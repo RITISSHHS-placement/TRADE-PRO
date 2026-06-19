@@ -1,10 +1,7 @@
 # TradePro — Full-Stack Trading Platform
 
-> Institutional-grade trading platform · Spring Boot + React · Auto-deploys via GitHub
 
-[![Deploy Frontend](https://img.shields.io/badge/Frontend-GitHub%20Pages-blue?logo=github)](https://pages.github.com)
-[![Deploy Backend](https://img.shields.io/badge/Backend-Railway-blueviolet?logo=railway)](https://railway.app)
-
+Frontend --> https://vercel.com/ritisshhs-placements-projects
 ---
 
 ## ⚡ One-Command GitHub Setup
