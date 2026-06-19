@@ -51,14 +51,12 @@
       <artifactId>h2</artifactId>
       <scope>runtime</scope>
     </dependency>
-    <!-- Uncomment for production PostgreSQL -->
-    <!--
+    <!-- PostgreSQL for production -->
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <scope>runtime</scope>
     </dependency>
-    -->
 
     <!-- JWT -->
     <dependency>
