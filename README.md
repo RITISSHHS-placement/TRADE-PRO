@@ -1,7 +1,7 @@
 # TradePro — Full-Stack Trading Platform
 
 
-Frontend --> https://vercel.com/ritisshhs-placements-projects
+Frontend --> https://trade-pro-t7l6.vercel.app/
 ---
 
 ## ⚡ One-Command GitHub Setup
