@@ -1,0 +1,164 @@
+.page { display: flex; flex-direction: column; gap: 24px; }
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 4px;
+}
+
+.sub { font-size: 14px; color: var(--gray-3); }
+
+.tradeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.tradeBtn:hover { background: #6a50e8; box-shadow: 0 6px 20px rgba(123,97,255,0.35); transform: translateY(-1px); }
+
+/* STATS */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* MAIN GRID */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 16px;
+  align-items: start;
+}
+
+.chartCard { padding: 24px; }
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+.chartTitle { font-size: 12px; color: var(--gray-3); font-weight: 500; letter-spacing: 0.04em; margin-bottom: 4px; }
+.chartPrice { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; }
+.chartChange { font-size: 14px; color: var(--green); font-weight: 500; }
+
+.liveTag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--green-dim);
+}
+.liveDot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* QUICK CARDS */
+.quickCards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.quickCard {
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.quickCard:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+.killCard:hover { border-color: rgba(255,77,106,0.3); }
+
+.quickIcon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+}
+.quickTitle { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.quickDesc { font-size: 11px; color: var(--gray-3); line-height: 1.5; }
+
+/* TRADES */
+.tradesCard { overflow: hidden; }
+.tradesHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.tradesTitle { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; }
+.viewAll {
+  font-size: 13px;
+  color: var(--accent-dim);
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.viewAll:hover { color: var(--accent); }
+
+.tradesTable { display: flex; flex-direction: column; }
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+  padding: 10px 24px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-3);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+  padding: 14px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  align-items: center;
+  transition: background 0.15s;
+  font-size: 13px;
+}
+.tableRow:hover { background: rgba(255,255,255,0.025); }
+.tableRow:last-child { border-bottom: none; }
+
+.symbol { font-weight: 700; font-size: 13px; }
+.exchange { font-size: 11px; color: var(--gray-3); margin-top: 2px; }
+.qty { font-weight: 600; }
+.price { color: var(--gray-2); }
+.pnlUp { color: var(--green); font-weight: 600; }
+.pnlDown { color: var(--red); font-weight: 600; }
+
+@media (max-width: 1024px) {
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+  .mainGrid { grid-template-columns: 1fr; }
+  .quickCards { flex-direction: row; }
+  .quickCard { flex: 1; }
+}

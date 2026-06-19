@@ -1,0 +1,116 @@
+.page { display: flex; flex-direction: column; gap: 24px; }
+.title { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; }
+.sub { font-size: 14px; color: var(--gray-3); margin-top: -16px; }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.card { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+.cardHead { display: flex; align-items: flex-start; gap: 14px; }
+.cardIcon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cardTitle { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 3px; }
+.cardSub { font-size: 12px; color: var(--gray-3); }
+
+/* AUTH METHODS */
+.authMethods { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.method {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.method:last-child { border-bottom: none; }
+.methodName { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.methodDesc { font-size: 12px; color: var(--gray-3); }
+.enabledBadge {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600;
+  padding: 4px 10px; border-radius: var(--radius-full);
+  background: var(--green-dim); color: var(--green);
+}
+
+/* TOTP SETUP */
+.totpSetup {
+  background: rgba(123,97,255,0.05);
+  border: 1px solid rgba(123,97,255,0.15);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+.totpTitle { font-size: 13px; font-weight: 600; margin-bottom: 14px; color: var(--accent-dim); }
+.qrPlaceholder { display: flex; justify-content: center; margin-bottom: 16px; }
+.qrCode {
+  width: 140px; height: 140px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px;
+}
+.qrInner { font-size: 13px; font-weight: 600; }
+.qrSub { font-size: 10px; color: var(--gray-3); }
+.secretKey { font-size: 10px; font-family: monospace; color: var(--accent-dim); word-break: break-all; text-align: center; padding: 0 8px; }
+.totpVerify { display: flex; gap: 10px; align-items: center; }
+.codeInput {
+  flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 10px 14px;
+  font-size: 18px; font-weight: 700; letter-spacing: 0.2em;
+  color: var(--white); font-family: monospace; text-align: center;
+  outline: none; transition: border-color 0.2s;
+}
+.codeInput:focus { border-color: var(--accent); }
+
+/* KYC */
+.kycGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.kycItem { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; }
+.kycLabel { font-size: 11px; color: var(--gray-3); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px; }
+.kycVal { font-size: 15px; font-weight: 700; }
+.verified { color: var(--green); }
+.pending { color: var(--amber); }
+.rejected { color: var(--red); }
+.kycWarning {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  background: var(--amber-dim); border: 1px solid rgba(247,168,65,0.2);
+  border-radius: var(--radius-md);
+  font-size: 12px; color: var(--amber); font-weight: 500;
+}
+
+/* SESSIONS */
+.sessionRow {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sessionRow:last-child { border-bottom: none; }
+.sessionIcon { color: var(--gray-3); flex-shrink: 0; }
+.sessionInfo { flex: 1; }
+.sessionName { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.sessionMeta { font-size: 11px; color: var(--gray-3); }
+.currentBadge {
+  font-size: 10px; font-weight: 600; padding: 3px 9px;
+  border-radius: var(--radius-full);
+  background: var(--green-dim); color: var(--green);
+}
+.revokeBtn {
+  font-size: 11px; font-weight: 600; padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--red-dim); color: var(--red);
+  border: 1px solid rgba(255,77,106,0.2);
+  cursor: pointer; transition: all 0.15s;
+}
+.revokeBtn:hover { background: rgba(255,77,106,0.2); }
+
+/* PASSWORD */
+.pwForm { display: flex; flex-direction: column; gap: 12px; }
+.pwInput {
+  width: 100%; background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 10px 14px; font-size: 14px; color: var(--white);
+  font-family: var(--font); outline: none; transition: border-color 0.2s;
+}
+.pwInput:focus { border-color: var(--accent); }
+.pwInput::placeholder { color: var(--gray-4); }
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+}

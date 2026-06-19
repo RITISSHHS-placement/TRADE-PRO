@@ -1,0 +1,101 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal {
+  background: var(--surface-2);
+  border: 1px solid rgba(255, 77, 106, 0.3);
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 420px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 0 60px rgba(255, 77, 106, 0.15), 0 32px 64px rgba(0,0,0,0.6);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  color: var(--gray-3);
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.closeBtn:hover { background: rgba(255,255,255,0.08); color: var(--white); }
+
+.iconWrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: var(--red-dim);
+  border: 1px solid rgba(255, 77, 106, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--red);
+  margin: 0 auto 24px;
+  box-shadow: 0 0 24px rgba(255, 77, 106, 0.2);
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-align: center;
+  margin-bottom: 12px;
+  color: var(--white);
+}
+
+.desc {
+  font-size: 14px;
+  color: var(--gray-2);
+  text-align: center;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.desc strong {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(247, 168, 65, 0.08);
+  border: 1px solid rgba(247, 168, 65, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--amber);
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 24px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.actions > * {
+  flex: 1;
+}

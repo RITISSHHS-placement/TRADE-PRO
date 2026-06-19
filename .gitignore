@@ -1,0 +1,36 @@
+# ── Java / Maven ──
+backend/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+
+# ── Node / React ──
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+
+# ── IDE ──
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Docker ──
+*.pid
+.docker/
+
+# ── Secrets (never commit these) ──
+*.env
+secrets/
