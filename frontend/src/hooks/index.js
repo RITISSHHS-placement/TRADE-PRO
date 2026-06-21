@@ -1,8 +1,11 @@
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useCallback } from 'react'
 import { loginUser, logoutUser, registerUser } from '../store/slices/authSlice'
 import { placeTrade, fetchTrades, fetchPositions } from '../store/slices/tradeSlice'
 import { setOrderPanel, setKillSwitchModal } from '../store/slices/uiSlice'
+import { loadQuotes, loadIntradayChart, setChartSymbol } from '../store/slices/marketSlice'
+import { DEFAULT_SYMBOLS } from '../services/marketData'
 import { userAPI } from '../services/api'
 import toast from 'react-hot-toast'
 
@@ -113,4 +116,62 @@ export function useAutoLogout() {
   }
 
   return { setupAutoLogout }
+}
+
+// ---- useMarketData ----
+// Polls live market quotes and intraday chart data at a configurable interval.
+// Default interval: 5 seconds. Pass intervalMs to override.
+export function useMarketData({ symbols = DEFAULT_SYMBOLS, intervalMs = 5000 } = {}) {
+  const dispatch = useDispatch()
+  const { quotes, chart, chartSymbol, loading, chartLoading, lastUpdated, error } =
+    useSelector((state) => state.market)
+
+  const intervalRef = useRef(null)
+
+  const refresh = useCallback(() => {
+    dispatch(loadQuotes(symbols))
+  }, [dispatch, symbols])
+
+  const refreshChart = useCallback((sym) => {
+    dispatch(loadIntradayChart(sym || chartSymbol))
+  }, [dispatch, chartSymbol])
+
+  const changeChartSymbol = useCallback((sym) => {
+    dispatch(setChartSymbol(sym))
+    dispatch(loadIntradayChart(sym))
+  }, [dispatch])
+
+  useEffect(() => {
+    // Initial load
+    dispatch(loadQuotes(symbols))
+    dispatch(loadIntradayChart(chartSymbol))
+
+    // Poll at interval
+    intervalRef.current = setInterval(() => {
+      dispatch(loadQuotes(symbols))
+    }, intervalMs)
+
+    // Refresh chart every 60 seconds (less frequent — historical data)
+    const chartInterval = setInterval(() => {
+      dispatch(loadIntradayChart(chartSymbol))
+    }, 60_000)
+
+    return () => {
+      clearInterval(intervalRef.current)
+      clearInterval(chartInterval)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return {
+    quotes,
+    chart,
+    chartSymbol,
+    loading,
+    chartLoading,
+    lastUpdated,
+    error,
+    refresh,
+    refreshChart,
+    changeChartSymbol,
+  }
 }

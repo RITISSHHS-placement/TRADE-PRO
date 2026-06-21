@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useTrades } from '../hooks'
-import { Button, Input, Select, Card, Badge } from '../components/ui'
+import { useTrades, useMarketData } from '../hooks'
+import { Button, Input, Select, Card, Badge, Spinner } from '../components/ui'
+import { SYMBOL_LABELS } from '../services/marketData'
 import styles from './TradePage.module.css'
 
 const SEGMENTS = [
@@ -25,8 +26,15 @@ const EXCHANGES = [
   { value: 'MCX', label: 'MCX' },
 ]
 
+const WATCH_SYMBOLS = [
+  '^NSEI', '^BSESN',
+  'RELIANCE.NS', 'INFY.NS', 'HDFCBANK.NS',
+  'TCS.NS', 'WIPRO.NS', 'ICICIBANK.NS',
+]
+
 export default function TradePage() {
   const { place, placing, trades } = useTrades()
+  const { quotes, loading: quotesLoading, lastUpdated } = useMarketData({ intervalMs: 5000 })
   const [side, setSide] = useState('BUY')
   const [orderType, setOrderType] = useState('MARKET')
   const [isGTT, setIsGTT] = useState(false)
@@ -171,22 +179,33 @@ export default function TradePage() {
           <Card className={styles.watchCard}>
             <div className={styles.cardHeader}>
               <h2 className={styles.cardTitle}>Market Watch</h2>
+              {quotesLoading && <Spinner size={14} />}
             </div>
             <div className={styles.watchList}>
-              {WATCHLIST.map((item) => (
-                <div key={item.symbol} className={styles.watchItem}>
-                  <div>
-                    <div className={styles.watchSym}>{item.symbol}</div>
-                    <div className={styles.watchEx}>{item.exchange}</div>
-                  </div>
-                  <div className={styles.watchRight}>
-                    <div className={styles.watchPrice}>₹{item.price.toLocaleString('en-IN')}</div>
-                    <div className={item.change >= 0 ? styles.changeUp : styles.changeDown}>
-                      {item.change >= 0 ? '↑' : '↓'} {Math.abs(item.change)}%
+              {WATCH_SYMBOLS.map((sym) => {
+                const q = quotes[sym]
+                const up = (q?.changePct ?? 0) >= 0
+                return (
+                  <div key={sym} className={styles.watchItem}>
+                    <div>
+                      <div className={styles.watchSym}>{SYMBOL_LABELS[sym] || sym}</div>
+                      <div className={styles.watchEx}>
+                        {sym.endsWith('.NS') ? 'NSE' : sym.endsWith('.BS') ? 'BSE' : 'INDEX'}
+                      </div>
+                    </div>
+                    <div className={styles.watchRight}>
+                      <div className={styles.watchPrice}>
+                        {q
+                          ? `₹${q.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                          : '—'}
+                      </div>
+                      <div className={up ? styles.changeUp : styles.changeDown}>
+                        {q ? `${up ? '↑' : '↓'} ${Math.abs(q.changePct).toFixed(2)}%` : '—'}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </Card>
 
@@ -216,12 +235,3 @@ export default function TradePage() {
     </div>
   )
 }
-
-const WATCHLIST = [
-  { symbol: 'RELIANCE', exchange: 'NSE', price: 2841.50, change: 1.24 },
-  { symbol: 'INFY', exchange: 'NSE', price: 1678.30, change: -0.82 },
-  { symbol: 'HDFC BANK', exchange: 'NSE', price: 1542.10, change: 0.45 },
-  { symbol: 'TCS', exchange: 'NSE', price: 3890.00, change: 2.14 },
-  { symbol: 'WIPRO', exchange: 'NSE', price: 521.75, change: -1.30 },
-  { symbol: 'NIFTY 50', exchange: 'NSE', price: 24381, change: 0.42 },
-]
