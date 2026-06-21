@@ -123,35 +123,28 @@ export function useAutoLogout() {
 // Default interval: 5 seconds. Pass intervalMs to override.
 export function useMarketData({ symbols = DEFAULT_SYMBOLS, intervalMs = 5000 } = {}) {
   const dispatch = useDispatch()
-  const { quotes, chart, chartSymbol, loading, chartLoading, lastUpdated, error } =
+  const { quotes, charts, chartSymbol, loading, chartLoading, lastUpdated, error } =
     useSelector((state) => state.market)
 
   const intervalRef = useRef(null)
 
-  const refresh = useCallback(() => {
-    dispatch(loadQuotes(symbols))
+  const refresh = useCallback((syms) => {
+    dispatch(loadQuotes(syms || symbols))
   }, [dispatch, symbols])
-
-  const refreshChart = useCallback((sym) => {
-    dispatch(loadIntradayChart(sym || chartSymbol))
-  }, [dispatch, chartSymbol])
 
   const changeChartSymbol = useCallback((sym) => {
     dispatch(setChartSymbol(sym))
-    dispatch(loadIntradayChart(sym))
-  }, [dispatch])
+    if (!charts[sym]) dispatch(loadIntradayChart(sym))
+  }, [dispatch, charts])
 
   useEffect(() => {
-    // Initial load
     dispatch(loadQuotes(symbols))
     dispatch(loadIntradayChart(chartSymbol))
 
-    // Poll at interval
     intervalRef.current = setInterval(() => {
       dispatch(loadQuotes(symbols))
     }, intervalMs)
 
-    // Refresh chart every 60 seconds (less frequent — historical data)
     const chartInterval = setInterval(() => {
       dispatch(loadIntradayChart(chartSymbol))
     }, 60_000)
@@ -162,8 +155,11 @@ export function useMarketData({ symbols = DEFAULT_SYMBOLS, intervalMs = 5000 } =
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const chart = charts[chartSymbol] || []
+
   return {
     quotes,
+    charts,
     chart,
     chartSymbol,
     loading,
@@ -171,7 +167,6 @@ export function useMarketData({ symbols = DEFAULT_SYMBOLS, intervalMs = 5000 } =
     lastUpdated,
     error,
     refresh,
-    refreshChart,
     changeChartSymbol,
   }
 }

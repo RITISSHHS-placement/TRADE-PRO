@@ -11,6 +11,7 @@ import TradePage from './pages/TradePage'
 import PortfolioPage from './pages/PortfolioPage'
 import SettingsPage from './pages/SettingsPage'
 import SecurityPage from './pages/SecurityPage'
+import MarketPage from './pages/MarketPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 // Layout
@@ -38,6 +39,7 @@ export default function App() {
       <Route path="/dashboard" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
         <Route index element={<DashboardPage />} />
         <Route path="trade" element={<TradePage />} />
+        <Route path="market" element={<MarketPage />} />
         <Route path="portfolio" element={<PortfolioPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="security" element={<SecurityPage />} />

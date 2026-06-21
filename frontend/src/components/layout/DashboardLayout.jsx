@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   LayoutDashboard, TrendingUp, Briefcase, Settings,
-  Shield, LogOut, Zap, ChevronLeft, Menu, Bell
+  Shield, LogOut, Zap, ChevronLeft, Menu, Bell, BarChart2
 } from 'lucide-react'
 import { logoutUser } from '../../store/slices/authSlice'
 import { toggleSidebar } from '../../store/slices/uiSlice'
@@ -14,6 +14,7 @@ import styles from './DashboardLayout.module.css'
 const NAV_ITEMS = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', end: true },
   { to: '/dashboard/trade', icon: TrendingUp, label: 'Trade' },
+  { to: '/dashboard/market', icon: BarChart2, label: 'Markets' },
   { to: '/dashboard/portfolio', icon: Briefcase, label: 'Portfolio' },
   { to: '/dashboard/security', icon: Shield, label: 'Security' },
   { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
