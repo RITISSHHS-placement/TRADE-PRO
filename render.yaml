@@ -35,7 +35,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://trade-pro-t7l6.vercel.app
+        value: https://trade-profinal-e1mzs68l9-ritisshhs-placements-projects.vercel.app
       - key: TOTP_ISSUER
         value: TradePro
     healthCheckPath: /api/health
