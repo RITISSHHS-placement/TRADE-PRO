@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL (for production-like local dev)
   postgres:
@@ -29,7 +27,9 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      DATABASE_URL: jdbc:postgresql://postgres:5432/tradeprodb
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: tradeprodb
       DB_USERNAME: tradepro
       DB_PASSWORD: tradepro123
       JWT_SECRET: change-this-secret-in-production-must-be-very-long
@@ -43,6 +43,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8080/api
     container_name: tradepro-frontend
     ports:
       - "3000:80"

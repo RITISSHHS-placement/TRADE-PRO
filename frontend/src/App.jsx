@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import React from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import { AnimatePresence } from 'framer-motion'
 
 // Pages
 import LandingPage from './pages/LandingPage'
@@ -28,25 +29,29 @@ function PublicRoute({ children }) {
 }
 
 export default function App() {
+  const location = useLocation()
+
   return (
-    <Routes>
-      {/* Public */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-      <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+    <AnimatePresence mode="wait" initial={false}>
+      <Routes location={location} key={location.pathname}>
+        {/* Public */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+        <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
-      {/* Protected — inside DashboardLayout */}
-      <Route path="/dashboard" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
-        <Route index element={<DashboardPage />} />
-        <Route path="trade" element={<TradePage />} />
-        <Route path="market" element={<MarketPage />} />
-        <Route path="portfolio" element={<PortfolioPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-        <Route path="security" element={<SecurityPage />} />
-      </Route>
+        {/* Protected — inside DashboardLayout */}
+        <Route path="/dashboard" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
+          <Route index element={<DashboardPage />} />
+          <Route path="trade" element={<TradePage />} />
+          <Route path="market" element={<MarketPage />} />
+          <Route path="portfolio" element={<PortfolioPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="security" element={<SecurityPage />} />
+        </Route>
 
-      {/* 404 */}
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+        {/* 404 */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </AnimatePresence>
   )
 }

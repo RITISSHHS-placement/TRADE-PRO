@@ -1,266 +1,326 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import * as THREE from 'three'
+import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion'
+import { ArrowRight, BarChart3, Shield, Sparkles, Zap, TrendingUp, Moon, Sun } from 'lucide-react'
 import styles from './LandingPage.module.css'
+
+function BullBearScene({ theme }) {
+  const mountRef = useRef(null)
+  const mouse = useRef({ x: 0, y: 0 })
+
+  useEffect(() => {
+    const container = mountRef.current
+    if (!container) return
+
+    const width = container.clientWidth
+    const height = container.clientHeight
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setSize(width, height)
+    renderer.setClearColor(0x000000, 0)
+    container.appendChild(renderer.domElement)
+
+    const scene = new THREE.Scene()
+    const camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 100)
+    camera.position.set(0, 1.3, 8)
+
+    const ambient = new THREE.HemisphereLight(0xffffff, 0x0b0d1a, 0.85)
+    scene.add(ambient)
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.8)
+    keyLight.position.set(6, 7, 5)
+    scene.add(keyLight)
+
+    const fillLight = new THREE.DirectionalLight(0x7b61ff, 0.75)
+    fillLight.position.set(-6, 2, 4)
+    scene.add(fillLight)
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(16, 16),
+      new THREE.MeshStandardMaterial({ color: 0x080910, roughness: 0.88, metalness: 0.05, opacity: 0.92, transparent: true })
+    )
+    floor.rotation.x = -Math.PI / 2
+    floor.position.y = -1.58
+    scene.add(floor)
+
+    const grid = new THREE.GridHelper(16, 24, 0x2a2c40, 0x13141f)
+    grid.position.y = -1.57
+    scene.add(grid)
+
+    const bullMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x7b61ff,
+      metalness: 0.78,
+      roughness: 0.14,
+      clearcoat: 0.92,
+      clearcoatRoughness: 0.06,
+      emissive: 0x27106f,
+      emissiveIntensity: 0.08,
+    })
+
+    const bearMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x00d084,
+      metalness: 0.6,
+      roughness: 0.18,
+      clearcoat: 0.7,
+      emissive: 0x004d33,
+      emissiveIntensity: 0.08,
+    })
+
+    const bull = new THREE.Group()
+    const bullBody = new THREE.Mesh(new THREE.SphereGeometry(0.75, 32, 32), bullMaterial)
+    bullBody.scale.set(1.82, 1.06, 0.98)
+    bull.add(bullBody)
+
+    const bullHead = new THREE.Mesh(new THREE.SphereGeometry(0.34, 24, 24), bullMaterial)
+    bullHead.position.set(1.04, 0.12, 0)
+    bullHead.scale.set(1, 0.86, 0.86)
+    bull.add(bullHead)
+
+    const bullHornA = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.64, 18), new THREE.MeshPhysicalMaterial({ color: 0xfbe6d2, metalness: 0.82, roughness: 0.16 }))
+    bullHornA.position.set(1.4, 0.34, 0.24)
+    bullHornA.rotation.set(0, 0, -0.45)
+    bull.add(bullHornA)
+
+    const bullHornB = bullHornA.clone()
+    bullHornB.position.set(1.4, 0.34, -0.24)
+    bullHornB.rotation.set(0, 0, 0.45)
+    bull.add(bullHornB)
+
+    const bullLegA = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.92, 16), bullMaterial)
+    bullLegA.position.set(0.77, -0.96, 0.33)
+    bull.add(bullLegA)
+
+    const bullLegB = bullLegA.clone()
+    bullLegB.position.set(0.77, -0.96, -0.33)
+    bull.add(bullLegB)
+
+    bull.position.set(-1.88, -0.79, 0)
+    scene.add(bull)
+
+    const bear = new THREE.Group()
+    const bearBody = new THREE.Mesh(new THREE.SphereGeometry(0.82, 34, 34), bearMaterial)
+    bearBody.scale.set(1.46, 1.02, 1.04)
+    bear.add(bearBody)
+
+    const bearHead = new THREE.Mesh(new THREE.SphereGeometry(0.36, 30, 30), bearMaterial)
+    bearHead.position.set(-1.03, 0.12, 0)
+    bear.add(bearHead)
+
+    const earA = new THREE.Mesh(new THREE.SphereGeometry(0.15, 18, 18), bearMaterial)
+    earA.position.set(-1.35, 0.41, 0.25)
+    bear.add(earA)
+
+    const earB = earA.clone()
+    earB.position.set(-1.35, 0.41, -0.25)
+    bear.add(earB)
+
+    const bearLegA = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.92, 16), bearMaterial)
+    bearLegA.position.set(-0.9, -0.96, 0.34)
+    bear.add(bearLegA)
+
+    const bearLegB = bearLegA.clone()
+    bearLegB.position.set(-0.9, -0.96, -0.34)
+    bear.add(bearLegB)
+
+    bear.position.set(1.6, -0.78, 0)
+    bear.rotation.y = Math.PI * 0.14
+    scene.add(bear)
+
+    const bars = new THREE.Group()
+    const barData = [
+      { x: -2.8, height: 1.36, color: 0x00d084 },
+      { x: -1.25, height: 1.96, color: 0xff4d6a },
+      { x: 0.28, height: 1.42, color: 0x00d084 },
+      { x: 1.65, height: 2.06, color: 0x00d084 },
+    ]
+    barData.forEach((item) => {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.18, item.height, 0.18), new THREE.MeshStandardMaterial({ color: item.color, roughness: 0.18, metalness: 0.3 }))
+      bar.position.set(item.x, item.height / 2 - 1.5, 0)
+      bars.add(bar)
+      const wick = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.32, 0.05), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.12 }))
+      wick.position.set(item.x, item.height - 1.05, 0)
+      bars.add(wick)
+    })
+    scene.add(bars)
+
+    let frameId = null
+    const animate = () => {
+      const tx = mouse.current.x * 0.12
+      const ty = mouse.current.y * 0.08
+      bull.rotation.y += 0.003
+      bear.rotation.y -= 0.003
+      bars.rotation.y += 0.002
+      camera.position.x += (tx - camera.position.x) * 0.05
+      camera.position.y += (ty + 0.3 - camera.position.y) * 0.05
+      camera.lookAt(0, -0.22, 0)
+      renderer.render(scene, camera)
+      frameId = requestAnimationFrame(animate)
+    }
+    animate()
+
+    const handleMove = (event) => {
+      mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1
+      mouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1
+    }
+    window.addEventListener('mousemove', handleMove, { passive: true })
+
+    const handleResize = () => {
+      const w = container.clientWidth
+      const h = container.clientHeight
+      camera.aspect = w / h
+      camera.updateProjectionMatrix()
+      renderer.setSize(w, h)
+    }
+    window.addEventListener('resize', handleResize, { passive: true })
+
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId)
+      window.removeEventListener('mousemove', handleMove)
+      window.removeEventListener('resize', handleResize)
+      if (container && renderer.domElement.parentElement === container) {
+        container.removeChild(renderer.domElement)
+      }
+      renderer.dispose()
+    }
+  }, [theme])
+
+  return <div ref={mountRef} className={styles.sceneCanvas} />
+}
 
 export default function LandingPage() {
   const navigate = useNavigate()
-  const canvasRef = useRef(null)
-  const mouseRef = useRef({ x: 0, y: 0 })
-  const glowRef = useRef(null)
-  const [counters, setCounters] = useState({ vol: 0, users: 0 })
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem('tp-theme') || 'dark' } catch { return 'dark' }
+  })
+  const { scrollYProgress } = useScroll()
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0])
+  const isDark = theme === 'dark'
 
-  // Particle canvas
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    let particles = []
-    let raf
-
-    const resize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
-    resize()
-    window.addEventListener('resize', resize)
-
-    for (let i = 0; i < 60; i++) {
-      particles.push({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        r: Math.random() * 1.2 + 0.3,
-        vx: (Math.random() - 0.5) * 0.18,
-        vy: (Math.random() - 0.5) * 0.18,
-        o: Math.random() * 0.4 + 0.1,
-      })
-    }
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      // Grid
-      ctx.strokeStyle = 'rgba(255,255,255,0.022)'
-      ctx.lineWidth = 0.5
-      for (let x = 0; x < canvas.width; x += 60) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke()
-      }
-      for (let y = 0; y < canvas.height; y += 60) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke()
-      }
-      // Particles
-      particles.forEach((p) => {
-        p.x += p.vx; p.y += p.vy
-        if (p.x < 0) p.x = canvas.width
-        if (p.x > canvas.width) p.x = 0
-        if (p.y < 0) p.y = canvas.height
-        if (p.y > canvas.height) p.y = 0
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(123,97,255,${p.o})`
-        ctx.fill()
-      })
-      // Connections
-      ctx.lineWidth = 0.5
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x
-          const dy = particles[i].y - particles[j].y
-          const d = Math.sqrt(dx * dx + dy * dy)
-          if (d < 100) {
-            ctx.globalAlpha = (1 - d / 100) * 0.25
-            ctx.strokeStyle = 'rgba(123,97,255,1)'
-            ctx.beginPath()
-            ctx.moveTo(particles[i].x, particles[i].y)
-            ctx.lineTo(particles[j].x, particles[j].y)
-            ctx.stroke()
-          }
-        }
-      }
-      ctx.globalAlpha = 1
-      raf = requestAnimationFrame(draw)
-    }
-    draw()
-
-    return () => {
-      cancelAnimationFrame(raf)
-      window.removeEventListener('resize', resize)
-    }
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark'
+      try { localStorage.setItem('tp-theme', next) } catch {}
+      return next
+    })
   }, [])
 
-  // Mouse glow
-  useEffect(() => {
-    const onMove = (e) => {
-      if (glowRef.current) {
-        glowRef.current.style.left = e.clientX + 'px'
-        glowRef.current.style.top = e.clientY + 'px'
-      }
-    }
-    window.addEventListener('mousemove', onMove)
-    return () => window.removeEventListener('mousemove', onMove)
-  }, [])
-
-  // Counters
-  useEffect(() => {
-    let frame
-    let start = null
-    const duration = 1800
-    const targets = { vol: 2847, users: 48291 }
-    const animate = (ts) => {
-      if (!start) start = ts
-      const progress = Math.min((ts - start) / duration, 1)
-      const ease = 1 - Math.pow(1 - progress, 3)
-      setCounters({
-        vol: Math.round(ease * targets.vol),
-        users: Math.round(ease * targets.users),
-      })
-      if (progress < 1) frame = requestAnimationFrame(animate)
-    }
-    const timeout = setTimeout(() => { frame = requestAnimationFrame(animate) }, 400)
-    return () => { clearTimeout(timeout); cancelAnimationFrame(frame) }
-  }, [])
-
-  // Scroll reveal
-  useEffect(() => {
-    const els = document.querySelectorAll('[data-reveal]')
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add(styles.revealed); io.unobserve(e.target) } }),
-      { threshold: 0.1 }
-    )
-    els.forEach((el) => io.observe(el))
-    return () => io.disconnect()
-  }, [])
+  const features = [
+    { icon: <Zap size={20} />, title: 'Market intelligence', desc: 'Live momentum signals, sentiment alerts, and order-flow clarity.', color: '#7b61ff' },
+    { icon: <BarChart3 size={20} />, title: 'Trade orchestration', desc: 'Multi-asset execution, custom triggers and one-click scaled orders.', color: '#00d084' },
+    { icon: <Shield size={20} />, title: 'Institutional security', desc: 'JWT auth, TOTP, device control, and versioned sessions with emergency stop controls.', color: '#f7a841' },
+    { icon: <TrendingUp size={20} />, title: 'Premium analytics', desc: 'Heatmaps, liquidity flow, risk-weighted signals, and portfolio insight.', color: '#ff6b9d' },
+  ]
 
   return (
-    <div className={styles.page}>
-      <canvas ref={canvasRef} className={styles.canvas} />
-      <div ref={glowRef} className={styles.mouseGlow} />
+    <div className={`${styles.page} ${isDark ? styles.dark : styles.light}`}>
+      <motion.div className={styles.heroBackdrop} style={{ opacity: heroOpacity }} />
 
-      {/* NAV */}
       <nav className={styles.nav}>
-        <div className={styles.navLogo}>Trade<span>Pro</span></div>
-        <div className={styles.navLinks}>
-          <a href="#features">Features</a>
-          <a href="#security">Security</a>
-        </div>
-        <div className={styles.navActions}>
-          <button className={styles.navSecondary} onClick={() => navigate('/login')}>Sign in</button>
-          <button className={styles.navPrimary} onClick={() => navigate('/register')}>Get started →</button>
+        <div className={styles.navInner}>
+          <div className={styles.brand}>Trade<span>Pro</span></div>
+          <div className={styles.navLinks}>
+            <button type="button" onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}>Features</button>
+            <button type="button" onClick={() => document.getElementById('cta')?.scrollIntoView({ behavior: 'smooth' })}>Start</button>
+          </div>
+          <div className={styles.navActions}>
+            <button className={styles.themeBtn} onClick={toggleTheme} aria-label="Toggle theme">
+              <AnimatePresence mode="wait">
+                {isDark ? (
+                  <motion.span key="sun" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <Sun size={16} />
+                  </motion.span>
+                ) : (
+                  <motion.span key="moon" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <Moon size={16} />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </button>
+            <button className={styles.btnGhost} onClick={() => navigate('/login')}>Sign in</button>
+            <button className={styles.btnPrimary} onClick={() => navigate('/register')}>Get started</button>
+          </div>
         </div>
       </nav>
 
-      {/* HERO */}
       <section className={styles.hero}>
-        <div className={styles.eyebrow}>
-          <span className={styles.eyebrowDot} />
-          Now in early access · Built for serious traders
-        </div>
+        <div className={styles.heroCopy}>
+          <span className={styles.heroBadge}>Bull & Bear market intelligence</span>
+          <h1 className={styles.heroTitle}>A premium stock market studio built for motion and clarity.</h1>
+          <p className={styles.heroText}>Live trade flow, risk-aware order controls, and elegant analytics — all in a smooth, premium interface.</p>
 
-        <h1 className={styles.h1}>
-          Trade with<br />
-          <span className={styles.gradientText}>institutional</span><br />
-          precision
-        </h1>
-
-        <p className={styles.sub}>
-          TradePro brings enterprise-grade security, AI risk management,
-          and sub-millisecond execution to every investor.
-        </p>
-
-        <div className={styles.cta}>
-          <button className={styles.btnPrimary} onClick={() => navigate('/register')}>
-            Start trading free →
-          </button>
-          <button className={styles.btnSecondary} onClick={() => navigate('/login')}>
-            Sign in
-          </button>
-        </div>
-
-        <div className={styles.statsRow}>
-          {[
-            { val: `₹${counters.vol.toLocaleString('en-IN')}Cr`, label: 'Daily Volume' },
-            { val: '0.003s', label: 'Avg Execution' },
-            { val: `${counters.users.toLocaleString('en-IN')}+`, label: 'Active Traders' },
-            { val: '99.99%', label: 'Uptime SLA' },
-          ].map((s) => (
-            <div key={s.label} className={styles.stat}>
-              <div className={styles.statVal}>{s.val}</div>
-              <div className={styles.statLabel}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* FEATURES */}
-      <section id="features" className={styles.section}>
-        <div className={styles.sectionHead} data-reveal>
-          <div className={styles.sectionLabel}>Features</div>
-          <h2 className={styles.sectionH2}>Engineered for the edge</h2>
-        </div>
-        <div className={styles.featGrid} data-reveal>
-          {FEATURES.map((f) => (
-            <div key={f.title} className={`${styles.featCard} ${f.wide ? styles.wide : ''}`}>
-              <div className={styles.featIcon} style={{ background: f.bg, color: f.color }}>{f.icon}</div>
-              <div className={styles.featTitle}>{f.title}</div>
-              <div className={styles.featDesc}>{f.desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* SECURITY */}
-      <section id="security" className={styles.section}>
-        <div className={styles.secGrid}>
-          <div data-reveal>
-            <div className={styles.sectionLabel}>Security</div>
-            <h2 className={styles.sectionH2}>Bank-grade.<br />Not bank-slow.</h2>
-            <p className={styles.secDesc}>
-              Every layer of the stack is hardened. JWT tokens, TOTP 2FA,
-              device binding, BCrypt hashing, and a kill switch for emergencies.
-            </p>
-            <button className={styles.btnSecondary} onClick={() => navigate('/register')}>
-              Get protected →
+          <div className={styles.heroActions}>
+            <button className={styles.btnPrimary} onClick={() => navigate('/register')}>
+              Open account now <ArrowRight size={16} />
+            </button>
+            <button className={styles.btnSecondary} onClick={() => navigate('/login')}>
+              Secure sign in
             </button>
           </div>
-          <div className={styles.secCards} data-reveal>
-            {SECURITY_ITEMS.map((s) => (
-              <div key={s.title} className={styles.secCard}>
-                <div className={styles.secIcon} style={{ background: s.bg, color: s.color }}>{s.icon}</div>
-                <div>
-                  <div className={styles.secTitle}>{s.title}</div>
-                  <div className={styles.secDesc2}>{s.desc}</div>
-                </div>
-                <div className={styles.secBadge}>ACTIVE</div>
-              </div>
-            ))}
+
+          <div className={styles.heroStats}>
+            <div className={styles.heroStatCard}>
+              <span>Daily volume</span>
+              <strong>₹2.8K Cr</strong>
+            </div>
+            <div className={styles.heroStatCard}>
+              <span>Execution</span>
+              <strong>0.003s</strong>
+            </div>
+            <div className={styles.heroStatCard}>
+              <span>Active traders</span>
+              <strong>48K+</strong>
+            </div>
           </div>
+        </div>
+
+        <div className={styles.heroVisual}>
+          <BullBearScene theme={theme} />
         </div>
       </section>
 
-      {/* FOOTER */}
+      <section className={styles.gridSection} id="features">
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionLabel}>Why TradePro</span>
+          <h2>Premium market analytics, beautiful execution, and instant control.</h2>
+        </div>
+
+        <div className={styles.featuresGrid}>
+          {features.map((feature) => (
+            <motion.div key={feature.title} className={styles.featureCard} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}>
+              <div className={styles.featureIcon} style={{ background: `${feature.color}22`, color: feature.color }}>
+                {feature.icon}
+              </div>
+              <h3>{feature.title}</h3>
+              <p>{feature.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.ctaSection} id="cta">
+        <div className={styles.ctaCard}>
+          <div className={styles.ctaTop}>
+            <Sparkles size={18} className={styles.ctaSparkle} />
+            <span>Premium onboarding</span>
+          </div>
+          <h2>Launch your professional trading workspace.</h2>
+          <p>Fast onboarding with polished dashboards, secure controls, and premium market visibility.</p>
+          <button className={styles.ctaButton} onClick={() => navigate('/register')}>
+            Create free account
+          </button>
+        </div>
+      </section>
+
       <footer className={styles.footer}>
-        <div className={styles.footerLogo}>Trade<span>Pro</span></div>
-        <p className={styles.footerSub}>Built for traders who don't compromise.</p>
-        <button className={styles.btnPrimary} onClick={() => navigate('/register')}>
-          Request early access →
-        </button>
-        <div className={styles.footerMeta}>SEBI Registered · NSE · BSE · MCX · ISO 27001</div>
+        <div className={styles.footerBrand}>Trade<span>Pro</span></div>
+        <div className={styles.footerLinks}>
+          <button type="button" onClick={() => navigate('/login')}>Sign in</button>
+          <button type="button" onClick={() => navigate('/register')}>Register</button>
+          <button type="button" onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}>Features</button>
+        </div>
+        <p>© 2026 TradePro. Built for traders who value speed, security, and refined execution.</p>
       </footer>
     </div>
   )
 }
-
-const FEATURES = [
-  { icon: '⚡', title: 'GTT Orders', desc: 'Good-Till-Triggered orders with multi-condition support. Set ABOVE/BELOW triggers with custom expiry.', bg: 'rgba(123,97,255,0.12)', color: '#a390ff', wide: true },
-  { icon: '◉', title: 'AI Risk Nudges', desc: 'Intelligent pre-trade alerts for overexposure, risky stocks, and daily limit breaches.', bg: 'rgba(0,208,132,0.12)', color: '#00d084' },
-  { icon: '⊞', title: 'Multi-Segment', desc: 'Equity, Futures, Options, Currency, Commodity — all in one unified interface.', bg: 'rgba(247,168,65,0.12)', color: '#f7a841' },
-  { icon: '◈', title: 'Kill Switch', desc: 'One tap halts all trades, cancels orders, and logs out all sessions instantly.', bg: 'rgba(255,77,106,0.12)', color: '#ff4d6a' },
-  { icon: '⬡', title: 'P&L Intelligence', desc: 'Brokerage, STT, GST, exchange charges — every cost tracked automatically.', bg: 'rgba(123,97,255,0.12)', color: '#a390ff' },
-  { icon: '◳', title: 'Session Control', desc: 'Auto-logout, device binding, and trusted device management built in.', bg: 'rgba(0,208,132,0.12)', color: '#00d084' },
-]
-
-const SECURITY_ITEMS = [
-  { icon: '◉', title: 'TOTP / 2FA', desc: 'Google Authenticator compatible time-based OTP', bg: 'rgba(123,97,255,0.12)', color: '#a390ff' },
-  { icon: '⊛', title: 'JWT + Refresh Tokens', desc: 'Short-lived access tokens with secure 7-day rotation', bg: 'rgba(0,208,132,0.12)', color: '#00d084' },
-  { icon: '◈', title: 'Device Binding', desc: 'New devices require verification before first access', bg: 'rgba(247,168,65,0.12)', color: '#f7a841' },
-  { icon: '⬡', title: 'Visual KYC', desc: 'Face verification with liveness detection', bg: 'rgba(123,97,255,0.12)', color: '#a390ff' },
-  { icon: '◳', title: 'BCrypt Hashing', desc: 'Adaptive cost-factor hashing — no plaintext ever stored', bg: 'rgba(0,208,132,0.12)', color: '#00d084' },
-]
