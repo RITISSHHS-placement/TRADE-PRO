@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react'
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { AnimatePresence, motion } from 'framer-motion'
 import {
   LayoutDashboard, TrendingUp, Briefcase, Settings,
   Shield, LogOut, Zap, ChevronLeft, Menu, Bell, BarChart2
@@ -125,17 +124,7 @@ export default function DashboardLayout() {
 
         {/* Page Content */}
         <main className={styles.content}>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -18 }}
-              transition={{ duration: 0.32, ease: 'easeOut' }}
-            >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
+          <Outlet />
         </main>
       </div>
 
