@@ -1,8 +1,5 @@
-# render.yaml — Deploy everything to Render.com with one click
-# https://render.com/docs/blueprint-spec
-
+# render.yaml — Backend only (frontend is on Vercel)
 services:
-  # ── Spring Boot Backend ──
   - type: web
     name: tradepro-backend
     runtime: docker
@@ -35,23 +32,10 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://trade-profinal-e1mzs68l9-ritisshhs-placements-projects.vercel.app
+        value: https://trade-pro-t7l6.vercel.app
       - key: TOTP_ISSUER
         value: TradePro
     healthCheckPath: /api/health
-
-  # ── React Frontend ──
-  - type: web
-    name: tradepro-frontend
-    runtime: docker
-    rootDir: frontend
-    dockerfilePath: ./Dockerfile
-    dockerCommand: nginx -g 'daemon off;'
-    plan: free
-    envVars:
-      - key: VITE_API_URL
-        value: https://tradepro-backend.onrender.com/api
-    pullRequestPreviewsEnabled: true
 
 databases:
   - name: tradepro-db
