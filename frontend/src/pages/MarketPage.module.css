@@ -2,18 +2,18 @@
 
 /* ── HEADER ── */
 .header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.title { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 4px; }
+.title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; }
 .sub { font-size: 13px; color: var(--gray-3); }
 .headerRight { display: flex; align-items: center; gap: 10px; }
 .updatedTime { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gray-3); }
 .refreshBtn {
   display: flex; align-items: center; gap: 6px;
-  padding: 7px 14px; border-radius: var(--radius-full);
-  background: rgba(255,255,255,0.06); border: 1px solid var(--border);
-  color: var(--gray-2); font-size: 12px; font-weight: 500; cursor: pointer;
+  padding: 7px 14px; border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  color: var(--gray-2); font-size: 12px; font-weight: 600; cursor: pointer;
   transition: all 0.15s;
 }
-.refreshBtn:hover { background: rgba(255,255,255,0.1); color: var(--white); }
+.refreshBtn:hover { background: rgba(255,255,255,0.09); color: var(--white); }
 .refreshBtn:disabled { opacity: 0.4; cursor: default; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .spinning { animation: spin 0.7s linear infinite; }
@@ -21,22 +21,22 @@
 /* ── TICKER STRIP ── */
 .tickerStrip {
   display: flex; gap: 0; overflow-x: auto;
-  background: var(--surface-2); border: 1px solid var(--border);
+  background: var(--navy-2); border: 1px solid var(--border);
   border-radius: var(--radius-md); scrollbar-width: none;
 }
 .tickerStrip::-webkit-scrollbar { display: none; }
 .tickerChip {
   display: flex; align-items: center; gap: 6px;
-  padding: 0 16px; height: 38px; flex-shrink: 0;
+  padding: 0 16px; height: 36px; flex-shrink: 0;
   border-right: 1px solid var(--border); cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.12s;
 }
-.tickerChip:hover { background: var(--surface-3); }
+.tickerChip:hover { background: var(--navy-3); }
 .tickerChip:last-child { border-right: none; }
-.tSym { font-size: 11px; color: var(--gray-3); font-weight: 600; }
-.tPrice { font-size: 12px; font-weight: 700; }
-.tUp { font-size: 10px; color: var(--green); font-weight: 600; }
-.tDown { font-size: 10px; color: var(--red); font-weight: 600; }
+.tSym   { font-size: 10px; color: var(--gray-3); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.tPrice { font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.tUp    { font-size: 10px; color: var(--green); font-weight: 700; }
+.tDown  { font-size: 10px; color: var(--red);   font-weight: 700; }
 
 /* ── BODY LAYOUT ── */
 .body {

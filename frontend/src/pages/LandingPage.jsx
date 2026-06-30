@@ -246,7 +246,9 @@ export default function LandingPage() {
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
           <span className={styles.heroBadge}>Bull & Bear market intelligence</span>
-          <h1 className={styles.heroTitle}>A premium stock market studio built for motion and clarity.</h1>
+        <h1 className={styles.heroTitle}>
+            A premium stock market studio built for <span className={styles.heroBull}>bulls</span> and <span className={styles.heroBear}>bears</span> alike.
+          </h1>
           <p className={styles.heroText}>Live trade flow, risk-aware order controls, and elegant analytics — all in a smooth, premium interface.</p>
 
           <div className={styles.heroActions}>

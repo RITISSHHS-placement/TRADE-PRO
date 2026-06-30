@@ -1,47 +1,70 @@
-/* =====================
-   TradePro Design System
-   ===================== */
+/* ═══════════════════════════════════════════
+   TradePro Design System — Bull & Bear Theme
+   Navy blue base · Green bull · Red bear
+═══════════════════════════════════════════ */
 
 :root {
-  /* Colors */
-  --black: #080810;
-  --surface-1: #0e0e1a;
-  --surface-2: #13131f;
-  --surface-3: #1a1a28;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.15);
+  /* ── Core palette (navy/dark blue base) */
+  --black:       #060d16;
+  --navy:        #0a1628;
+  --navy-2:      #0f1f35;
+  --navy-3:      #162840;
+  --navy-4:      #1e3450;
 
-  --white: #ffffff;
-  --gray-1: #f0f0f5;
-  --gray-2: #c0c0d0;
-  --gray-3: #80809a;
-  --gray-4: #44445a;
+  --surface-1:   #0d1e33;
+  --surface-2:   #112236;
+  --surface-3:   #162c44;
 
-  --accent: #7b61ff;
-  --accent-dim: #a390ff;
-  --accent-glow: rgba(123, 97, 255, 0.2);
+  --border:      rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --border-blue: rgba(41, 98, 255, 0.25);
 
-  --green: #00d084;
-  --green-dim: rgba(0, 208, 132, 0.12);
-  --red: #ff4d6a;
-  --red-dim: rgba(255, 77, 106, 0.12);
-  --amber: #f7a841;
-  --amber-dim: rgba(247, 168, 65, 0.12);
+  /* ── Text */
+  --white:       #ffffff;
+  --gray-1:      #e8eef6;
+  --gray-2:      #b0bece;
+  --gray-3:      #6e8299;
+  --gray-4:      #3a4f63;
 
-  /* Typography */
-  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+  /* ── Bull green */
+  --green:       #00c853;
+  --green-bright:#00e676;
+  --green-dim:   rgba(0, 200, 83, 0.12);
+  --green-glow:  rgba(0, 200, 83, 0.25);
 
-  /* Spacing */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-full: 100px;
+  /* ── Bear red */
+  --red:         #ff1744;
+  --red-bright:  #ff4569;
+  --red-dim:     rgba(255, 23, 68, 0.12);
+  --red-glow:    rgba(255, 23, 68, 0.25);
 
-  /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.6);
-  --glow-accent: 0 0 24px rgba(123, 97, 255, 0.3);
+  /* ── Accent blue */
+  --accent:      #2962ff;
+  --accent-dim:  #5c8aff;
+  --accent-glow: rgba(41, 98, 255, 0.22);
+
+  /* ── Amber */
+  --amber:       #ffab00;
+  --amber-dim:   rgba(255, 171, 0, 0.12);
+
+  /* ── Typography */
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ── Spacing / radius */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-full: 999px;
+
+  /* ── Shadows */
+  --shadow-sm:  0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-md:  0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-lg:  0 24px 64px rgba(0, 0, 0, 0.7);
+  --glow-green: 0 0 20px rgba(0, 200, 83, 0.3);
+  --glow-red:   0 0 20px rgba(255, 23, 68, 0.3);
+  --glow-accent: 0 0 20px rgba(41, 98, 255, 0.3);
 }
 
 *, *::before, *::after {
@@ -50,9 +73,7 @@
   padding: 0;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font);
@@ -64,10 +85,7 @@ body {
   overflow-x: hidden;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+a { color: inherit; text-decoration: none; }
 
 button {
   font-family: var(--font);
@@ -76,73 +94,47 @@ button {
   background: none;
 }
 
-input, select, textarea {
-  font-family: var(--font);
-}
+input, select, textarea { font-family: var(--font); }
 
-/* Scrollbar */
+/* ── Scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
 
-/* Utility classes */
+/* ── Utility */
 .glass {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(10, 22, 40, 0.7);
   border: 1px solid var(--border);
   backdrop-filter: blur(20px);
 }
 
-.glass-strong {
-  background: rgba(14, 14, 26, 0.85);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(24px) saturate(180%);
-}
-
 .gradient-text {
-  background: linear-gradient(135deg, #fff 0%, var(--accent-dim) 50%, var(--green) 100%);
+  background: linear-gradient(135deg, #fff 0%, #5c8aff 50%, #00c853 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
+.bull-text  { color: var(--green); }
+.bear-text  { color: var(--red); }
+
 .sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0,0,0,0);
-  white-space: nowrap;
-  border: 0;
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
 }
 
-/* Animations */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+/* ── Keyframes */
+@keyframes fadeUp   { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse    { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+@keyframes spin     { to { transform: rotate(360deg); } }
+@keyframes shimmer  { from { background-position: -200% center; } to { background-position: 200% center; } }
+@keyframes ticker   { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+@keyframes bullglow { 0%,100% { box-shadow: 0 0 12px rgba(0,200,83,0.3); } 50% { box-shadow: 0 0 28px rgba(0,200,83,0.6); } }
+@keyframes bearglow { 0%,100% { box-shadow: 0 0 12px rgba(255,23,68,0.3); }  50% { box-shadow: 0 0 28px rgba(255,23,68,0.6); } }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes shimmer {
-  from { background-position: -200% center; }
-  to { background-position: 200% center; }
-}
-
-.animate-fadeUp { animation: fadeUp 0.6s ease both; }
-.animate-fadeIn { animation: fadeIn 0.4s ease both; }
-.animate-pulse { animation: pulse 2s ease-in-out infinite; }
+.animate-fadeUp  { animation: fadeUp  0.5s ease both; }
+.animate-fadeIn  { animation: fadeIn  0.3s ease both; }
+.animate-pulse   { animation: pulse   2s ease-in-out infinite; }
