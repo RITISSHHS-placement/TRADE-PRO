@@ -7,13 +7,6 @@
     {
       "source": "/api/:path*",
       "destination": "https://tradepro-backend-erfj.onrender.com/api/:path*"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
     }
   ]
 }
