@@ -2,9 +2,17 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
-// Load persisted auth from localStorage
-const savedToken = localStorage.getItem('tp_token')
-const savedUser = localStorage.getItem('tp_user')
+// Load persisted auth from localStorage (guarded for SSR / private mode)
+let savedToken = null
+let savedUser = null
+try {
+  savedToken = localStorage.getItem('tp_token')
+  const rawUser = localStorage.getItem('tp_user')
+  if (rawUser) savedUser = JSON.parse(rawUser)
+} catch {
+  savedToken = null
+  savedUser = null
+}
 
 export const registerUser = createAsyncThunk(
   'auth/register',
@@ -60,7 +68,7 @@ export const refreshToken = createAsyncThunk(
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
-    user: savedUser ? JSON.parse(savedUser) : null,
+    user: savedUser,
     token: savedToken || null,
     loading: false,
     error: null,
