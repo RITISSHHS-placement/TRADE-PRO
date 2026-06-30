@@ -23,7 +23,6 @@ const NAV_ITEMS = [
 export default function DashboardLayout() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const location = useLocation()
   const { user } = useSelector((s) => s.auth)
   const { sidebarCollapsed } = useSelector((s) => s.ui)
   const { setupAutoLogout } = useAutoLogout()
