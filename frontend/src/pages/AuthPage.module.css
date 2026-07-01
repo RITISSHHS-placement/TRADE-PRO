@@ -1,154 +1,101 @@
 /* ═══════════════════════════════════
-   Auth Pages — Bull & Bear Navy Theme
+   Auth Pages — Red/Green on White
 ═══════════════════════════════════ */
-
 .page {
   min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
   padding: 40px 24px;
-  background:
-    radial-gradient(ellipse at 10% 20%, rgba(0,200,83,0.08) 0%, transparent 40%),
-    radial-gradient(ellipse at 90% 80%, rgba(255,23,68,0.07) 0%, transparent 40%),
-    radial-gradient(ellipse at 50% 50%, rgba(41,98,255,0.06) 0%, transparent 60%),
-    linear-gradient(180deg, #060d16 0%, #0a1628 100%);
+  background: linear-gradient(160deg, #f0fdf4 0%, #ffffff 40%, #fff5f5 100%);
   position: relative; overflow: hidden;
 }
-
-/* subtle candlestick grid lines in background */
 .page::before {
   content: '';
   position: absolute; inset: 0; pointer-events: none;
   background-image:
-    repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 60px),
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 60px);
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.025) 0px, rgba(0,0,0,0.025) 1px, transparent 1px, transparent 60px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.025) 0px, rgba(0,0,0,0.025) 1px, transparent 1px, transparent 60px);
 }
 
 .bg, .overlay { position: absolute; inset: 0; pointer-events: none; }
-
 .bg {
   background:
-    radial-gradient(circle at 15% 15%, rgba(0,200,83,0.12), transparent 30%),
-    radial-gradient(circle at 85% 85%, rgba(255,23,68,0.10), transparent 30%);
+    radial-gradient(circle at 10% 15%, rgba(0,168,68,0.08), transparent 35%),
+    radial-gradient(circle at 90% 85%, rgba(220,38,38,0.07), transparent 35%);
 }
-
-.overlay {
-  background: linear-gradient(135deg, rgba(41,98,255,0.04), transparent 50%, rgba(0,200,83,0.03));
-}
+.overlay { background: transparent; }
 
 .container {
-  width: min(1100px, 100%);
-  display: grid;
-  grid-template-columns: 1fr 1.05fr;
-  gap: 28px;
-  position: relative; z-index: 1;
+  width: min(1080px, 100%);
+  display: grid; grid-template-columns: 1fr 1.05fr;
+  gap: 28px; position: relative; z-index: 1;
 }
 
-/* ── Hero card (left) ── */
+/* ── Hero card ── */
 .heroCard {
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: 40px;
-  background: rgba(10,22,40,0.6);
-  backdrop-filter: blur(24px);
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-md);
   display: flex; flex-direction: column; justify-content: center; gap: 20px;
   position: relative; overflow: hidden;
 }
-
-/* Bull/Bear decorative lines */
 .heroCard::before {
   content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, var(--green), var(--accent), var(--red));
+  position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--green), var(--accent-dim), var(--red));
 }
 
-.brand { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; color: var(--white); }
+.brand { font-size: 20px; font-weight: 900; letter-spacing: -0.04em; color: var(--gray-1); }
 .brand span { color: var(--green); }
 
-.heroTitle {
-  font-size: clamp(28px, 3.5vw, 44px);
-  line-height: 1.08; letter-spacing: -0.04em; font-weight: 800;
-}
+.heroTitle { font-size: clamp(26px, 3vw, 40px); line-height: 1.1; letter-spacing: -0.04em; font-weight: 900; color: var(--gray-1); }
+.heroText { color: var(--gray-3); font-size: 14px; line-height: 1.8; }
 
-.heroText { color: var(--gray-2); font-size: 15px; line-height: 1.8; max-width: 480px; }
-
-.quickList { display: grid; gap: 12px; }
-
+.quickList { display: grid; gap: 10px; }
 .quickItem {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 13px 15px; background: var(--bg-alt);
   border-left: 3px solid var(--green);
-  transition: border-color 0.2s;
 }
-.quickItem:nth-child(2) { border-left-color: var(--accent); }
-.quickItem:nth-child(3) { border-left-color: var(--amber); }
+.quickItem:nth-child(2) { border-left-color: var(--amber); }
+.quickItem:nth-child(3) { border-left-color: var(--red); }
+.quickItem strong { display: block; font-size: 13px; font-weight: 700; color: var(--gray-1); margin-bottom: 3px; }
+.quickItem span { font-size: 12px; color: var(--gray-3); line-height: 1.6; }
 
-.quickItem strong {
-  display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; color: var(--white);
-}
-.quickItem span { color: var(--gray-3); font-size: 12px; line-height: 1.6; }
-
-/* ── Auth card (right) ── */
+/* ── Auth card ── */
 .authCard {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 40px;
-  background: rgba(10,22,40,0.8);
-  backdrop-filter: blur(24px);
-  box-shadow: var(--shadow-lg);
-  position: relative; overflow: hidden;
+  border: 1px solid var(--border); border-radius: var(--radius-xl);
+  padding: 40px; background: #ffffff;
+  box-shadow: var(--shadow-lg); position: relative; overflow: hidden;
 }
 .authCard::before {
   content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, var(--accent), var(--green));
+  position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--green), var(--accent-dim));
 }
 
-.cardHeader { margin-bottom: 28px; }
-.cardTitle { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 6px; }
+.cardHeader { margin-bottom: 26px; }
+.cardTitle { font-size: 26px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 6px; color: var(--gray-1); }
 .cardSubtitle { font-size: 14px; color: var(--gray-3); line-height: 1.7; }
 
-.form { display: flex; flex-direction: column; gap: 16px; }
+.form { display: flex; flex-direction: column; gap: 15px; }
 
-.eyeButton {
-  background: none; border: none; cursor: pointer;
-  color: var(--gray-3); display: inline-flex; align-items: center; justify-content: center;
-}
-.eyeButton:hover { color: var(--white); }
+.eyeButton { background: none; border: none; cursor: pointer; color: var(--gray-4); }
+.eyeButton:hover { color: var(--gray-1); }
 
-.formFooter {
-  margin-top: 20px; display: flex; flex-wrap: wrap; gap: 6px;
-  font-size: 13px; color: var(--gray-3);
-}
+.formFooter { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px; color: var(--gray-3); }
+.link { color: var(--green-dark); font-weight: 700; }
+.link:hover { text-decoration: underline; }
 
-.link { color: var(--accent-dim); font-weight: 700; }
-.link:hover { color: var(--white); text-decoration: underline; }
-
-.terms {
-  margin-top: 14px; font-size: 12px; line-height: 1.8; color: var(--gray-4);
-}
-
-/* ── Bull/Bear market indicators at bottom of hero ── */
-.marketIndicators {
-  display: flex; gap: 12px; margin-top: 4px;
-}
-.bullIndicator, .bearIndicator {
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 12px; border-radius: var(--radius-sm);
-  font-size: 12px; font-weight: 700;
-}
-.bullIndicator { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,200,83,0.2); }
-.bearIndicator { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(255,23,68,0.2); }
+.terms { margin-top: 14px; font-size: 12px; line-height: 1.8; color: var(--gray-4); }
 
 @media (max-width: 900px) {
   .container { grid-template-columns: 1fr; }
-  .heroCard { padding: 30px; }
-  .authCard { padding: 30px; }
+  .heroCard, .authCard { padding: 30px; }
 }
-
 @media (max-width: 520px) {
   .page { padding: 24px 16px; }
   .heroCard, .authCard { border-radius: 16px; padding: 24px; }
-  .heroTitle { font-size: 28px; }
 }
