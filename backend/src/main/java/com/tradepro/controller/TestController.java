@@ -13,6 +13,6 @@ public class TestController {
     
     @GetMapping("/health")
     public String health() {
-        return "✅ Backend is healthy and ready to serve requests!";
+        return "✅ Backend v2 is healthy — MarketDataController active!";
     }
 }

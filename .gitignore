@@ -34,3 +34,5 @@ desktop.ini
 # ── Secrets (never commit these) ──
 *.env
 secrets/
+.vercel
+.env*
