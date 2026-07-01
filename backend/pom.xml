@@ -13,7 +13,7 @@
 
   <groupId>com.tradepro</groupId>
   <artifactId>tradepro-backend</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <name>TradePro Backend</name>
   <description>TradePro Trading Platform Backend</description>
 
