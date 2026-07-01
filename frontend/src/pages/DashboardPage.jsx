@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
-import { TrendingUp, Zap, Shield, Activity, RefreshCw, Clock } from 'lucide-react'
+import { TrendingUp, Zap, Shield, Activity, RefreshCw, Clock, ArrowUpRight, ArrowDownRight } from 'lucide-react'
 import { useDispatch } from 'react-redux'
 import { setKillSwitchModal } from '../store/slices/uiSlice'
 import { useTrades, useMarketData } from '../hooks'
@@ -14,190 +13,285 @@ import { SYMBOL_LABELS } from '../services/marketData'
 import styles from './DashboardPage.module.css'
 
 const STATUS_COLORS = {
-  PENDING: 'warning',
-  COMPLETE: 'success',
-  CANCELLED: 'default',
-  REJECTED: 'danger',
-  PARTIAL: 'accent',
+  PENDING: 'warning', COMPLETE: 'success',
+  CANCELLED: 'default', REJECTED: 'danger', PARTIAL: 'accent',
 }
 
 const CHART_SYMBOL = '^NSEI'
-const WATCHLIST_SYMBOLS = ['RELIANCE.NS', 'INFY.NS', 'HDFCBANK.NS', 'TCS.NS', 'WIPRO.NS', 'ICICIBANK.NS', 'SBIN.NS', 'BAJFINANCE.NS']
+const TICKER_SYMBOLS = ['^NSEI', '^BSESN', '^NSEBANK', 'RELIANCE.NS', 'TCS.NS', 'INFY.NS', 'HDFCBANK.NS', 'WIPRO.NS', 'ICICIBANK.NS']
+const WATCHLIST_SYMBOLS = [
+  'RELIANCE.NS', 'TCS.NS', 'INFY.NS', 'HDFCBANK.NS',
+  'WIPRO.NS', 'ICICIBANK.NS', 'SBIN.NS', 'BAJFINANCE.NS',
+  'BHARTIARTL.NS', 'HINDUNILVR.NS', 'LT.NS', 'ITC.NS',
+]
 
-function formatTime(ts) {
-  if (!ts) return '--'
-  const d = new Date(ts)
-  return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-}
-
-function fmtVolume(n) {
-  if (!n) return '--'
-  if (n >= 1e7) return `${(n / 1e7).toFixed(1)}Cr`
-  if (n >= 1e5) return `${(n / 1e5).toFixed(1)}L`
+const fmt2  = (n) => n?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '—'
+const fmt0  = (n) => n?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) ?? '—'
+const fmtVol = (n) => {
+  if (!n) return '—'
+  if (n >= 1e7) return `${(n / 1e7).toFixed(2)}Cr`
+  if (n >= 1e5) return `${(n / 1e5).toFixed(2)}L`
   return n.toLocaleString('en-IN')
 }
+const fmtTime = (ts) =>
+  ts ? new Date(ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--'
 
+/* ─── Live Stock Row ─────────────────────────────── */
+function StockRow({ sym, quote, onSelect, isSelected }) {
+  const up = (quote?.changePct ?? 0) >= 0
+  const label = SYMBOL_LABELS[sym] || sym
+
+  return (
+    <div
+      className={`${styles.stockRow} ${isSelected ? styles.stockRowActive : ''}`}
+      onClick={() => onSelect(sym)}
+      role="button" tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onSelect(sym)}
+    >
+      {/* Symbol */}
+      <div className={styles.srSym}>
+        <span className={styles.srName}>{label}</span>
+        <span className={styles.srCode}>{sym.replace('.NS','').replace('.BS','')}</span>
+      </div>
+
+      {/* Live price */}
+      <div className={styles.srPrice}>
+        {quote ? `₹${fmt2(quote.price)}` : <span className={styles.srLoading}>—</span>}
+      </div>
+
+      {/* Change */}
+      <div className={up ? styles.srUp : styles.srDown}>
+        {quote ? (
+          <>
+            {up ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
+            {up ? '+' : ''}{fmt2(quote.change)}
+            <span>({up ? '+' : ''}{quote.changePct.toFixed(2)}%)</span>
+          </>
+        ) : '—'}
+      </div>
+
+      {/* OHLV */}
+      <div className={styles.srOhlv}>
+        {quote ? (
+          <>
+            <span>O <b>{fmt2(quote.open)}</b></span>
+            <span>H <b style={{ color: 'var(--green)' }}>{fmt2(quote.high)}</b></span>
+            <span>L <b style={{ color: 'var(--red)' }}>{fmt2(quote.low)}</b></span>
+            <span>V <b>{fmtVol(quote.volume)}</b></span>
+          </>
+        ) : '—'}
+      </div>
+
+      {/* Prev close */}
+      <div className={styles.srPrev}>
+        {quote ? `₹${fmt2(quote.prevClose)}` : '—'}
+      </div>
+    </div>
+  )
+}
+
+/* ─── Charges Section ───────────────────────────── */
+function ChargesSection() {
+  const charges = [
+    {
+      amount: '0',
+      title: 'Free equity delivery',
+      desc: 'All equity delivery investments (NSE, BSE), are absolutely free — ₹0 brokerage.',
+      color: '#f59e0b',
+    },
+    {
+      amount: '20',
+      title: 'Intraday and F&O trades',
+      desc: 'Flat ₹20 or 0.03% (whichever is lower) per executed order on intraday trades across equity, currency, and commodity trades.',
+      color: '#f59e0b',
+      highlight: true,
+    },
+    {
+      amount: '0',
+      title: 'Free direct MF',
+      desc: 'All direct mutual fund investments are absolutely free — ₹0 commissions & DP charges.',
+      color: '#f59e0b',
+    },
+  ]
+
+  return (
+    <Card className={styles.chargesCard}>
+      <div className={styles.chargesHeader}>
+        <h2 className={styles.chargesTitle}>Charges</h2>
+        <p className={styles.chargesSub}>List of all charges and taxes</p>
+      </div>
+      <div className={styles.chargesGrid}>
+        {charges.map((c) => (
+          <div key={c.title} className={`${styles.chargeItem} ${c.highlight ? styles.chargeHighlight : ''}`}>
+            <div className={styles.chargeBig}>
+              <span className={styles.chargeRupee}>₹</span>
+              <span className={styles.chargeNum}>{c.amount}</span>
+            </div>
+            <h3 className={styles.chargeLabel}>{c.title}</h3>
+            <p className={styles.chargeDesc}>{c.desc}</p>
+          </div>
+        ))}
+      </div>
+    </Card>
+  )
+}
+
+/* ─── Main Dashboard ────────────────────────────── */
 export default function DashboardPage() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { user } = useSelector((s) => s.auth)
   const { trades, loading: tradesLoading, loadTrades } = useTrades()
   const {
-    quotes,
-    chart,
-    chartLoading,
-    loading: quotesLoading,
-    lastUpdated,
-    error: marketError,
-    refresh,
-    changeChartSymbol,
+    quotes, chart, chartLoading,
+    loading: quotesLoading, lastUpdated, error: marketError,
+    refresh, changeChartSymbol,
   } = useMarketData({ intervalMs: 5000 })
 
   const [chartSym, setChartSym] = useState(CHART_SYMBOL)
 
   useEffect(() => { loadTrades() }, [])
 
-  const handleChartSymChange = (sym) => {
+  const handleSelect = (sym) => {
     setChartSym(sym)
     changeChartSymbol(sym)
   }
 
   const totalPnl = trades.reduce((acc, t) => acc + (t.pnl || 0), 0)
   const completedTrades = trades.filter((t) => t.status === 'COMPLETE').length
-  const nifty = quotes['^NSEI']
+  const nifty  = quotes['^NSEI']
   const sensex = quotes['^BSESN']
+  const bank   = quotes['^NSEBANK']
   const chartQuote = quotes[chartSym]
-  const chartUp = (chartQuote?.changePct ?? 0) >= 0
-  const chartData = chart.length >= 2 ? chart : []
+  const chartUp    = (chartQuote?.changePct ?? 0) >= 0
+  const chartData  = chart.length >= 2 ? chart : []
 
   return (
-    <motion.div className={styles.page} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
-      <motion.div className={styles.tickerBar} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
-        {['^NSEI', '^BSESN', 'RELIANCE.NS', 'INFY.NS', 'TCS.NS', 'HDFCBANK.NS', 'WIPRO.NS'].map((sym) => {
+    <div className={styles.page}>
+
+      {/* ── Ticker bar ── */}
+      <div className={styles.tickerBar}>
+        {TICKER_SYMBOLS.map((sym) => {
           const q = quotes[sym]
-          if (!q) return (
-            <div key={sym} className={styles.tickerItem}>
-              <span className={styles.tickerSym}>{SYMBOL_LABELS[sym] || sym}</span>
-              <span className={styles.tickerVal}>—</span>
-            </div>
-          )
-          const up = q.changePct >= 0
+          const up = (q?.changePct ?? 0) >= 0
           return (
-            <div key={sym} className={styles.tickerItem}>
+            <div key={sym} className={styles.tickerItem} onClick={() => handleSelect(sym)}>
               <span className={styles.tickerSym}>{SYMBOL_LABELS[sym] || sym}</span>
-              <span className={styles.tickerVal}>₹{q.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              <span className={up ? styles.tickerUp : styles.tickerDown}>{up ? '▲' : '▼'} {Math.abs(q.changePct).toFixed(2)}%</span>
+              {q ? (
+                <>
+                  <span className={styles.tickerVal}>₹{fmt2(q.price)}</span>
+                  <span className={up ? styles.tickerUp : styles.tickerDown}>
+                    {up ? '▲' : '▼'} {Math.abs(q.changePct).toFixed(2)}%
+                  </span>
+                </>
+              ) : <span className={styles.tickerVal}>—</span>}
             </div>
           )
         })}
-
         <div className={styles.tickerRight}>
-          <span className={styles.tickerTime}><Clock size={11} /> {formatTime(lastUpdated)}</span>
-          <button className={styles.refreshBtn} onClick={refresh} disabled={quotesLoading} title="Refresh market data">
-            <RefreshCw size={13} className={quotesLoading ? styles.spinning : ''} />
+          <span className={styles.tickerTime}><Clock size={11} /> {fmtTime(lastUpdated)}</span>
+          <button className={styles.refreshBtn} onClick={refresh} disabled={quotesLoading}>
+            <RefreshCw size={12} className={quotesLoading ? styles.spinning : ''} />
           </button>
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div className={styles.header} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12, duration: 0.5 }}>
+      {/* ── Header ── */}
+      <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Good morning, {user?.name?.split(' ')[0]} 👋</h1>
-          <p className={styles.sub}>A premium view of the markets and your positions.</p>
+          <p className={styles.sub}>Here's your live market overview and portfolio summary.</p>
         </div>
         <button className={styles.tradeBtn} onClick={() => navigate('/dashboard/trade')}>
-          <TrendingUp size={16} /> Place Order
+          <TrendingUp size={15} /> Place Order
         </button>
-      </motion.div>
+      </div>
 
-      <motion.div className={styles.statsGrid} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.5 }}>
-        <Stat
-          label="NIFTY 50"
-          value={nifty ? `₹${nifty.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
+      {/* ── Index Stats ── */}
+      <div className={styles.statsGrid}>
+        <Stat label="NIFTY 50"
+          value={nifty ? `₹${fmt2(nifty.price)}` : '—'}
           change={nifty ? `${nifty.changePct >= 0 ? '+' : ''}${nifty.changePct.toFixed(2)}% today` : 'Loading...'}
           changeType={nifty ? (nifty.changePct >= 0 ? 'up' : 'down') : 'up'}
         />
-        <Stat
-          label="SENSEX"
-          value={sensex ? `₹${sensex.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
+        <Stat label="SENSEX"
+          value={sensex ? `₹${fmt2(sensex.price)}` : '—'}
           change={sensex ? `${sensex.changePct >= 0 ? '+' : ''}${sensex.changePct.toFixed(2)}% today` : 'Loading...'}
           changeType={sensex ? (sensex.changePct >= 0 ? 'up' : 'down') : 'up'}
         />
-        <Stat
-          label="Unrealised P&L"
+        <Stat label="BANK NIFTY"
+          value={bank ? `₹${fmt2(bank.price)}` : '—'}
+          change={bank ? `${bank.changePct >= 0 ? '+' : ''}${bank.changePct.toFixed(2)}% today` : 'Loading...'}
+          changeType={bank ? (bank.changePct >= 0 ? 'up' : 'down') : 'up'}
+        />
+        <Stat label="Unrealised P&L"
           value={`${totalPnl >= 0 ? '+' : ''}₹${Math.abs(totalPnl).toLocaleString('en-IN')}`}
           change={`${completedTrades} completed trades`}
           changeType={totalPnl >= 0 ? 'up' : 'down'}
         />
-        <Stat
-          label="Margin Used"
-          value="64%"
-          change="₹1.2L free"
-          changeType="up"
-        />
-      </motion.div>
+      </div>
 
+      {/* ── Chart + Quick Actions ── */}
       <div className={styles.mainGrid}>
         <Card className={styles.chartCard}>
           <div className={styles.chartHeader}>
             <div>
               <div className={styles.chartSymPicker}>
-                {['^NSEI', '^BSESN', 'RELIANCE.NS', 'TCS.NS', 'INFY.NS'].map((sym) => (
-                  <button
-                    key={sym}
+                {['^NSEI', '^BSESN', '^NSEBANK', 'RELIANCE.NS', 'TCS.NS', 'INFY.NS'].map((sym) => (
+                  <button key={sym}
                     className={`${styles.chartSymBtn} ${chartSym === sym ? styles.chartSymActive : ''}`}
-                    onClick={() => handleChartSymChange(sym)}
+                    onClick={() => handleSelect(sym)}
                   >
                     {SYMBOL_LABELS[sym] || sym}
                   </button>
                 ))}
               </div>
               <div className={styles.chartPrice}>
-                {chartQuote ? `₹${chartQuote.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
+                {chartQuote ? `₹${fmt2(chartQuote.price)}` : '—'}
                 {chartQuote && (
                   <span className={chartUp ? styles.chartChangeUp : styles.chartChangeDown}>
-                    {chartUp ? '↑' : '↓'} {Math.abs(chartQuote.changePct).toFixed(2)}%
+                    {chartUp ? '↑' : '↓'} {chartUp ? '+' : ''}{fmt2(chartQuote.change)} ({Math.abs(chartQuote.changePct).toFixed(2)}%)
                   </span>
                 )}
               </div>
               {chartQuote && (
                 <div className={styles.chartMeta}>
-                  <span>O: ₹{chartQuote.open.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
-                  <span>H: ₹{chartQuote.high.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
-                  <span>L: ₹{chartQuote.low.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
-                  <span>Vol: {fmtVolume(chartQuote.volume)}</span>
+                  <span>Open <b>₹{fmt2(chartQuote.open)}</b></span>
+                  <span>High <b style={{ color: 'var(--green)' }}>₹{fmt2(chartQuote.high)}</b></span>
+                  <span>Low <b style={{ color: 'var(--red)' }}>₹{fmt2(chartQuote.low)}</b></span>
+                  <span>Prev Close <b>₹{fmt2(chartQuote.prevClose)}</b></span>
+                  <span>Volume <b>{fmtVol(chartQuote.volume)}</b></span>
                 </div>
               )}
             </div>
-            <div className={styles.liveTag}>
-              <span className={styles.liveDot} /> LIVE
-            </div>
+            <div className={styles.liveTag}><span className={styles.liveDot} />LIVE</div>
           </div>
 
           {chartLoading && chartData.length === 0 ? (
-            <div className={styles.chartLoader}>
-              <Spinner size={28} />
-              <span>Loading chart data…</span>
-            </div>
+            <div className={styles.chartLoader}><Spinner size={24} /><span>Loading chart…</span></div>
           ) : chartData.length === 0 ? (
-            <div className={styles.chartLoader}>
-              <span className={styles.chartError}>
-                {marketError ? 'Market data unavailable.' : 'Chart data loading…'}
-              </span>
-            </div>
+            <div className={styles.chartLoader}><span style={{ color: 'var(--gray-3)', fontSize: 13 }}>{marketError ? 'Data unavailable.' : 'Loading…'}</span></div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 8, right: 0, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={chartUp ? '#00d084' : '#ff4d6a'} stopOpacity={0.22} />
-                    <stop offset="95%" stopColor={chartUp ? '#00d084' : '#ff4d6a'} stopOpacity={0} />
+                  <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor={chartUp ? '#00a844' : '#dc2626'} stopOpacity={0.15} />
+                    <stop offset="95%" stopColor={chartUp ? '#00a844' : '#dc2626'} stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                <XAxis dataKey="time" tick={{ fill: '#80809a', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                <YAxis tick={{ fill: '#80809a', fontSize: 11 }} axisLine={false} tickLine={false} domain={['auto', 'auto']} tickFormatter={(v) => v.toLocaleString('en-IN')} />
-                <Tooltip contentStyle={{ background: '#0f111f', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, color: '#fff', fontSize: 13 }} cursor={{ stroke: 'rgba(255,255,255,0.12)' }} formatter={(v) => [`₹${v.toLocaleString('en-IN')}`, SYMBOL_LABELS[chartSym] || chartSym]} />
-                <Area type="monotone" dataKey="value" stroke={chartUp ? '#00d084' : '#ff4d6a'} strokeWidth={2} fill="url(#chartGrad)" dot={false} isAnimationActive={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
+                <XAxis dataKey="time" tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={false} tickLine={false} domain={['auto', 'auto']} tickFormatter={fmt0} />
+                <Tooltip
+                  contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, color: '#111', fontSize: 13, boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}
+                  cursor={{ stroke: 'rgba(0,0,0,0.1)' }}
+                  formatter={(v) => [`₹${fmt2(v)}`, SYMBOL_LABELS[chartSym] || chartSym]}
+                />
+                <Area type="monotone" dataKey="value"
+                  stroke={chartUp ? '#00a844' : '#dc2626'} strokeWidth={2}
+                  fill="url(#cg)" dot={false} isAnimationActive={false}
+                />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -205,67 +299,64 @@ export default function DashboardPage() {
 
         <div className={styles.quickCards}>
           <Card className={styles.quickCard} onClick={() => navigate('/dashboard/security')}>
-            <div className={styles.quickIcon} style={{ background: 'rgba(123,97,255,0.12)', color: '#a390ff' }}><Shield size={20} /></div>
+            <div className={styles.quickIcon} style={{ background: '#ede9fe', color: '#7c3aed' }}><Shield size={20} /></div>
             <div className={styles.quickTitle}>Security</div>
             <div className={styles.quickDesc}>2FA, TOTP, device management</div>
           </Card>
           <Card className={styles.quickCard} onClick={() => navigate('/dashboard/settings')}>
-            <div className={styles.quickIcon} style={{ background: 'rgba(247,168,65,0.12)', color: '#f7a841' }}><Activity size={20} /></div>
+            <div className={styles.quickIcon} style={{ background: '#fef3c7', color: '#d97706' }}><Activity size={20} /></div>
             <div className={styles.quickTitle}>Risk Controls</div>
             <div className={styles.quickDesc}>Kill switch, limits, watchdogs</div>
           </Card>
           <Card className={`${styles.quickCard} ${styles.killCard}`} onClick={() => dispatch(setKillSwitchModal(true))}>
-            <div className={styles.quickIcon} style={{ background: 'rgba(255,77,106,0.14)', color: '#ff4d6a' }}><Zap size={20} /></div>
+            <div className={styles.quickIcon} style={{ background: 'var(--red-dim)', color: 'var(--red-dark)' }}><Zap size={20} /></div>
             <div className={styles.quickTitle}>Kill Switch</div>
             <div className={styles.quickDesc}>Pause trading instantly</div>
           </Card>
         </div>
       </div>
 
-      <Card className={styles.watchlistCard}>
-        <div className={styles.tradesHeader}>
-          <h2 className={styles.tradesTitle}>Market Watchlist</h2>
+      {/* ── Live Stocks Table ── */}
+      <Card className={styles.stocksCard}>
+        <div className={styles.stocksHeader}>
+          <div>
+            <h2 className={styles.stocksTitle}>Live Market Watch</h2>
+            <p className={styles.stocksSub}>Real-time prices · Refreshed every 5 seconds</p>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {quotesLoading && <Spinner size={14} />}
-            <span className={styles.watchUpdate}>Updated {formatTime(lastUpdated)}</span>
+            <span className={styles.watchUpdate}>{fmtTime(lastUpdated)}</span>
+            <button className={styles.refreshBtn} onClick={refresh} disabled={quotesLoading}>
+              <RefreshCw size={12} className={quotesLoading ? styles.spinning : ''} />
+            </button>
           </div>
         </div>
 
-        <div className={styles.watchGrid}>
-          {WATCHLIST_SYMBOLS.map((sym) => {
-            const q = quotes[sym]
-            const up = (q?.changePct ?? 0) >= 0
-            return (
-              <div
-                key={sym}
-                className={styles.watchCard}
-                onClick={() => handleChartSymChange(sym)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && handleChartSymChange(sym)}
-                aria-label={`View ${SYMBOL_LABELS[sym] || sym} chart`}
-              >
-                <div className={styles.watchTop}>
-                  <span className={styles.watchSym}>{SYMBOL_LABELS[sym] || sym}</span>
-                  <span className={up ? styles.watchBadgeUp : styles.watchBadgeDown}>
-                    {up ? '▲' : '▼'} {q ? Math.abs(q.changePct).toFixed(2) : '--'}%
-                  </span>
-                </div>
-                <div className={styles.watchPrice}>
-                  {q ? `₹${q.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : <span className={styles.watchLoading}>Loading…</span>}
-                </div>
-                {q && (
-                  <div className={styles.watchMeta}>
-                    <span>H {q.high.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-                    <span>L {q.low.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-                  </div>
-                )}
-              </div>
-            )
-          })}
+        {/* Table head */}
+        <div className={styles.stockTableHead}>
+          <span>Symbol</span>
+          <span>LTP</span>
+          <span>Change</span>
+          <span>Open / High / Low / Volume</span>
+          <span>Prev Close</span>
+        </div>
+
+        <div className={styles.stockTableBody}>
+          {WATCHLIST_SYMBOLS.map((sym) => (
+            <StockRow
+              key={sym} sym={sym}
+              quote={quotes[sym]}
+              onSelect={handleSelect}
+              isSelected={chartSym === sym}
+            />
+          ))}
         </div>
       </Card>
 
+      {/* ── Charges ── */}
+      <ChargesSection />
+
+      {/* ── Recent Orders ── */}
       <Card className={styles.tradesCard}>
         <div className={styles.tradesHeader}>
           <h2 className={styles.tradesTitle}>Recent Orders</h2>
@@ -279,12 +370,8 @@ export default function DashboardPage() {
         ) : (
           <div className={styles.tradesTable}>
             <div className={styles.tableHeader}>
-              <span>Symbol</span>
-              <span>Type</span>
-              <span>Qty</span>
-              <span>Price</span>
-              <span>Status</span>
-              <span>P&L</span>
+              <span>Symbol</span><span>Type</span><span>Qty</span>
+              <span>Price</span><span>Status</span><span>P&L</span>
             </div>
             {trades.slice(0, 8).map((trade) => (
               <div key={trade.id} className={styles.tableRow}>
@@ -296,12 +383,14 @@ export default function DashboardPage() {
                 <div className={styles.qty}>{trade.quantity}</div>
                 <div className={styles.price}>₹{(trade.executedPrice || trade.price || 0).toLocaleString('en-IN')}</div>
                 <div><Badge variant={STATUS_COLORS[trade.status] || 'default'}>{trade.status}</Badge></div>
-                <div className={trade.pnl >= 0 ? styles.pnlUp : styles.pnlDown}>{trade.pnl >= 0 ? '+' : ''}₹{(trade.pnl || 0).toLocaleString('en-IN')}</div>
+                <div className={trade.pnl >= 0 ? styles.pnlUp : styles.pnlDown}>
+                  {trade.pnl >= 0 ? '+' : ''}₹{(trade.pnl || 0).toLocaleString('en-IN')}
+                </div>
               </div>
             ))}
           </div>
         )}
       </Card>
-    </motion.div>
+    </div>
   )
 }
