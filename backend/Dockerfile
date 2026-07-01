@@ -5,6 +5,7 @@ ENV MAVEN_OPTS="-Xmx512m -XX:MaxRAMPercentage=50.0"
 COPY pom.xml .
 RUN mvn dependency:go-offline -q
 COPY src ./src
+# Cache bust: v2 MarketDataController
 RUN mvn clean package -DskipTests -q
 
 # ---- Run Stage ----
