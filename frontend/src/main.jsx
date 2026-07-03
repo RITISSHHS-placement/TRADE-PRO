@@ -9,9 +9,22 @@ import { injectStore, injectActions } from './services/api'
 import { logoutUser, refreshToken } from './store/slices/authSlice'
 import './assets/styles/global.css'
 
-// Break circular dependency — inject store after it's created
 injectStore(store)
 injectActions(logoutUser, refreshToken)
+
+// Apply saved theme to <html> on load
+const applyTheme = (theme) => {
+  document.documentElement.setAttribute('data-theme', theme)
+}
+try {
+  applyTheme(localStorage.getItem('tp-theme') || 'light')
+} catch { applyTheme('light') }
+
+// Keep theme in sync with Redux store
+store.subscribe(() => {
+  const theme = store.getState().ui?.theme || 'light'
+  applyTheme(theme)
+})
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null } }

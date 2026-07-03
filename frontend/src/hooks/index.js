@@ -120,41 +120,51 @@ export function useAutoLogout() {
 
 // ---- useMarketData ----
 // Polls live market quotes and intraday chart data at a configurable interval.
-// Default interval: 5 seconds. Pass intervalMs to override.
+// Uses stable refs so intervals never restart on re-render.
 export function useMarketData({ symbols = DEFAULT_SYMBOLS, intervalMs = 5000 } = {}) {
   const dispatch = useDispatch()
   const { quotes, charts, chartSymbol, loading, chartLoading, lastUpdated, error } =
     useSelector((state) => state.market)
 
-  const intervalRef = useRef(null)
-  const chartIntervalRef = useRef(null)
+  // Stable refs so useEffect deps never change
+  const symbolsRef    = useRef(symbols)
+  const intervalMsRef = useRef(intervalMs)
+  const quoteTimerRef = useRef(null)
+  const chartTimerRef = useRef(null)
+  const mountedRef    = useRef(false)
 
-  const refresh = useCallback((syms) => {
-    dispatch(loadQuotes(syms || symbols))
-  }, [dispatch, symbols])
+  const refresh = useCallback(() => {
+    dispatch(loadQuotes(symbolsRef.current))
+  }, [dispatch])
 
   const changeChartSymbol = useCallback((sym) => {
     dispatch(setChartSymbol(sym))
-    if (!charts[sym]) dispatch(loadIntradayChart(sym))
-  }, [dispatch, charts])
+    dispatch(loadIntradayChart(sym))
+  }, [dispatch])
 
   useEffect(() => {
-    dispatch(loadQuotes(symbols))
-    intervalRef.current = setInterval(() => {
-      dispatch(loadQuotes(symbols))
-    }, intervalMs)
+    if (mountedRef.current) return   // only run once
+    mountedRef.current = true
 
-    return () => clearInterval(intervalRef.current)
-  }, [dispatch, symbols, intervalMs])
-
-  useEffect(() => {
+    // Initial load
+    dispatch(loadQuotes(symbolsRef.current))
     dispatch(loadIntradayChart(chartSymbol))
-    chartIntervalRef.current = setInterval(() => {
+
+    // Quote polling — 5s
+    quoteTimerRef.current = setInterval(() => {
+      dispatch(loadQuotes(symbolsRef.current))
+    }, intervalMsRef.current)
+
+    // Chart refresh — 60s
+    chartTimerRef.current = setInterval(() => {
       dispatch(loadIntradayChart(chartSymbol))
     }, 60_000)
 
-    return () => clearInterval(chartIntervalRef.current)
-  }, [dispatch, chartSymbol])
+    return () => {
+      clearInterval(quoteTimerRef.current)
+      clearInterval(chartTimerRef.current)
+    }
+  }, []) // empty deps — truly runs once
 
   const chart = charts[chartSymbol] || []
 

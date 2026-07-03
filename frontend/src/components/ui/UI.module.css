@@ -94,7 +94,6 @@
   position: relative; overflow: hidden;
 }
 .cardGlow { box-shadow: var(--glow-green); border-color: var(--border-green); }
-
 /* ── Badge ── */
 .badge {
   display: inline-flex; align-items: center;

@@ -3,29 +3,34 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   LayoutDashboard, TrendingUp, Briefcase, Settings,
-  Shield, LogOut, Zap, ChevronLeft, Menu, Bell, BarChart2
+  Shield, LogOut, Zap, ChevronLeft, Menu, Bell,
+  BarChart2, IndianRupee, Sun, Moon, PieChart,
 } from 'lucide-react'
 import { logoutUser } from '../../store/slices/authSlice'
-import { toggleSidebar } from '../../store/slices/uiSlice'
+import { toggleSidebar, toggleTheme } from '../../store/slices/uiSlice'
 import KillSwitchModal from '../ui/KillSwitchModal'
 import { useAutoLogout } from '../../hooks'
 import styles from './DashboardLayout.module.css'
 
+// Pricing moved to top of nav (left side = top in sidebar)
 const NAV_ITEMS = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', end: true },
-  { to: '/dashboard/trade', icon: TrendingUp, label: 'Trade' },
-  { to: '/dashboard/market', icon: BarChart2, label: 'Markets' },
-  { to: '/dashboard/portfolio', icon: Briefcase, label: 'Portfolio' },
-  { to: '/dashboard/security', icon: Shield, label: 'Security' },
-  { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
+  { to: '/dashboard',           icon: IndianRupee,     label: 'Pricing',     end: true, note: 'Left' },
+  { to: '/dashboard/overview',  icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/dashboard/trade',     icon: TrendingUp,      label: 'Trade' },
+  { to: '/dashboard/market',    icon: BarChart2,       label: 'Markets' },
+  { to: '/dashboard/mf',        icon: PieChart,        label: 'Mutual Funds' },
+  { to: '/dashboard/portfolio', icon: Briefcase,       label: 'Portfolio' },
+  { to: '/dashboard/security',  icon: Shield,          label: 'Security' },
+  { to: '/dashboard/settings',  icon: Settings,        label: 'Settings' },
 ]
 
 export default function DashboardLayout() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const { user } = useSelector((s) => s.auth)
-  const { sidebarCollapsed } = useSelector((s) => s.ui)
-  const { setupAutoLogout } = useAutoLogout()
+  const { user }             = useSelector((s) => s.auth)
+  const { sidebarCollapsed, theme } = useSelector((s) => s.ui)
+  const { setupAutoLogout }  = useAutoLogout()
+  const isDark = theme === 'dark'
 
   useEffect(() => {
     const cleanup = setupAutoLogout()
@@ -39,7 +44,7 @@ export default function DashboardLayout() {
 
   return (
     <div className={styles.layout}>
-      {/* Sidebar */}
+      {/* ── Sidebar ── */}
       <aside className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ''}`}>
         <div className={styles.sidebarTop}>
           <div className={styles.logo}>
@@ -72,6 +77,16 @@ export default function DashboardLayout() {
         </nav>
 
         <div className={styles.sidebarBottom}>
+          {/* Dark / Light toggle */}
+          <button
+            className={styles.themeBtn}
+            onClick={() => dispatch(toggleTheme())}
+            aria-label="Toggle theme"
+          >
+            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+            {!sidebarCollapsed && <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
+          </button>
+
           {/* Kill Switch */}
           <button
             className={styles.killSwitch}
@@ -101,9 +116,8 @@ export default function DashboardLayout() {
         </div>
       </aside>
 
-      {/* Main */}
+      {/* ── Main ── */}
       <div className={styles.main}>
-        {/* Top Bar */}
         <header className={styles.topbar}>
           <div className={styles.topbarLeft}>
             <div className={styles.marketStatus}>
@@ -115,13 +129,20 @@ export default function DashboardLayout() {
             <div className={styles.kycBadge} data-status={user?.kycStatus?.toLowerCase()}>
               KYC: {user?.kycStatus || 'PENDING'}
             </div>
+            <button
+              className={styles.iconBtn}
+              onClick={() => dispatch(toggleTheme())}
+              aria-label="Toggle theme"
+              title={isDark ? 'Switch to Light' : 'Switch to Dark'}
+            >
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             <button className={styles.iconBtn}>
               <Bell size={18} />
             </button>
           </div>
         </header>
 
-        {/* Page Content */}
         <main className={styles.content}>
           <Outlet />
         </main>
