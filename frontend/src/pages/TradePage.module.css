@@ -2,7 +2,26 @@
 .grid { display: grid; grid-template-columns: 400px 1fr; gap: 18px; align-items: start; }
 .orderCard, .watchCard, .recentCard { overflow: hidden; }
 .cardHeader { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border); background: var(--white); }
-.cardTitle { font-size: 14px; font-weight: 800; color: var(--gray-1); }
+.cardTitle { font-size: 14px; font-weight: 800; color: var(--gray-1); margin-bottom: 4px; }
+.marketMeta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; color: var(--gray-4); }
+.marketTime { color: var(--gray-4); }
+.liveBadge { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--green-dark); }
+.liveDot { width: 6px; height: 6px; border-radius: 999px; background: var(--green); animation: pulse 1.5s ease-in-out infinite; }
+.marketTime { color: var(--gray-4); }
+.watchHeaderRight { display: flex; align-items: center; gap: 10px; }
+.refreshBtn {
+  padding: 7px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--gray-4);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.refreshBtn:hover { background: var(--bg-alt); }
+.refreshBtn:disabled { opacity: 0.45; cursor: default; }
 .segmentToggle { display: flex; background: var(--bg-2); border-radius: var(--radius-sm); padding: 3px; gap: 2px; }
 .segBtn { padding: 5px 12px; border-radius: 5px; font-size: 11px; font-weight: 700; color: var(--gray-3); transition: all 0.12s; }
 .segActive { background: var(--white); color: var(--gray-1); box-shadow: var(--shadow-sm); }

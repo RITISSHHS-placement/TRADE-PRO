@@ -6,6 +6,9 @@
 .sub { font-size: 13px; color: var(--gray-3); }
 .headerRight { display: flex; align-items: center; gap: 10px; }
 .updatedTime { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gray-3); }
+.liveInfo { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.liveStamp { font-size: 12px; color: var(--gray-3); }
+.liveBadge { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--green); }
 .refreshBtn {
   display: flex; align-items: center; gap: 6px;
   padding: 7px 14px; border-radius: var(--radius-md);

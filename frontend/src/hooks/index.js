@@ -127,6 +127,7 @@ export function useMarketData({ symbols = DEFAULT_SYMBOLS, intervalMs = 5000 } =
     useSelector((state) => state.market)
 
   const intervalRef = useRef(null)
+  const chartIntervalRef = useRef(null)
 
   const refresh = useCallback((syms) => {
     dispatch(loadQuotes(syms || symbols))
@@ -139,21 +140,21 @@ export function useMarketData({ symbols = DEFAULT_SYMBOLS, intervalMs = 5000 } =
 
   useEffect(() => {
     dispatch(loadQuotes(symbols))
-    dispatch(loadIntradayChart(chartSymbol))
-
     intervalRef.current = setInterval(() => {
       dispatch(loadQuotes(symbols))
     }, intervalMs)
 
-    const chartInterval = setInterval(() => {
+    return () => clearInterval(intervalRef.current)
+  }, [dispatch, symbols, intervalMs])
+
+  useEffect(() => {
+    dispatch(loadIntradayChart(chartSymbol))
+    chartIntervalRef.current = setInterval(() => {
       dispatch(loadIntradayChart(chartSymbol))
     }, 60_000)
 
-    return () => {
-      clearInterval(intervalRef.current)
-      clearInterval(chartInterval)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    return () => clearInterval(chartIntervalRef.current)
+  }, [dispatch, chartSymbol])
 
   const chart = charts[chartSymbol] || []
 

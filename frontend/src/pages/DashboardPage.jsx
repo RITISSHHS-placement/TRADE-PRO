@@ -162,9 +162,26 @@ export default function DashboardPage() {
   const nifty  = quotes['^NSEI']
   const sensex = quotes['^BSESN']
   const bank   = quotes['^NSEBANK']
+  const marketState = nifty?.marketState || 'CLOSED'
+  const marketStatusLabel = marketState === 'REGULAR' ? 'Market Open' : 'Market Closed'
+  const marketStatusClass = marketState === 'REGULAR' ? styles.statusOpen : styles.statusClosed
   const chartQuote = quotes[chartSym]
   const chartUp    = (chartQuote?.changePct ?? 0) >= 0
   const chartData  = chart.length >= 2 ? chart : []
+
+  const tickerQuoteList = TICKER_SYMBOLS
+    .map((sym) => ({ sym, quote: quotes[sym] }))
+    .filter((item) => item.quote && typeof item.quote.changePct === 'number')
+
+  const topGainer = tickerQuoteList.reduce((best, current) => {
+    if (!best || current.quote.changePct > best.quote.changePct) return current
+    return best
+  }, null)
+
+  const topLoser = tickerQuoteList.reduce((worst, current) => {
+    if (!worst || current.quote.changePct < worst.quote.changePct) return current
+    return worst
+  }, null)
 
   return (
     <div className={styles.page}>
@@ -201,6 +218,11 @@ export default function DashboardPage() {
         <div>
           <h1 className={styles.title}>Good morning, {user?.name?.split(' ')[0]} 👋</h1>
           <p className={styles.sub}>Here's your live market overview and portfolio summary.</p>
+          <div className={styles.liveMeta}>
+            <span className={`${styles.statusBadge} ${marketStatusClass}`}>{marketStatusLabel}</span>
+            <span className={styles.liveBadge}><span className={styles.liveDot} /> Refreshed every 5 seconds</span>
+            <span className={styles.liveNote}>{lastUpdated ? `Updated ${fmtTime(lastUpdated)}` : 'Connecting to live market data…'}</span>
+          </div>
         </div>
         <button className={styles.tradeBtn} onClick={() => navigate('/dashboard/trade')}>
           <TrendingUp size={15} /> Place Order
@@ -229,6 +251,33 @@ export default function DashboardPage() {
           change={`${completedTrades} completed trades`}
           changeType={totalPnl >= 0 ? 'up' : 'down'}
         />
+      </div>
+
+      <div className={styles.moversGrid}>
+        <Card className={styles.moverCard}>
+          <div className={styles.moverHeader}>Top Gainer</div>
+          {topGainer ? (
+            <div className={styles.moverBody}>
+              <span className={styles.moverSymbol}>{SYMBOL_LABELS[topGainer.sym] || topGainer.sym}</span>
+              <span className={styles.moverPrice}>₹{fmt2(topGainer.quote.price)}</span>
+              <span className={styles.moverChange}>+{topGainer.quote.changePct.toFixed(2)}%</span>
+            </div>
+          ) : (
+            <div className={styles.moverEmpty}>Waiting for live quote updates…</div>
+          )}
+        </Card>
+        <Card className={styles.moverCard}>
+          <div className={styles.moverHeader}>Top Loser</div>
+          {topLoser ? (
+            <div className={styles.moverBody}>
+              <span className={styles.moverSymbol}>{SYMBOL_LABELS[topLoser.sym] || topLoser.sym}</span>
+              <span className={styles.moverPrice}>₹{fmt2(topLoser.quote.price)}</span>
+              <span className={styles.moverChange}>{topLoser.quote.changePct >= 0 ? '+' : ''}{topLoser.quote.changePct.toFixed(2)}%</span>
+            </div>
+          ) : (
+            <div className={styles.moverEmpty}>Waiting for live quote updates…</div>
+          )}
+        </Card>
       </div>
 
       {/* ── Chart + Quick Actions ── */}

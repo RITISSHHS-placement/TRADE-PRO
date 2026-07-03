@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react'
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -169,18 +169,18 @@ export default function MarketPage() {
   const pollRef = useRef(null)
 
   // All non-MF symbols combined for polling
-  const allSymbols = [
-    ...Object.keys(INDICES),
-    ...Object.keys(EQUITIES),
-    ...Object.keys(ETFS),
-    ...Object.keys(FNO),
-    ...Object.keys(COMMODITIES),
-    ...Object.keys(FOREX),
-    ...Object.keys(CRYPTO),
-    ...Object.keys(GLOBAL_INDICES),
-  ]
-  // Deduplicate
-  const uniqueSymbols = [...new Set(allSymbols)]
+  const uniqueSymbols = useMemo(() => [
+    ...new Set([
+      ...Object.keys(INDICES),
+      ...Object.keys(EQUITIES),
+      ...Object.keys(ETFS),
+      ...Object.keys(FNO),
+      ...Object.keys(COMMODITIES),
+      ...Object.keys(FOREX),
+      ...Object.keys(CRYPTO),
+      ...Object.keys(GLOBAL_INDICES),
+    ]),
+  ], [])
 
   // Initial load
   useEffect(() => {
@@ -191,11 +191,12 @@ export default function MarketPage() {
       dispatch(loadQuotes(uniqueSymbols))
     }, 5000)
 
-    // Load MF list once
-    if (mfList.length === 0) dispatch(loadMFList())
-
     return () => clearInterval(pollRef.current)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dispatch, uniqueSymbols]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (mfList.length === 0) dispatch(loadMFList())
+  }, [dispatch, mfList.length])
 
   // Load MF NAVs when MF tab is active
   useEffect(() => {
@@ -241,6 +242,10 @@ export default function MarketPage() {
         <div>
           <h1 className={styles.title}>Market Hub</h1>
           <p className={styles.sub}>Live data across equities, F&O, commodities, forex, crypto & mutual funds</p>
+          <div className={styles.liveInfo}>
+            <span className={styles.liveBadge}><span className={styles.liveDot} /> Auto-refresh every 5 seconds</span>
+            <span className={styles.liveStamp}>{lastUpdated ? `Updated ${fmtTime(lastUpdated)}` : 'Connecting…'}</span>
+          </div>
         </div>
         <div className={styles.headerRight}>
           <span className={styles.updatedTime}>

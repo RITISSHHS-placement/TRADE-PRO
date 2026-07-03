@@ -34,7 +34,7 @@ const WATCH_SYMBOLS = [
 
 export default function TradePage() {
   const { place, placing, trades } = useTrades()
-  const { quotes, loading: quotesLoading, lastUpdated } = useMarketData({ intervalMs: 5000 })
+  const { quotes, loading: quotesLoading, lastUpdated, refresh } = useMarketData({ intervalMs: 5000 })
   const [side, setSide] = useState('BUY')
   const [orderType, setOrderType] = useState('MARKET')
   const [isGTT, setIsGTT] = useState(false)
@@ -178,8 +178,23 @@ export default function TradePage() {
         <div className={styles.right}>
           <Card className={styles.watchCard}>
             <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>Market Watch</h2>
-              {quotesLoading && <Spinner size={14} />}
+              <div>
+                <h2 className={styles.cardTitle}>Market Watch</h2>
+                <div className={styles.marketMeta}>
+                  <span className={styles.liveBadge}><span className={styles.liveDot} /> Live prices — auto-refresh every 5s</span>
+                  <span className={styles.marketTime}>{lastUpdated ? `Updated ${new Date(lastUpdated).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' })}` : 'Connecting…'}</span>
+                </div>
+              </div>
+              <div className={styles.watchHeaderRight}>
+                <button
+                  type="button"
+                  className={styles.refreshBtn}
+                  onClick={refresh}
+                  disabled={quotesLoading}
+                >
+                  {quotesLoading ? <Spinner size={14} /> : 'Refresh'}
+                </button>
+              </div>
             </div>
             <div className={styles.watchList}>
               {WATCH_SYMBOLS.map((sym) => {
