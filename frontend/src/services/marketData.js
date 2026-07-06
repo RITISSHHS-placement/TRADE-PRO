@@ -1,228 +1,190 @@
 /**
- * marketData.js
- * All market data goes through the TradePro backend proxy (/api/market/*)
- * which fetches from Yahoo Finance server-side (no CORS issues).
+ * marketData.js  — NSE India live data via TradePro backend proxy
  *
- * Refresh: quotes every 5s, chart every 60s
+ * Backend endpoints (all public, no API key):
+ *   /api/market/indices    → all NSE indices
+ *   /api/market/nifty50   → NIFTY 50 stocks with live prices
+ *   /api/market/niftybank → BANK NIFTY stocks
+ *   /api/market/gainers   → top gainers
+ *   /api/market/losers    → top losers
+ *   /api/market/stock/:symbol → single stock
  */
 
-// Use the same base URL the rest of the app uses
 const BASE = import.meta.env.VITE_API_URL
-  ? import.meta.env.VITE_API_URL          // e.g. https://tradepro-backend-erfj.onrender.com/api
-  : '/api'                                 // Vercel proxy → Render
+  ? import.meta.env.VITE_API_URL   // https://tradepro-backend-erfj.onrender.com/api
+  : '/api'                          // Vercel proxy → Render
 
-/* ─────────────────────────────────────────────────────────
-   QUOTE FETCH  (via backend proxy)
-───────────────────────────────────────────────────────── */
-export async function fetchQuotes(symbols) {
-  if (!symbols?.length) return {}
+async function get(path) {
+  const res = await fetch(`${BASE}/market/${path}`)
+  if (!res.ok) throw new Error(`${path} failed: ${res.status}`)
+  return res.json()
+}
 
-  const joined = symbols.join(',')
-  const res = await fetch(`${BASE}/market/quotes?symbols=${encodeURIComponent(joined)}`)
-  if (!res.ok) throw new Error(`Market proxy error: ${res.status}`)
-
-  const json = await res.json()
-  const result = {}
-
-  for (const q of (json?.quoteResponse?.result || [])) {
-    result[q.symbol] = {
-      symbol:     q.symbol,
-      shortName:  q.shortName || q.longName || q.symbol,
-      price:      q.regularMarketPrice    ?? 0,
-      change:     q.regularMarketChange   ?? 0,
-      changePct:  q.regularMarketChangePercent ?? 0,
-      open:       q.regularMarketOpen     ?? 0,
-      high:       q.regularMarketDayHigh  ?? 0,
-      low:        q.regularMarketDayLow   ?? 0,
-      prevClose:  q.regularMarketPreviousClose ?? 0,
-      volume:     q.regularMarketVolume   ?? 0,
-      currency:   q.currency ?? 'INR',
-      marketState: q.marketState ?? 'CLOSED',
-      updatedAt:  Date.now(),
+/* ─────────────────────────────────────────────────────
+   NSE INDICES  (NIFTY 50, BANK NIFTY, VIX, etc.)
+───────────────────────────────────────────────────── */
+export async function fetchNSEIndices() {
+  const data = await get('indices')
+  const map  = {}
+  for (const item of (data.data || [])) {
+    const key = item.index?.toUpperCase()
+    if (!key) continue
+    map[key] = {
+      symbol:    key,
+      name:      item.index,
+      price:     item.last       ?? 0,
+      change:    item.variation  ?? 0,
+      changePct: item.percentChange ?? 0,
+      open:      item.open       ?? 0,
+      high:      item.high       ?? 0,
+      low:       item.low        ?? 0,
+      prevClose: item.previousClose ?? 0,
+      yearHigh:  item.yearHigh   ?? 0,
+      yearLow:   item.yearLow    ?? 0,
+      updatedAt: Date.now(),
     }
   }
-  return result
+  return map
 }
 
-/* ─────────────────────────────────────────────────────────
-   INTRADAY CHART  (via backend proxy, 5m candles)
-───────────────────────────────────────────────────────── */
-export async function fetchIntradayChart(symbol) {
-  const res = await fetch(
-    `${BASE}/market/chart/${encodeURIComponent(symbol)}?interval=5m&range=1d`
-  )
-  if (!res.ok) throw new Error(`Chart proxy error: ${res.status}`)
-
-  const json = await res.json()
-  const chart = json?.chart?.result?.[0]
-  if (!chart) return []
-
-  const timestamps = chart.timestamp || []
-  const closes     = chart.indicators?.quote?.[0]?.close || []
-
-  return timestamps
-    .map((ts, i) => {
-      if (closes[i] == null) return null
-      const d = new Date(ts * 1000)
-      return {
-        time:  `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`,
-        value: Math.round(closes[i] * 100) / 100,
-      }
-    })
-    .filter(Boolean)
+/* ─────────────────────────────────────────────────────
+   NIFTY 50 STOCKS
+───────────────────────────────────────────────────── */
+export async function fetchNifty50() {
+  const data = await get('nifty50')
+  return parseEquityList(data.data || [])
 }
 
-/* ─────────────────────────────────────────────────────────
-   MUTUAL FUND NAV  (mfapi.in — AMFI end-of-day, direct)
-───────────────────────────────────────────────────────── */
+export async function fetchNiftyBank() {
+  const data = await get('niftybank')
+  return parseEquityList(data.data || [])
+}
+
+function parseEquityList(items) {
+  const map = {}
+  for (const s of items) {
+    if (!s.symbol || s.symbol === 'NIFTY 50' || s.symbol === 'NIFTY BANK') continue
+    map[s.symbol] = {
+      symbol:    s.symbol,
+      name:      s.meta?.companyName || s.symbol,
+      price:     s.lastPrice  ?? s.open ?? 0,
+      change:    s.change     ?? 0,
+      changePct: s.pChange    ?? 0,
+      open:      s.open       ?? 0,
+      high:      s.dayHigh    ?? 0,
+      low:       s.dayLow     ?? 0,
+      prevClose: s.previousClose ?? 0,
+      volume:    s.totalTradedVolume ?? 0,
+      value:     s.totalTradedValue  ?? 0,
+      yearHigh:  s['52WeekHigh'] ?? 0,
+      yearLow:   s['52WeekLow']  ?? 0,
+      updatedAt: Date.now(),
+    }
+  }
+  return map
+}
+
+/* ─────────────────────────────────────────────────────
+   GAINERS / LOSERS
+───────────────────────────────────────────────────── */
+export async function fetchGainers() {
+  const data = await get('gainers')
+  return (data.NIFTY?.data || data.data || []).map(s => ({
+    symbol:    s.symbol,
+    name:      s.companyName || s.symbol,
+    price:     s.ltp      ?? 0,
+    changePct: s.netPrice ?? 0,
+    change:    s.tradedQuantity ?? 0,
+  })).slice(0, 10)
+}
+
+export async function fetchLosers() {
+  const data = await get('losers')
+  return (data.NIFTY?.data || data.data || []).map(s => ({
+    symbol:    s.symbol,
+    name:      s.companyName || s.symbol,
+    price:     s.ltp      ?? 0,
+    changePct: s.netPrice ?? 0,
+  })).slice(0, 10)
+}
+
+/* ─────────────────────────────────────────────────────
+   MF — directly from mfapi.in (CORS-friendly)
+───────────────────────────────────────────────────── */
 const MF_BASE = 'https://api.mfapi.in/mf'
 
 export async function fetchMFList() {
   const res = await fetch(MF_BASE)
-  if (!res.ok) throw new Error(`MF list error: ${res.status}`)
+  if (!res.ok) throw new Error('MF list failed')
   return res.json()
 }
 
-export async function fetchMFNav(schemeCode) {
-  const res = await fetch(`${MF_BASE}/${schemeCode}`)
-  if (!res.ok) throw new Error(`MF NAV error: ${res.status}`)
-  const json = await res.json()
-  const latest = json.data?.[0]
+export async function fetchMFNav(code) {
+  const res = await fetch(`${MF_BASE}/${code}`)
+  if (!res.ok) throw new Error(`MF ${code} failed`)
+  const j = await res.json()
   return {
-    schemeCode,
-    schemeName:      json.meta?.scheme_name     || '',
-    nav:             latest?.nav ? parseFloat(latest.nav) : null,
-    date:            latest?.date || '',
-    fundHouse:       json.meta?.fund_house       || '',
-    schemeCategory:  json.meta?.scheme_category  || '',
-    schemeType:      json.meta?.scheme_type      || '',
+    schemeCode:     code,
+    schemeName:     j.meta?.scheme_name     || '',
+    nav:            j.data?.[0]?.nav        ? parseFloat(j.data[0].nav) : null,
+    date:           j.data?.[0]?.date       || '',
+    fundHouse:      j.meta?.fund_house      || '',
+    schemeCategory: j.meta?.scheme_category || '',
+    schemeType:     j.meta?.scheme_type     || '',
+    history:        j.data?.slice(0, 30)    || [],
   }
 }
 
-/* ─────────────────────────────────────────────────────────
-   SYMBOL CATALOGS
-───────────────────────────────────────────────────────── */
-
-export const INDICES = {
-  '^NSEI':       'NIFTY 50',
-  '^BSESN':      'SENSEX',
-  '^NSEBANK':    'BANK NIFTY',
-  '^CNXIT':      'NIFTY IT',
-  '^CNXPHARMA':  'NIFTY Pharma',
-  '^CNXFMCG':    'NIFTY FMCG',
-  '^CNXAUTO':    'NIFTY Auto',
-  '^CNXMETAL':   'NIFTY Metal',
-  '^CNXREALTY':  'NIFTY Realty',
-  '^NSMIDCP':    'NIFTY Midcap',
-  '^CNXSMALLCAP':'NIFTY SmallCap',
-  '^INDIAVIX':   'India VIX',
+/* ─────────────────────────────────────────────────────
+   SYMBOL / LABEL MAPS  (for display)
+───────────────────────────────────────────────────── */
+export const INDEX_KEYS = {
+  'NIFTY 50':               'NIFTY 50',
+  'NIFTY BANK':             'BANK NIFTY',
+  'NIFTY NEXT 50':          'NIFTY NEXT 50',
+  'NIFTY MIDCAP SELECT':    'MIDCAP SEL',
+  'NIFTY IT':               'NIFTY IT',
+  'NIFTY PHARMA':           'PHARMA',
+  'NIFTY FMCG':             'FMCG',
+  'NIFTY AUTO':             'AUTO',
+  'NIFTY METAL':            'METAL',
+  'NIFTY REALTY':           'REALTY',
+  'NIFTY FINANCIAL SERVICES':'FIN SVC',
+  'INDIA VIX':              'INDIA VIX',
 }
-
-export const EQUITIES = {
-  'RELIANCE.NS':   'RELIANCE',
-  'TCS.NS':        'TCS',
-  'HDFCBANK.NS':   'HDFC BANK',
-  'INFY.NS':       'INFOSYS',
-  'ICICIBANK.NS':  'ICICI BANK',
-  'HINDUNILVR.NS': 'HUL',
-  'SBIN.NS':       'SBI',
-  'BAJFINANCE.NS': 'BAJAJ FIN',
-  'BHARTIARTL.NS': 'AIRTEL',
-  'KOTAKBANK.NS':  'KOTAK BANK',
-  'WIPRO.NS':      'WIPRO',
-  'HCLTECH.NS':    'HCL TECH',
-  'AXISBANK.NS':   'AXIS BANK',
-  'LT.NS':         'L&T',
-  'ITC.NS':        'ITC',
-  'ASIANPAINT.NS': 'ASIAN PAINTS',
-  'MARUTI.NS':     'MARUTI',
-  'SUNPHARMA.NS':  'SUN PHARMA',
-  'TITAN.NS':      'TITAN',
-  'ULTRACEMCO.NS': 'ULTRATECH',
-  'NESTLEIND.NS':  'NESTLE',
-  'POWERGRID.NS':  'POWER GRID',
-  'NTPC.NS':       'NTPC',
-  'ONGC.NS':       'ONGC',
-  'COALINDIA.NS':  'COAL INDIA',
-  'M&M.NS':        'M&M',
-  'DRREDDY.NS':    'DR REDDY',
-  'TATAMOTORS.NS': 'TATA MOTORS',
-  'TATASTEEL.NS':  'TATA STEEL',
-  'JSWSTEEL.NS':   'JSW STEEL',
-}
-
-export const ETFS = {
-  'NIFTYBEES.NS':  'NIFTY BeES',
-  'BANKBEES.NS':   'Bank BeES',
-  'GOLDBEES.NS':   'Gold BeES',
-  'SILVERBEES.NS': 'Silver BeES',
-  'LIQUIDBEES.NS': 'Liquid BeES',
-  'JUNIORBEES.NS': 'Junior BeES',
-  'ITBEES.NS':     'IT BeES',
-}
-
-export const FNO = {
-  '^INDIAVIX':    'India VIX',
-  '^NSEI':        'NIFTY Spot',
-  '^NSEBANK':     'BankNifty Spot',
-  'NIFTYBEES.NS': 'NIFTY ETF',
-  'BANKBEES.NS':  'BankNifty ETF',
-}
-
-export const COMMODITIES = {
-  'GC=F':  'Gold Futures',
-  'SI=F':  'Silver Futures',
-  'PL=F':  'Platinum',
-  'PA=F':  'Palladium',
-  'CL=F':  'Crude Oil WTI',
-  'BZ=F':  'Brent Crude',
-  'NG=F':  'Natural Gas',
-  'HG=F':  'Copper',
-}
-
-export const FOREX = {
-  'USDINR=X': 'USD/INR',
-  'EURINR=X': 'EUR/INR',
-  'GBPINR=X': 'GBP/INR',
-  'EURUSD=X': 'EUR/USD',
-  'GBPUSD=X': 'GBP/USD',
-  'USDJPY=X': 'USD/JPY',
-}
-
-export const CRYPTO = {
-  'BTC-USD':  'Bitcoin',
-  'ETH-USD':  'Ethereum',
-  'BNB-USD':  'BNB',
-  'SOL-USD':  'Solana',
-  'XRP-USD':  'XRP',
-  'ADA-USD':  'Cardano',
-  'DOGE-USD': 'Dogecoin',
-}
-
-export const GLOBAL_INDICES = {
-  '^GSPC': 'S&P 500',
-  '^DJI':  'Dow Jones',
-  '^IXIC': 'NASDAQ',
-  '^FTSE': 'FTSE 100',
-  '^N225': 'Nikkei 225',
-  '^HSI':  'Hang Seng',
-}
-
-export const TOP_MF_CODES = [
-  120503, 120716, 120837, 125354, 120823,
-  118825, 120847, 120465, 119598, 120594,
-  120578, 120492, 120505, 120828, 120600,
-]
-
-export const DEFAULT_SYMBOLS = [
-  ...Object.keys(INDICES).slice(0, 4),
-  ...Object.keys(EQUITIES).slice(0, 12),
-  ...Object.keys(COMMODITIES).slice(0, 4),
-  ...Object.keys(FOREX).slice(0, 3),
-]
 
 export const SYMBOL_LABELS = {
-  ...INDICES, ...EQUITIES, ...ETFS,
-  ...FNO, ...COMMODITIES, ...FOREX,
-  ...CRYPTO, ...GLOBAL_INDICES,
+  ...INDEX_KEYS,
+  'RELIANCE':  'RELIANCE',
+  'TCS':       'TCS',
+  'HDFCBANK':  'HDFC BANK',
+  'INFY':      'INFOSYS',
+  'ICICIBANK': 'ICICI BANK',
+  'HINDUNILVR':'HUL',
+  'SBIN':      'SBI',
+  'BAJFINANCE':'BAJAJ FIN',
+  'BHARTIARTL':'AIRTEL',
+  'KOTAKBANK': 'KOTAK BANK',
+  'WIPRO':     'WIPRO',
+  'HCLTECH':   'HCL TECH',
+  'AXISBANK':  'AXIS BANK',
+  'LT':        'L&T',
+  'ITC':       'ITC',
+  'MARUTI':    'MARUTI',
+  'TITAN':     'TITAN',
+  'TATAMOTORS':'TATA MOTORS',
+  'TATASTEEL': 'TATA STEEL',
+  'ONGC':      'ONGC',
+  'NTPC':      'NTPC',
+  'SUNPHARMA': 'SUN PHARMA',
+  'ASIANPAINT':'ASIAN PAINTS',
+  'ULTRACEMCO':'ULTRATECH',
+  'BAJAJ-AUTO':'BAJAJ AUTO',
+  'HEROMOTOCO':'HERO MOTO',
+  'JSWSTEEL':  'JSW STEEL',
+  'M&M':       'M&M',
+  'DRREDDY':   'DR REDDY',
 }
+
+// Default symbols for polling
+export const DEFAULT_SYMBOLS = Object.keys(SYMBOL_LABELS)

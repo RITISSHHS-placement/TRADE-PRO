@@ -1,0 +1,96 @@
+.page { display: flex; flex-direction: column; gap: 28px; }
+
+.header { text-align: center; padding: 8px 0 4px; }
+.title  { font-size: 28px; font-weight: 900; color: var(--gray-1); letter-spacing: -0.04em; margin-bottom: 6px; }
+.sub    { font-size: 15px; color: var(--gray-3); }
+
+/* ── Charges grid ── */
+.chargesGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+.chargeCard {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 32px 28px;
+  display: flex; flex-direction: column; gap: 12px;
+  position: relative; overflow: hidden;
+  transition: all 0.18s; box-shadow: var(--shadow-sm);
+}
+.chargeCard:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.chargeHighlight {
+  border-color: var(--border-green);
+  box-shadow: 0 0 0 1px var(--border-green), var(--shadow-md);
+}
+.chargeHighlight::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--green), var(--accent-dim));
+}
+
+.popularBadge {
+  position: absolute; top: 16px; right: 16px;
+  font-size: 10px; font-weight: 700; padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--green-dim); color: var(--green-dark);
+  border: 1px solid var(--border-green);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+
+.chargeBig  { display: flex; align-items: flex-start; gap: 2px; }
+.rupee   { font-size: 28px; font-weight: 900; color: #f59e0b; margin-top: 8px; line-height: 1; }
+.amount  { font-size: 88px; font-weight: 900; color: #f59e0b; line-height: 1; letter-spacing: -0.04em; }
+
+.chargeTitle { font-size: 18px; font-weight: 900; color: var(--gray-1); letter-spacing: -0.02em; margin-top: -8px; }
+.chargeSub   { font-size: 12px; color: var(--gray-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.chargeDesc  { font-size: 13px; color: var(--gray-3); line-height: 1.75; }
+
+.featureList { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.featureItem { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-2); font-weight: 500; }
+.check { color: var(--green); flex-shrink: 0; }
+
+/* ── CTA ── */
+.cta {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1.5px solid var(--border-green);
+  border-radius: var(--radius-xl); padding: 40px 36px;
+  text-align: center;
+}
+[data-theme="dark"] .cta { background: linear-gradient(135deg, rgba(0,200,83,0.08), rgba(5,150,105,0.05)); }
+.ctaTitle { font-size: 22px; font-weight: 900; color: var(--gray-1); letter-spacing: -0.03em; margin-bottom: 8px; }
+.ctaSub   { font-size: 14px; color: var(--gray-3); margin-bottom: 20px; }
+.ctaBtns  { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+.btnPrimary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 24px; border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #059669, #00a844);
+  color: #fff; font-size: 14px; font-weight: 700;
+  border: none; cursor: pointer; transition: all 0.18s;
+  box-shadow: 0 4px 14px rgba(0,168,68,0.25);
+}
+.btnPrimary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,168,68,0.35); }
+
+.btnSecondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 24px; border-radius: var(--radius-md);
+  background: transparent; color: var(--green-dark);
+  font-size: 14px; font-weight: 700;
+  border: 1.5px solid var(--border-green); cursor: pointer; transition: all 0.15s;
+}
+.btnSecondary:hover { background: var(--green-dim); }
+
+/* ── Taxes ── */
+.taxSection { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.taxTitle { font-size: 18px; font-weight: 800; color: var(--gray-1); letter-spacing: -0.02em; padding: 20px 24px 4px; }
+.taxSub   { font-size: 13px; color: var(--gray-3); padding: 0 24px 16px; border-bottom: 1px solid var(--border); }
+.taxTable { display: flex; flex-direction: column; }
+.taxHead  { display: grid; grid-template-columns: 1.2fr 2fr 1.5fr 2fr; padding: 10px 24px; font-size: 10px; font-weight: 700; color: var(--gray-4); text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--border); background: var(--bg-alt); }
+.taxRow   { display: grid; grid-template-columns: 1.2fr 2fr 1.5fr 2fr; padding: 13px 24px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--gray-2); align-items: center; transition: background 0.12s; }
+.taxRow:last-child { border-bottom: none; }
+.taxRow:hover { background: var(--bg-alt); }
+.taxName { font-weight: 700; color: var(--gray-1); }
+.taxNote { font-size: 11px; color: var(--gray-3); }
+
+/* ── Disclaimer ── */
+.disclaimer { font-size: 12px; color: var(--gray-4); line-height: 1.7; padding: 14px 16px; background: var(--bg-2); border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+@media (max-width: 1024px) { .chargesGrid { grid-template-columns: 1fr; } .taxHead, .taxRow { grid-template-columns: 1.2fr 1.5fr 1.5fr; } .taxHead span:last-child, .taxRow span:last-child { display: none; } }
+@media (max-width: 640px) { .chargesGrid { grid-template-columns: 1fr; } .taxHead, .taxRow { grid-template-columns: 1fr 1fr; } .taxHead span:nth-child(n+3), .taxRow span:nth-child(n+3) { display: none; } }

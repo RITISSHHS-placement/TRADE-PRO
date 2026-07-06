@@ -2,9 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  AreaChart, Area, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, CartesianGrid,
 } from 'recharts'
-import { TrendingUp, Zap, Shield, Activity, RefreshCw, Clock, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import {
+  TrendingUp, TrendingDown, Zap, Shield,
+  Activity, RefreshCw, Clock, ArrowUpRight, ArrowDownRight,
+} from 'lucide-react'
 import { useDispatch } from 'react-redux'
 import { setKillSwitchModal } from '../store/slices/uiSlice'
 import { useTrades, useMarketData } from '../hooks'
@@ -17,16 +21,8 @@ const STATUS_COLORS = {
   CANCELLED: 'default', REJECTED: 'danger', PARTIAL: 'accent',
 }
 
-const CHART_SYMBOL = '^NSEI'
-const TICKER_SYMBOLS = ['^NSEI', '^BSESN', '^NSEBANK', 'RELIANCE.NS', 'TCS.NS', 'INFY.NS', 'HDFCBANK.NS', 'WIPRO.NS', 'ICICIBANK.NS']
-const WATCHLIST_SYMBOLS = [
-  'RELIANCE.NS', 'TCS.NS', 'INFY.NS', 'HDFCBANK.NS',
-  'WIPRO.NS', 'ICICIBANK.NS', 'SBIN.NS', 'BAJFINANCE.NS',
-  'BHARTIARTL.NS', 'HINDUNILVR.NS', 'LT.NS', 'ITC.NS',
-]
-
-const fmt2  = (n) => n?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '—'
-const fmt0  = (n) => n?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) ?? '—'
+const fmt2 = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const fmt0 = (n) => (n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })
 const fmtVol = (n) => {
   if (!n) return '—'
   if (n >= 1e7) return `${(n / 1e7).toFixed(2)}Cr`
@@ -36,11 +32,23 @@ const fmtVol = (n) => {
 const fmtTime = (ts) =>
   ts ? new Date(ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--'
 
-/* ─── Live Stock Row ─────────────────────────────── */
-function StockRow({ sym, quote, onSelect, isSelected }) {
-  const up = (quote?.changePct ?? 0) >= 0
-  const label = SYMBOL_LABELS[sym] || sym
+// Key indices to show in ticker
+const TICKER_INDICES = [
+  'NIFTY 50', 'NIFTY BANK', 'NIFTY NEXT 50',
+  'NIFTY IT', 'NIFTY PHARMA', 'NIFTY AUTO', 'INDIA VIX',
+]
 
+// Stocks to show in live table
+const WATCHLIST = [
+  'RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK',
+  'HINDUNILVR', 'SBIN', 'BAJFINANCE', 'BHARTIARTL',
+  'KOTAKBANK', 'WIPRO', 'LT', 'ITC', 'TATAMOTORS', 'AXISBANK',
+]
+
+/* ── Stock row ── */
+function StockRow({ sym, quote, isSelected, onSelect }) {
+  const up = (quote?.changePct ?? 0) >= 0
+  const name = SYMBOL_LABELS[sym] || sym
   return (
     <div
       className={`${styles.stockRow} ${isSelected ? styles.stockRowActive : ''}`}
@@ -48,72 +56,39 @@ function StockRow({ sym, quote, onSelect, isSelected }) {
       role="button" tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && onSelect(sym)}
     >
-      {/* Symbol */}
       <div className={styles.srSym}>
-        <span className={styles.srName}>{label}</span>
-        <span className={styles.srCode}>{sym.replace('.NS','').replace('.BS','')}</span>
+        <span className={styles.srName}>{name}</span>
+        <span className={styles.srCode}>NSE: {sym}</span>
       </div>
-
-      {/* Live price */}
       <div className={styles.srPrice}>
         {quote ? `₹${fmt2(quote.price)}` : <span className={styles.srLoading}>—</span>}
       </div>
-
-      {/* Change */}
       <div className={up ? styles.srUp : styles.srDown}>
         {quote ? (
           <>
-            {up ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
+            {up ? <ArrowUpRight size={13}/> : <ArrowDownRight size={13}/>}
             {up ? '+' : ''}{fmt2(quote.change)}
-            <span>({up ? '+' : ''}{quote.changePct.toFixed(2)}%)</span>
+            <span>({up ? '+' : ''}{(quote.changePct ?? 0).toFixed(2)}%)</span>
           </>
         ) : '—'}
       </div>
-
-      {/* OHLV */}
       <div className={styles.srOhlv}>
         {quote ? (
           <>
             <span>O <b>{fmt2(quote.open)}</b></span>
             <span>H <b style={{ color: 'var(--green)' }}>{fmt2(quote.high)}</b></span>
             <span>L <b style={{ color: 'var(--red)' }}>{fmt2(quote.low)}</b></span>
-            <span>V <b>{fmtVol(quote.volume)}</b></span>
+            <span>Vol <b>{fmtVol(quote.volume)}</b></span>
           </>
         ) : '—'}
       </div>
-
-      {/* Prev close */}
-      <div className={styles.srPrev}>
-        {quote ? `₹${fmt2(quote.prevClose)}` : '—'}
-      </div>
+      <div className={styles.srPrev}>{quote ? `₹${fmt2(quote.prevClose)}` : '—'}</div>
     </div>
   )
 }
 
-/* ─── Charges Section ───────────────────────────── */
-function ChargesSection() {
-  const charges = [
-    {
-      amount: '0',
-      title: 'Free equity delivery',
-      desc: 'All equity delivery investments (NSE, BSE), are absolutely free — ₹0 brokerage.',
-      color: '#f59e0b',
-    },
-    {
-      amount: '20',
-      title: 'Intraday and F&O trades',
-      desc: 'Flat ₹20 or 0.03% (whichever is lower) per executed order on intraday trades across equity, currency, and commodity trades.',
-      color: '#f59e0b',
-      highlight: true,
-    },
-    {
-      amount: '0',
-      title: 'Free direct MF',
-      desc: 'All direct mutual fund investments are absolutely free — ₹0 commissions & DP charges.',
-      color: '#f59e0b',
-    },
-  ]
-
+/* ── Charges ── */
+function Charges() {
   return (
     <Card className={styles.chargesCard}>
       <div className={styles.chargesHeader}>
@@ -121,12 +96,13 @@ function ChargesSection() {
         <p className={styles.chargesSub}>List of all charges and taxes</p>
       </div>
       <div className={styles.chargesGrid}>
-        {charges.map((c) => (
-          <div key={c.title} className={`${styles.chargeItem} ${c.highlight ? styles.chargeHighlight : ''}`}>
-            <div className={styles.chargeBig}>
-              <span className={styles.chargeRupee}>₹</span>
-              <span className={styles.chargeNum}>{c.amount}</span>
-            </div>
+        {[
+          { n: '0',  title: 'Free equity delivery',  desc: 'All equity delivery investments (NSE, BSE), are absolutely free — ₹0 brokerage.' },
+          { n: '20', title: 'Intraday and F&O trades', desc: 'Flat ₹20 or 0.03% (whichever is lower) per executed order on intraday, currency and commodity trades.', hi: true },
+          { n: '0',  title: 'Free direct MF',          desc: 'All direct mutual fund investments are absolutely free — ₹0 commissions & DP charges.' },
+        ].map((c) => (
+          <div key={c.title} className={`${styles.chargeItem} ${c.hi ? styles.chargeHighlight : ''}`}>
+            <div className={styles.chargeBig}><span className={styles.chargeRupee}>₹</span><span className={styles.chargeNum}>{c.n}</span></div>
             <h3 className={styles.chargeLabel}>{c.title}</h3>
             <p className={styles.chargeDesc}>{c.desc}</p>
           </div>
@@ -136,69 +112,45 @@ function ChargesSection() {
   )
 }
 
-/* ─── Main Dashboard ────────────────────────────── */
 export default function DashboardPage() {
-  const navigate = useNavigate()
-  const dispatch = useDispatch()
-  const { user } = useSelector((s) => s.auth)
+  const navigate   = useNavigate()
+  const dispatch   = useDispatch()
+  const { user }   = useSelector((s) => s.auth)
   const { trades, loading: tradesLoading, loadTrades } = useTrades()
-  const {
-    quotes, chart, chartLoading,
-    loading: quotesLoading, lastUpdated, error: marketError,
-    refresh, changeChartSymbol,
-  } = useMarketData({ intervalMs: 5000 })
+  const { indices, stocks, gainers, losers, loading, lastUpdated, error, refresh } = useMarketData()
 
-  const [chartSym, setChartSym] = useState(CHART_SYMBOL)
+  const [selectedSym, setSelectedSym] = useState('NIFTY 50')
 
   useEffect(() => { loadTrades() }, [])
 
-  const handleSelect = (sym) => {
-    setChartSym(sym)
-    changeChartSymbol(sym)
-  }
-
-  const totalPnl = trades.reduce((acc, t) => acc + (t.pnl || 0), 0)
+  const totalPnl        = trades.reduce((a, t) => a + (t.pnl || 0), 0)
   const completedTrades = trades.filter((t) => t.status === 'COMPLETE').length
-  const nifty  = quotes['^NSEI']
-  const sensex = quotes['^BSESN']
-  const bank   = quotes['^NSEBANK']
-  const marketState = nifty?.marketState || 'CLOSED'
-  const marketStatusLabel = marketState === 'REGULAR' ? 'Market Open' : 'Market Closed'
-  const marketStatusClass = marketState === 'REGULAR' ? styles.statusOpen : styles.statusClosed
-  const chartQuote = quotes[chartSym]
-  const chartUp    = (chartQuote?.changePct ?? 0) >= 0
-  const chartData  = chart.length >= 2 ? chart : []
 
-  const tickerQuoteList = TICKER_SYMBOLS
-    .map((sym) => ({ sym, quote: quotes[sym] }))
-    .filter((item) => item.quote && typeof item.quote.changePct === 'number')
+  const nifty  = indices['NIFTY 50']
+  const bank   = indices['NIFTY BANK']
+  const sensex = indices['NIFTY NEXT 50']
+  const vix    = indices['INDIA VIX']
 
-  const topGainer = tickerQuoteList.reduce((best, current) => {
-    if (!best || current.quote.changePct > best.quote.changePct) return current
-    return best
-  }, null)
-
-  const topLoser = tickerQuoteList.reduce((worst, current) => {
-    if (!worst || current.quote.changePct < worst.quote.changePct) return current
-    return worst
-  }, null)
+  const selQuote = indices[selectedSym] || stocks[selectedSym]
+  const selUp    = (selQuote?.changePct ?? 0) >= 0
 
   return (
     <div className={styles.page}>
 
-      {/* ── Ticker bar ── */}
+      {/* ── Ticker ── */}
       <div className={styles.tickerBar}>
-        {TICKER_SYMBOLS.map((sym) => {
-          const q = quotes[sym]
+        {TICKER_INDICES.map((key) => {
+          const q  = indices[key]
           const up = (q?.changePct ?? 0) >= 0
           return (
-            <div key={sym} className={styles.tickerItem} onClick={() => handleSelect(sym)}>
-              <span className={styles.tickerSym}>{SYMBOL_LABELS[sym] || sym}</span>
+            <div key={key} className={styles.tickerItem}
+              onClick={() => setSelectedSym(key)}>
+              <span className={styles.tickerSym}>{SYMBOL_LABELS[key] || key}</span>
               {q ? (
                 <>
-                  <span className={styles.tickerVal}>₹{fmt2(q.price)}</span>
+                  <span className={styles.tickerVal}>{fmt2(q.price)}</span>
                   <span className={up ? styles.tickerUp : styles.tickerDown}>
-                    {up ? '▲' : '▼'} {Math.abs(q.changePct).toFixed(2)}%
+                    {up ? '▲' : '▼'} {Math.abs(q.changePct ?? 0).toFixed(2)}%
                   </span>
                 </>
               ) : <span className={styles.tickerVal}>—</span>}
@@ -206,9 +158,9 @@ export default function DashboardPage() {
           )
         })}
         <div className={styles.tickerRight}>
-          <span className={styles.tickerTime}><Clock size={11} /> {fmtTime(lastUpdated)}</span>
-          <button className={styles.refreshBtn} onClick={refresh} disabled={quotesLoading}>
-            <RefreshCw size={12} className={quotesLoading ? styles.spinning : ''} />
+          <span className={styles.tickerTime}><Clock size={11}/> {fmtTime(lastUpdated)}</span>
+          <button className={styles.refreshBtn} onClick={refresh} disabled={loading}>
+            <RefreshCw size={12} className={loading ? styles.spinning : ''} />
           </button>
         </div>
       </div>
@@ -217,193 +169,142 @@ export default function DashboardPage() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Good morning, {user?.name?.split(' ')[0]} 👋</h1>
-          <p className={styles.sub}>Here's your live market overview and portfolio summary.</p>
-          <div className={styles.liveMeta}>
-            <span className={`${styles.statusBadge} ${marketStatusClass}`}>{marketStatusLabel}</span>
-            <span className={styles.liveBadge}><span className={styles.liveDot} /> Refreshed every 5 seconds</span>
-            <span className={styles.liveNote}>{lastUpdated ? `Updated ${fmtTime(lastUpdated)}` : 'Connecting to live market data…'}</span>
-          </div>
+          <p className={styles.sub}>
+            {loading && !lastUpdated ? 'Connecting to NSE live data…'
+              : error ? 'Live data unavailable — retrying…'
+              : `Live NSE data · Updated ${fmtTime(lastUpdated)}`}
+          </p>
         </div>
         <button className={styles.tradeBtn} onClick={() => navigate('/dashboard/trade')}>
-          <TrendingUp size={15} /> Place Order
+          <TrendingUp size={15}/> Place Order
         </button>
       </div>
 
-      {/* ── Index Stats ── */}
+      {/* ── Stats ── */}
       <div className={styles.statsGrid}>
         <Stat label="NIFTY 50"
-          value={nifty ? `₹${fmt2(nifty.price)}` : '—'}
-          change={nifty ? `${nifty.changePct >= 0 ? '+' : ''}${nifty.changePct.toFixed(2)}% today` : 'Loading...'}
+          value={nifty ? fmt2(nifty.price) : '—'}
+          change={nifty ? `${nifty.changePct >= 0 ? '+' : ''}${(nifty.changePct ?? 0).toFixed(2)}% today` : 'Loading…'}
           changeType={nifty ? (nifty.changePct >= 0 ? 'up' : 'down') : 'up'}
         />
-        <Stat label="SENSEX"
-          value={sensex ? `₹${fmt2(sensex.price)}` : '—'}
-          change={sensex ? `${sensex.changePct >= 0 ? '+' : ''}${sensex.changePct.toFixed(2)}% today` : 'Loading...'}
-          changeType={sensex ? (sensex.changePct >= 0 ? 'up' : 'down') : 'up'}
-        />
         <Stat label="BANK NIFTY"
-          value={bank ? `₹${fmt2(bank.price)}` : '—'}
-          change={bank ? `${bank.changePct >= 0 ? '+' : ''}${bank.changePct.toFixed(2)}% today` : 'Loading...'}
+          value={bank ? fmt2(bank.price) : '—'}
+          change={bank ? `${bank.changePct >= 0 ? '+' : ''}${(bank.changePct ?? 0).toFixed(2)}% today` : 'Loading…'}
           changeType={bank ? (bank.changePct >= 0 ? 'up' : 'down') : 'up'}
         />
-        <Stat label="Unrealised P&L"
+        <Stat label="INDIA VIX"
+          value={vix ? fmt2(vix.price) : '—'}
+          change={vix ? `${vix.changePct >= 0 ? '+' : ''}${(vix.changePct ?? 0).toFixed(2)}% today` : 'Loading…'}
+          changeType={vix ? (vix.changePct >= 0 ? 'up' : 'down') : 'up'}
+        />
+        <Stat label="My P&L"
           value={`${totalPnl >= 0 ? '+' : ''}₹${Math.abs(totalPnl).toLocaleString('en-IN')}`}
           change={`${completedTrades} completed trades`}
           changeType={totalPnl >= 0 ? 'up' : 'down'}
         />
       </div>
 
-      <div className={styles.moversGrid}>
+      {/* ── Gainers / Losers ── */}
+      <div className={styles.moversRow}>
         <Card className={styles.moverCard}>
-          <div className={styles.moverHeader}>Top Gainer</div>
-          {topGainer ? (
-            <div className={styles.moverBody}>
-              <span className={styles.moverSymbol}>{SYMBOL_LABELS[topGainer.sym] || topGainer.sym}</span>
-              <span className={styles.moverPrice}>₹{fmt2(topGainer.quote.price)}</span>
-              <span className={styles.moverChange}>+{topGainer.quote.changePct.toFixed(2)}%</span>
-            </div>
-          ) : (
-            <div className={styles.moverEmpty}>Waiting for live quote updates…</div>
-          )}
+          <div className={styles.moverHead}><TrendingUp size={14}/> Top Gainers</div>
+          {gainers.length === 0
+            ? <div className={styles.moverEmpty}>{loading ? <Spinner size={16}/> : 'Loading…'}</div>
+            : gainers.slice(0, 5).map((g) => (
+              <div key={g.symbol} className={styles.moverRow} onClick={() => setSelectedSym(g.symbol)}>
+                <span className={styles.moverSym}>{SYMBOL_LABELS[g.symbol] || g.symbol}</span>
+                <span className={styles.moverUp}>+{(g.changePct ?? 0).toFixed(2)}%</span>
+              </div>
+            ))
+          }
         </Card>
         <Card className={styles.moverCard}>
-          <div className={styles.moverHeader}>Top Loser</div>
-          {topLoser ? (
-            <div className={styles.moverBody}>
-              <span className={styles.moverSymbol}>{SYMBOL_LABELS[topLoser.sym] || topLoser.sym}</span>
-              <span className={styles.moverPrice}>₹{fmt2(topLoser.quote.price)}</span>
-              <span className={styles.moverChange}>{topLoser.quote.changePct >= 0 ? '+' : ''}{topLoser.quote.changePct.toFixed(2)}%</span>
-            </div>
-          ) : (
-            <div className={styles.moverEmpty}>Waiting for live quote updates…</div>
-          )}
+          <div className={styles.moverHead}><TrendingDown size={14}/> Top Losers</div>
+          {losers.length === 0
+            ? <div className={styles.moverEmpty}>{loading ? <Spinner size={16}/> : 'Loading…'}</div>
+            : losers.slice(0, 5).map((l) => (
+              <div key={l.symbol} className={styles.moverRow} onClick={() => setSelectedSym(l.symbol)}>
+                <span className={styles.moverSym}>{SYMBOL_LABELS[l.symbol] || l.symbol}</span>
+                <span className={styles.moverDown}>{(l.changePct ?? 0).toFixed(2)}%</span>
+              </div>
+            ))
+          }
         </Card>
+
+        {/* Selected quote detail */}
+        {selQuote && (
+          <Card className={styles.quoteDetail}>
+            <div className={styles.qdSym}>{SYMBOL_LABELS[selectedSym] || selectedSym}</div>
+            <div className={`${styles.qdPrice} ${selUp ? styles.qdUp : styles.qdDown}`}>
+              ₹{fmt2(selQuote.price)}
+              <span>{selUp ? '▲' : '▼'} {Math.abs(selQuote.changePct ?? 0).toFixed(2)}%</span>
+            </div>
+            <div className={styles.qdGrid}>
+              <div className={styles.qdItem}><span>Open</span><b>₹{fmt2(selQuote.open)}</b></div>
+              <div className={styles.qdItem}><span>High</span><b style={{ color: 'var(--green)' }}>₹{fmt2(selQuote.high)}</b></div>
+              <div className={styles.qdItem}><span>Low</span><b style={{ color: 'var(--red)' }}>₹{fmt2(selQuote.low)}</b></div>
+              <div className={styles.qdItem}><span>Prev Close</span><b>₹{fmt2(selQuote.prevClose)}</b></div>
+              {selQuote.volume && <div className={styles.qdItem}><span>Volume</span><b>{fmtVol(selQuote.volume)}</b></div>}
+              {selQuote.yearHigh && <div className={styles.qdItem}><span>52W High</span><b>₹{fmt2(selQuote.yearHigh)}</b></div>}
+              {selQuote.yearLow && <div className={styles.qdItem}><span>52W Low</span><b>₹{fmt2(selQuote.yearLow)}</b></div>}
+            </div>
+          </Card>
+        )}
       </div>
 
-      {/* ── Chart + Quick Actions ── */}
-      <div className={styles.mainGrid}>
-        <Card className={styles.chartCard}>
-          <div className={styles.chartHeader}>
-            <div>
-              <div className={styles.chartSymPicker}>
-                {['^NSEI', '^BSESN', '^NSEBANK', 'RELIANCE.NS', 'TCS.NS', 'INFY.NS'].map((sym) => (
-                  <button key={sym}
-                    className={`${styles.chartSymBtn} ${chartSym === sym ? styles.chartSymActive : ''}`}
-                    onClick={() => handleSelect(sym)}
-                  >
-                    {SYMBOL_LABELS[sym] || sym}
-                  </button>
-                ))}
-              </div>
-              <div className={styles.chartPrice}>
-                {chartQuote ? `₹${fmt2(chartQuote.price)}` : '—'}
-                {chartQuote && (
-                  <span className={chartUp ? styles.chartChangeUp : styles.chartChangeDown}>
-                    {chartUp ? '↑' : '↓'} {chartUp ? '+' : ''}{fmt2(chartQuote.change)} ({Math.abs(chartQuote.changePct).toFixed(2)}%)
-                  </span>
-                )}
-              </div>
-              {chartQuote && (
-                <div className={styles.chartMeta}>
-                  <span>Open <b>₹{fmt2(chartQuote.open)}</b></span>
-                  <span>High <b style={{ color: 'var(--green)' }}>₹{fmt2(chartQuote.high)}</b></span>
-                  <span>Low <b style={{ color: 'var(--red)' }}>₹{fmt2(chartQuote.low)}</b></span>
-                  <span>Prev Close <b>₹{fmt2(chartQuote.prevClose)}</b></span>
-                  <span>Volume <b>{fmtVol(chartQuote.volume)}</b></span>
-                </div>
-              )}
-            </div>
-            <div className={styles.liveTag}><span className={styles.liveDot} />LIVE</div>
-          </div>
-
-          {chartLoading && chartData.length === 0 ? (
-            <div className={styles.chartLoader}><Spinner size={24} /><span>Loading chart…</span></div>
-          ) : chartData.length === 0 ? (
-            <div className={styles.chartLoader}><span style={{ color: 'var(--gray-3)', fontSize: 13 }}>{marketError ? 'Data unavailable.' : 'Loading…'}</span></div>
-          ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={chartData} margin={{ top: 8, right: 0, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={chartUp ? '#00a844' : '#dc2626'} stopOpacity={0.15} />
-                    <stop offset="95%" stopColor={chartUp ? '#00a844' : '#dc2626'} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
-                <XAxis dataKey="time" tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={false} tickLine={false} domain={['auto', 'auto']} tickFormatter={fmt0} />
-                <Tooltip
-                  contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, color: '#111', fontSize: 13, boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}
-                  cursor={{ stroke: 'rgba(0,0,0,0.1)' }}
-                  formatter={(v) => [`₹${fmt2(v)}`, SYMBOL_LABELS[chartSym] || chartSym]}
-                />
-                <Area type="monotone" dataKey="value"
-                  stroke={chartUp ? '#00a844' : '#dc2626'} strokeWidth={2}
-                  fill="url(#cg)" dot={false} isAnimationActive={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
+      {/* ── Quick Actions ── */}
+      <div className={styles.quickRow}>
+        <Card className={styles.quickCard} onClick={() => navigate('/dashboard/security')}>
+          <div className={styles.quickIcon} style={{ background: '#ede9fe', color: '#7c3aed' }}><Shield size={20}/></div>
+          <div className={styles.quickTitle}>Security</div>
+          <div className={styles.quickDesc}>2FA, TOTP, device management</div>
         </Card>
-
-        <div className={styles.quickCards}>
-          <Card className={styles.quickCard} onClick={() => navigate('/dashboard/security')}>
-            <div className={styles.quickIcon} style={{ background: '#ede9fe', color: '#7c3aed' }}><Shield size={20} /></div>
-            <div className={styles.quickTitle}>Security</div>
-            <div className={styles.quickDesc}>2FA, TOTP, device management</div>
-          </Card>
-          <Card className={styles.quickCard} onClick={() => navigate('/dashboard/settings')}>
-            <div className={styles.quickIcon} style={{ background: '#fef3c7', color: '#d97706' }}><Activity size={20} /></div>
-            <div className={styles.quickTitle}>Risk Controls</div>
-            <div className={styles.quickDesc}>Kill switch, limits, watchdogs</div>
-          </Card>
-          <Card className={`${styles.quickCard} ${styles.killCard}`} onClick={() => dispatch(setKillSwitchModal(true))}>
-            <div className={styles.quickIcon} style={{ background: 'var(--red-dim)', color: 'var(--red-dark)' }}><Zap size={20} /></div>
-            <div className={styles.quickTitle}>Kill Switch</div>
-            <div className={styles.quickDesc}>Pause trading instantly</div>
-          </Card>
-        </div>
+        <Card className={styles.quickCard} onClick={() => navigate('/dashboard/settings')}>
+          <div className={styles.quickIcon} style={{ background: '#fef3c7', color: '#d97706' }}><Activity size={20}/></div>
+          <div className={styles.quickTitle}>Risk Controls</div>
+          <div className={styles.quickDesc}>Kill switch, limits, watchdogs</div>
+        </Card>
+        <Card className={`${styles.quickCard} ${styles.killCard}`} onClick={() => dispatch(setKillSwitchModal(true))}>
+          <div className={styles.quickIcon} style={{ background: 'var(--red-dim)', color: 'var(--red-dark)' }}><Zap size={20}/></div>
+          <div className={styles.quickTitle}>Kill Switch</div>
+          <div className={styles.quickDesc}>Pause all trading instantly</div>
+        </Card>
+        <Card className={styles.quickCard} onClick={() => navigate('/dashboard/mf')}>
+          <div className={styles.quickIcon} style={{ background: 'var(--green-dim)', color: 'var(--green-dark)' }}><TrendingUp size={20}/></div>
+          <div className={styles.quickTitle}>Mutual Funds</div>
+          <div className={styles.quickDesc}>₹0 commission · Direct plans</div>
+        </Card>
       </div>
 
       {/* ── Live Stocks Table ── */}
       <Card className={styles.stocksCard}>
         <div className={styles.stocksHeader}>
           <div>
-            <h2 className={styles.stocksTitle}>Live Market Watch</h2>
-            <p className={styles.stocksSub}>Real-time prices · Refreshed every 5 seconds</p>
+            <h2 className={styles.stocksTitle}>Live Market Watch — NIFTY 50</h2>
+            <p className={styles.stocksSub}>NSE India live prices · Refreshed every 6 seconds</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {quotesLoading && <Spinner size={14} />}
+          <div className={styles.stocksRight}>
+            {loading && <Spinner size={14}/>}
             <span className={styles.watchUpdate}>{fmtTime(lastUpdated)}</span>
-            <button className={styles.refreshBtn} onClick={refresh} disabled={quotesLoading}>
-              <RefreshCw size={12} className={quotesLoading ? styles.spinning : ''} />
+            <button className={styles.refreshBtn} onClick={refresh} disabled={loading}>
+              <RefreshCw size={12} className={loading ? styles.spinning : ''}/>
             </button>
           </div>
         </div>
-
-        {/* Table head */}
         <div className={styles.stockTableHead}>
-          <span>Symbol</span>
-          <span>LTP</span>
-          <span>Change</span>
-          <span>Open / High / Low / Volume</span>
-          <span>Prev Close</span>
+          <span>Symbol</span><span>LTP</span>
+          <span>Change</span><span>O / H / L / Vol</span><span>Prev Close</span>
         </div>
-
-        <div className={styles.stockTableBody}>
-          {WATCHLIST_SYMBOLS.map((sym) => (
-            <StockRow
-              key={sym} sym={sym}
-              quote={quotes[sym]}
-              onSelect={handleSelect}
-              isSelected={chartSym === sym}
-            />
+        <div>
+          {WATCHLIST.map((sym) => (
+            <StockRow key={sym} sym={sym} quote={stocks[sym]}
+              isSelected={selectedSym === sym} onSelect={setSelectedSym} />
           ))}
         </div>
       </Card>
 
       {/* ── Charges ── */}
-      <ChargesSection />
+      <Charges />
 
       {/* ── Recent Orders ── */}
       <Card className={styles.tradesCard}>
@@ -411,9 +312,8 @@ export default function DashboardPage() {
           <h2 className={styles.tradesTitle}>Recent Orders</h2>
           <button className={styles.viewAll} onClick={() => navigate('/dashboard/portfolio')}>View all →</button>
         </div>
-
         {tradesLoading ? (
-          <div className={styles.tradesLoading}><Spinner size={32} /></div>
+          <div className={styles.tradesLoading}><Spinner size={32}/></div>
         ) : trades.length === 0 ? (
           <EmptyState icon="◳" title="No orders yet" description="Place your first order to see it here." />
         ) : (
@@ -422,18 +322,18 @@ export default function DashboardPage() {
               <span>Symbol</span><span>Type</span><span>Qty</span>
               <span>Price</span><span>Status</span><span>P&L</span>
             </div>
-            {trades.slice(0, 8).map((trade) => (
-              <div key={trade.id} className={styles.tableRow}>
+            {trades.slice(0, 8).map((t) => (
+              <div key={t.id} className={styles.tableRow}>
                 <div>
-                  <div className={styles.symbol}>{trade.symbol}</div>
-                  <div className={styles.exchange}>{trade.exchange} · {trade.segment}</div>
+                  <div className={styles.symbol}>{t.symbol}</div>
+                  <div className={styles.exchange}>{t.exchange} · {t.segment}</div>
                 </div>
-                <div><Badge variant={trade.side === 'BUY' ? 'success' : 'danger'}>{trade.side}</Badge></div>
-                <div className={styles.qty}>{trade.quantity}</div>
-                <div className={styles.price}>₹{(trade.executedPrice || trade.price || 0).toLocaleString('en-IN')}</div>
-                <div><Badge variant={STATUS_COLORS[trade.status] || 'default'}>{trade.status}</Badge></div>
-                <div className={trade.pnl >= 0 ? styles.pnlUp : styles.pnlDown}>
-                  {trade.pnl >= 0 ? '+' : ''}₹{(trade.pnl || 0).toLocaleString('en-IN')}
+                <div><Badge variant={t.side === 'BUY' ? 'success' : 'danger'}>{t.side}</Badge></div>
+                <div className={styles.qty}>{t.quantity}</div>
+                <div className={styles.price}>₹{(t.executedPrice || t.price || 0).toLocaleString('en-IN')}</div>
+                <div><Badge variant={STATUS_COLORS[t.status] || 'default'}>{t.status}</Badge></div>
+                <div className={t.pnl >= 0 ? styles.pnlUp : styles.pnlDown}>
+                  {t.pnl >= 0 ? '+' : ''}₹{(t.pnl || 0).toLocaleString('en-IN')}
                 </div>
               </div>
             ))}

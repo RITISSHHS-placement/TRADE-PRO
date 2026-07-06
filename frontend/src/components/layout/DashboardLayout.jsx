@@ -12,16 +12,16 @@ import KillSwitchModal from '../ui/KillSwitchModal'
 import { useAutoLogout } from '../../hooks'
 import styles from './DashboardLayout.module.css'
 
-// Pricing moved to top of nav (left side = top in sidebar)
+// Pricing first (top-left), then Dashboard, then rest
 const NAV_ITEMS = [
-  { to: '/dashboard',           icon: IndianRupee,     label: 'Pricing',     end: true, note: 'Left' },
-  { to: '/dashboard/overview',  icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/dashboard/trade',     icon: TrendingUp,      label: 'Trade' },
-  { to: '/dashboard/market',    icon: BarChart2,       label: 'Markets' },
-  { to: '/dashboard/mf',        icon: PieChart,        label: 'Mutual Funds' },
-  { to: '/dashboard/portfolio', icon: Briefcase,       label: 'Portfolio' },
-  { to: '/dashboard/security',  icon: Shield,          label: 'Security' },
-  { to: '/dashboard/settings',  icon: Settings,        label: 'Settings' },
+  { to: '/dashboard/pricing',  icon: IndianRupee,     label: 'Pricing' },
+  { to: '/dashboard',          icon: LayoutDashboard, label: 'Dashboard', end: true },
+  { to: '/dashboard/trade',    icon: TrendingUp,      label: 'Trade' },
+  { to: '/dashboard/market',   icon: BarChart2,       label: 'Markets' },
+  { to: '/dashboard/mf',       icon: PieChart,        label: 'Mutual Funds' },
+  { to: '/dashboard/portfolio', icon: Briefcase,      label: 'Portfolio' },
+  { to: '/dashboard/security', icon: Shield,          label: 'Security' },
+  { to: '/dashboard/settings', icon: Settings,        label: 'Settings' },
 ]
 
 export default function DashboardLayout() {

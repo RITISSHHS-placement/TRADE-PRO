@@ -4,8 +4,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import { loginUser, logoutUser, registerUser } from '../store/slices/authSlice'
 import { placeTrade, fetchTrades, fetchPositions } from '../store/slices/tradeSlice'
 import { setOrderPanel, setKillSwitchModal } from '../store/slices/uiSlice'
-import { loadQuotes, loadIntradayChart, setChartSymbol } from '../store/slices/marketSlice'
-import { DEFAULT_SYMBOLS } from '../services/marketData'
+import { loadIndices, loadNifty50, loadGainers, loadLosers } from '../store/slices/marketSlice'
 import { userAPI } from '../services/api'
 import toast from 'react-hot-toast'
 
@@ -119,65 +118,42 @@ export function useAutoLogout() {
 }
 
 // ---- useMarketData ----
-// Polls live market quotes and intraday chart data at a configurable interval.
-// Uses stable refs so intervals never restart on re-render.
-export function useMarketData({ symbols = DEFAULT_SYMBOLS, intervalMs = 5000 } = {}) {
-  const dispatch = useDispatch()
-  const { quotes, charts, chartSymbol, loading, chartLoading, lastUpdated, error } =
-    useSelector((state) => state.market)
+// Polls NSE India live data every 6 seconds via backend proxy.
+// Runs once on mount. Stable — no crashes on re-render.
+export function useMarketData({ intervalMs = 6000 } = {}) {
+  const dispatch    = useDispatch()
+  const { indices, stocks, gainers, losers, loading, lastUpdated, error } =
+    useSelector((s) => s.market)
 
-  // Stable refs so useEffect deps never change
-  const symbolsRef    = useRef(symbols)
-  const intervalMsRef = useRef(intervalMs)
-  const quoteTimerRef = useRef(null)
-  const chartTimerRef = useRef(null)
-  const mountedRef    = useRef(false)
+  const mountedRef  = useRef(false)
+  const timerRef    = useRef(null)
 
   const refresh = useCallback(() => {
-    dispatch(loadQuotes(symbolsRef.current))
-  }, [dispatch])
-
-  const changeChartSymbol = useCallback((sym) => {
-    dispatch(setChartSymbol(sym))
-    dispatch(loadIntradayChart(sym))
+    dispatch(loadIndices())
+    dispatch(loadNifty50())
   }, [dispatch])
 
   useEffect(() => {
-    if (mountedRef.current) return   // only run once
+    if (mountedRef.current) return
     mountedRef.current = true
 
     // Initial load
-    dispatch(loadQuotes(symbolsRef.current))
-    dispatch(loadIntradayChart(chartSymbol))
+    dispatch(loadIndices())
+    dispatch(loadNifty50())
+    dispatch(loadGainers())
+    dispatch(loadLosers())
 
-    // Quote polling — 5s
-    quoteTimerRef.current = setInterval(() => {
-      dispatch(loadQuotes(symbolsRef.current))
-    }, intervalMsRef.current)
+    // Poll every 6s
+    timerRef.current = setInterval(() => {
+      dispatch(loadIndices())
+      dispatch(loadNifty50())
+    }, intervalMs)
 
-    // Chart refresh — 60s
-    chartTimerRef.current = setInterval(() => {
-      dispatch(loadIntradayChart(chartSymbol))
-    }, 60_000)
+    return () => clearInterval(timerRef.current)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-    return () => {
-      clearInterval(quoteTimerRef.current)
-      clearInterval(chartTimerRef.current)
-    }
-  }, []) // empty deps — truly runs once
+  // Merge indices + stocks into a single quotes map for backward compat
+  const quotes = { ...indices, ...stocks }
 
-  const chart = charts[chartSymbol] || []
-
-  return {
-    quotes,
-    charts,
-    chart,
-    chartSymbol,
-    loading,
-    chartLoading,
-    lastUpdated,
-    error,
-    refresh,
-    changeChartSymbol,
-  }
+  return { quotes, indices, stocks, gainers, losers, loading, lastUpdated, error, refresh }
 }
