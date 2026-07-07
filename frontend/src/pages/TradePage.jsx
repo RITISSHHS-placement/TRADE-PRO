@@ -25,15 +25,18 @@ const EXCHANGES = [
   { value: 'MCX', label: 'MCX' },
 ]
 const WATCH_SYMBOLS = [
-  '^NSEI', '^BSESN', '^NSEBANK',
-  'RELIANCE.NS', 'INFY.NS', 'HDFCBANK.NS',
-  'TCS.NS', 'WIPRO.NS', 'ICICIBANK.NS',
+  'NIFTY 50', 'NIFTY BANK',
+  'RELIANCE', 'INFY', 'HDFCBANK',
+  'TCS', 'WIPRO', 'ICICIBANK',
 ]
 
 /* ── Market Watch reads from Redux store directly (no polling here) ── */
 const MarketWatch = memo(function MarketWatch() {
-  const quotes     = useSelector((s) => s.market.quotes)
-  const lastUpdated = useSelector((s) => s.market.lastUpdated)
+  const indices    = useSelector((s) => s.market?.indices    || {})
+  const stocks     = useSelector((s) => s.market?.stocks     || {})
+  const lastUpdated = useSelector((s) => s.market?.lastUpdated)
+  // Merge indices + stocks into one lookup
+  const quotes = { ...indices, ...stocks }
 
   return (
     <Card className={styles.watchCard}>
@@ -61,7 +64,7 @@ const MarketWatch = memo(function MarketWatch() {
               <div>
                 <div className={styles.watchSym}>{SYMBOL_LABELS[sym] || sym}</div>
                 <div className={styles.watchEx}>
-                  {sym.endsWith('.NS') ? 'NSE' : sym.endsWith('.BS') ? 'BSE' : 'INDEX'}
+                  {(sym === 'NIFTY 50' || sym === 'NIFTY BANK') ? 'INDEX' : 'NSE'}
                 </div>
               </div>
               <div className={styles.watchRight}>
