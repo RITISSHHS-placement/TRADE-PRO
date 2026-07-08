@@ -9,7 +9,7 @@ import {
   TrendingUp, TrendingDown, Wallet, ShieldCheck, LineChart as LineChartIcon,
   FileText, Users, Bell, LogOut, ChevronRight, Search, Plus, X,
   CheckCircle2, AlertTriangle, ArrowUpRight, ArrowDownRight, Landmark,
-  Gauge, ClipboardList, Lock, Eye, EyeOff, BarChart3, Sparkles,
+  Gauge, ClipboardList, Lock, Eye, EyeOff, BarChart3, Sparkles, BookOpen,
 } from 'lucide-react'
 import { useSelector, useDispatch } from 'react-redux'
 import { loginUser, logoutUser, registerUser } from './store/slices/authSlice'
@@ -68,12 +68,12 @@ const ROLES = [
 ]
 
 const NAV_BY_ROLE = {
-  CLIENT:     ['dashboard','trade','portfolio','research','margin'],
-  DEALER:     ['dashboard','trade','portfolio','margin'],
-  ANALYST:    ['dashboard','research'],
-  COMPLIANCE: ['dashboard','compliance','margin'],
-  RISK:       ['dashboard','margin','compliance'],
-  ADMIN:      ['dashboard','trade','portfolio','research','margin','compliance'],
+  CLIENT:     ['dashboard','trade','portfolio','research','margin','glossary'],
+  DEALER:     ['dashboard','trade','portfolio','margin','glossary'],
+  ANALYST:    ['dashboard','research','glossary'],
+  COMPLIANCE: ['dashboard','compliance','margin','glossary'],
+  RISK:       ['dashboard','margin','compliance','glossary'],
+  ADMIN:      ['dashboard','trade','portfolio','research','margin','compliance','glossary'],
 }
 
 const NAV_META = {
@@ -83,6 +83,7 @@ const NAV_META = {
   research:   { label:'Research',          icon:FileText        },
   margin:     { label:'Margin & Risk',     icon:Gauge           },
   compliance: { label:'Compliance',        icon:ShieldCheck     },
+  glossary:   { label:'Glossary',          icon:BookOpen        },
 }
 
 /* ── Live watchlist ticker using NSE data ── */
@@ -779,7 +780,88 @@ function MarginRisk() {
   )
 }
 
-/* ── Compliance ── */
+/* ── Financial Glossary ── */
+const GLOSSARY_TERMS = [
+  { term:'SEBI',  full:'Securities and Exchange Board of India',     def:'India\'s primary capital-market regulator. Oversees stock exchanges, brokers, mutual funds and listed companies. Equivalent to the US SEC.' },
+  { term:'NSE',   full:'National Stock Exchange of India',           def:'India\'s largest stock exchange by trading volume, headquartered in Mumbai. Home of the NIFTY 50 benchmark index.' },
+  { term:'BSE',   full:'Bombay Stock Exchange',                      def:'Asia\'s oldest stock exchange (est. 1875), also located in Mumbai. Home of the S&P BSE SENSEX benchmark index.' },
+  { term:'DEMAT', full:'Dematerialised Securities Account',          def:'An electronic account that holds shares and securities in digital form, eliminating paper certificates. Mandatory for trading in India since 1996.' },
+  { term:'P&L',   full:'Profit and Loss',                            def:'Net financial result of trading or investment activity. Unrealised P&L refers to open positions; realised P&L reflects closed trades.' },
+  { term:'LTCG',  full:'Long-Term Capital Gains',                    def:'Profit from selling equity held for more than 12 months. Taxed at 10% on gains exceeding ₹1 lakh per financial year (as of FY 2024-25).' },
+  { term:'STCG',  full:'Short-Term Capital Gains',                   def:'Profit from selling equity held for 12 months or less. Taxed at 15% under Section 111A of the Income Tax Act.' },
+  { term:'MTM',   full:'Mark-to-Market Valuation',                   def:'Daily revaluation of open positions at current market prices. Futures positions are MTM settled daily by exchanges; losses are debited from margin.' },
+  { term:'DP',    full:'Depository Participant',                     def:'An intermediary (bank or broker) registered with CDSL or NSDL that provides DEMAT account services to investors.' },
+  { term:'CDSL',  full:'Central Depository Services Limited',        def:'One of India\'s two depositories (BSE-promoted). Holds securities in electronic form on behalf of investors via DP accounts.' },
+  { term:'NSDL',  full:'National Securities Depository Limited',     def:'India\'s first and largest depository (NSE-promoted). Facilitates electronic settlement of trades on NSE and BSE.' },
+  { term:'XIRR',  full:'Extended Internal Rate of Return',           def:'A method to calculate annualised returns for investments with irregular cash flows (e.g., SIPs, partial redemptions). More accurate than simple CAGR for staggered investments.' },
+  { term:'F&O',   full:'Futures & Options',                          def:'Derivative instruments. Futures obligate the buyer/seller to transact at a future date; Options grant the right (not obligation) to buy (call) or sell (put) at a predetermined price.' },
+  { term:'NIFTY', full:'NSE Fifty',                                  def:'Flagship index of NSE comprising 50 large-cap stocks across 24 sectors. Used as the primary benchmark for Indian equity markets.' },
+  { term:'SENSEX',full:'Sensitive Index (S&P BSE SENSEX)',           def:'BSE\'s flagship 30-stock free-float market-cap weighted index. Considered a barometer of the Indian economy since 1986.' },
+  { term:'SIP',   full:'Systematic Investment Plan',                 def:'A method of investing a fixed amount in a mutual fund at regular intervals (monthly, weekly). Leverages rupee-cost averaging to reduce timing risk.' },
+  { term:'NAV',   full:'Net Asset Value',                            def:'Price per unit of a mutual fund, calculated as (total assets − liabilities) ÷ number of units outstanding. Published daily by AMCs after market close.' },
+  { term:'AMC',   full:'Asset Management Company',                   def:'The fund house that manages a mutual fund scheme. Examples: SBI MF, HDFC AMC, Mirae Asset.' },
+  { term:'AMFI',  full:'Association of Mutual Funds in India',       def:'Self-regulatory body for the mutual fund industry. Publishes daily NAVs and regulates AMC conduct.' },
+  { term:'GTT',   full:'Good Till Triggered',                        def:'A conditional order that stays active until the specified trigger price is hit, allowing investors to set entry/exit levels in advance.' },
+  { term:'STT',   full:'Securities Transaction Tax',                 def:'Tax levied on equity transactions. For delivery: 0.1% on buy and sell; for intraday sell: 0.025%; for F&O sell: 0.01% (futures), 0.05% (options on premium).' },
+  { term:'VIX',   full:'Volatility Index (India VIX)',               def:'NSE\'s measure of near-term market volatility derived from NIFTY option prices. Higher VIX = more uncertainty. Values above 20 are considered elevated.' },
+  { term:'MTF',   full:'Margin Trading Facility',                    def:'Allows investors to buy securities by paying only a portion of the total value (margin), with the broker funding the rest as a loan against interest.' },
+  { term:'T+1',   full:'Trade Plus One Settlement',                  def:'India moved to T+1 settlement in 2023. Shares bought are credited to your DEMAT account and funds settled by the next trading day.' },
+  { term:'ISIN',  full:'International Securities Identification Number', def:'A 12-character alphanumeric code that uniquely identifies a security globally. Indian ISINs start with "IN".' },
+]
+
+function Glossary() {
+  const [search, setSearch] = useState('')
+  const filtered = GLOSSARY_TERMS.filter(t =>
+    t.term.toLowerCase().includes(search.toLowerCase()) ||
+    t.full.toLowerCase().includes(search.toLowerCase()) ||
+    t.def.toLowerCase().includes(search.toLowerCase())
+  )
+  return (
+    <div className="mx-auto max-w-4xl px-6 py-10 fade-up">
+      <div className="mb-8">
+        <h1 className="font-display text-3xl text-zinc-50 mb-2">Financial Glossary</h1>
+        <p className="text-zinc-500 text-sm">Key terms, abbreviations and definitions used in Indian capital markets.</p>
+      </div>
+
+      {/* Search */}
+      <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 px-4 py-3 mb-8">
+        <Search size={15} className="text-zinc-500 shrink-0"/>
+        <input
+          className="bg-transparent flex-1 text-sm text-zinc-200 outline-none"
+          placeholder="Search terms, abbreviations…"
+          value={search} onChange={e => setSearch(e.target.value)}
+        />
+        {search && <button onClick={() => setSearch('')} className="text-zinc-500 hover:text-zinc-300"><X size={14}/></button>}
+      </div>
+
+      {/* Term cards */}
+      <div className="space-y-3">
+        {filtered.map(t => (
+          <div key={t.term} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
+            <div className="flex items-start gap-4">
+              <div className="shrink-0">
+                <span className="inline-block rounded-md bg-amber-400/10 border border-amber-400/20 px-3 py-1 font-mono text-sm font-bold text-amber-400 min-w-[72px] text-center">
+                  {t.term}
+                </span>
+              </div>
+              <div>
+                <div className="font-display text-base text-zinc-100 font-semibold mb-1">{t.full}</div>
+                <p className="text-sm text-zinc-400 leading-relaxed">{t.def}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-center py-12 text-zinc-500 text-sm">No terms match "{search}"</div>
+        )}
+      </div>
+
+      <div className="mt-8 rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-xs text-zinc-600">
+        Source: SEBI, NSE India, BSE India, AMFI, Income Tax Act (India). All definitions are for informational purposes only.
+      </div>
+    </div>
+  )
+}
 function Compliance() {
   const reports = [
     {name:'Daily Activity Report',   status:'Submitted', time:'18:02 IST'},
@@ -856,6 +938,7 @@ function AppShell() {
     research:   auth ? <Research />                                       : <Login setPage={navigateTo}/>,
     margin:     auth ? <MarginRisk />                                     : <Login setPage={navigateTo}/>,
     compliance: auth ? <Compliance />                                     : <Login setPage={navigateTo}/>,
+    glossary:   <Glossary />,
   }
 
   return (

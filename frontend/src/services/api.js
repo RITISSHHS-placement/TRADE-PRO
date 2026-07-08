@@ -13,7 +13,7 @@ export const injectActions = (logoutFn, refreshFn) => {
   _refreshToken = refreshFn
 }
 
-const BASE_URL = import.meta.env.VITE_API_URL || '/api'
+const BASE_URL = import.meta.env.VITE_API_URL || '/backend'
 
 // ---- Axios Instance ----
 const api = axios.create({
