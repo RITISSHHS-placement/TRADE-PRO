@@ -274,7 +274,9 @@ function Login({ setPage }) {
       deviceName: `${navigator.platform} Browser`,
       userAgent: navigator.userAgent,
     }))
-    // navigation handled by parent shell via Redux state
+    if (!result.error) {
+      setPage('dashboard')
+    }
   }
 
   return (
@@ -339,7 +341,7 @@ function Register({ setPage }) {
       deviceName: `${navigator.platform} Browser`,
       userAgent: navigator.userAgent,
     }))
-    if (!result.error) setDone(true)
+    if (!result.error) { setDone(true); setTimeout(() => setPage('dashboard'), 1200) }
   }
 
   if (done) return (
@@ -907,11 +909,20 @@ function AppShell() {
   const { token, user } = useSelector((s) => s.auth)
   const [page, setPage] = useState('landing')
 
-  // Sync auth state with page
+  // Sync auth state with page — redirect on login/logout
   useEffect(() => {
-    if (token && user && page === 'landing') setPage('dashboard')
-    if (!token && ['dashboard','trade','portfolio','research','margin','compliance'].includes(page)) setPage('landing')
-  }, [token])
+    if (token && user) {
+      // Logged in — go to dashboard from any public page
+      if (['landing', 'login', 'register'].includes(page)) {
+        setPage('dashboard')
+      }
+    } else {
+      // Logged out — go to landing from any protected page
+      if (['dashboard','trade','portfolio','research','margin','compliance'].includes(page)) {
+        setPage('landing')
+      }
+    }
+  }, [token, user])
 
   const navigateTo = (p) => {
     // Guard protected pages
