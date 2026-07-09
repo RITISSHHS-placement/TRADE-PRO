@@ -268,15 +268,13 @@ function Login({ setPage }) {
 
   const submit = async (e) => {
     e.preventDefault()
-    const result = await dispatch(loginUser({
+    await dispatch(loginUser({
       email, password: pw,
       deviceId: navigator.userAgent.slice(0, 64),
       deviceName: `${navigator.platform} Browser`,
       userAgent: navigator.userAgent,
     }))
-    if (!result.error) {
-      setPage('dashboard')
-    }
+    // Redirect handled by AppShell useEffect watching token+user
   }
 
   return (
@@ -905,27 +903,18 @@ function Compliance() {
 
 /* ── App Shell — wires Redux auth to page routing ── */
 function AppShell() {
-  const dispatch   = useDispatch()
+  const dispatch        = useDispatch()
   const { token, user } = useSelector((s) => s.auth)
   const [page, setPage] = useState('landing')
 
-  // Sync auth state with page — redirect on login/logout
+  // Watch token — as soon as it's set, go to dashboard
   useEffect(() => {
     if (token && user) {
-      // Logged in — go to dashboard from any public page
-      if (['landing', 'login', 'register'].includes(page)) {
-        setPage('dashboard')
-      }
-    } else {
-      // Logged out — go to landing from any protected page
-      if (['dashboard','trade','portfolio','research','margin','compliance'].includes(page)) {
-        setPage('landing')
-      }
+      setPage('dashboard')
     }
   }, [token, user])
 
   const navigateTo = (p) => {
-    // Guard protected pages
     if (!token && ['dashboard','trade','portfolio','research','margin','compliance'].includes(p)) {
       setPage('login'); return
     }
@@ -939,24 +928,27 @@ function AppShell() {
     setPage('landing')
   }
 
-  const pages = {
-    landing:    <Landing    setPage={navigateTo} />,
-    login:      <Login      setPage={navigateTo} />,
-    register:   <Register   setPage={navigateTo} />,
-    dashboard:  auth ? <Dashboard   auth={auth} setPage={navigateTo} />  : <Login setPage={navigateTo}/>,
-    trade:      auth ? <TradingTerminal />                                : <Login setPage={navigateTo}/>,
-    portfolio:  auth ? <Portfolio />                                      : <Login setPage={navigateTo}/>,
-    research:   auth ? <Research />                                       : <Login setPage={navigateTo}/>,
-    margin:     auth ? <MarginRisk />                                     : <Login setPage={navigateTo}/>,
-    compliance: auth ? <Compliance />                                     : <Login setPage={navigateTo}/>,
-    glossary:   <Glossary />,
+  // Determine which component to render
+  const renderPage = () => {
+    switch (page) {
+      case 'login':      return <Login setPage={setPage} />
+      case 'register':   return <Register setPage={setPage} />
+      case 'glossary':   return <Glossary />
+      case 'dashboard':  return auth ? <Dashboard auth={auth} setPage={navigateTo} /> : <Login setPage={setPage} />
+      case 'trade':      return auth ? <TradingTerminal /> : <Login setPage={setPage} />
+      case 'portfolio':  return auth ? <Portfolio />        : <Login setPage={setPage} />
+      case 'research':   return auth ? <Research />         : <Login setPage={setPage} />
+      case 'margin':     return auth ? <MarginRisk />       : <Login setPage={setPage} />
+      case 'compliance': return auth ? <Compliance />       : <Login setPage={setPage} />
+      default:           return <Landing setPage={navigateTo} />
+    }
   }
 
   return (
-    <div className="font-body min-h-screen bg-gray-50 text-gray-700 flex flex-col">
+    <div className="font-body min-h-screen bg-zinc-950 text-zinc-200 flex flex-col">
       <NavBar auth={auth} page={page} setPage={navigateTo} onLogout={onLogout}/>
       <TickerTape/>
-      <main className="flex-1">{pages[page] || pages.landing}</main>
+      <main className="flex-1">{renderPage()}</main>
       <Footer/>
     </div>
   )
