@@ -484,6 +484,7 @@ function Register({ setPage }) {
   const { loading, error } = useSelector((s) => s.auth)
   const [step, setStep]     = useState(1)
   const [done, setDone]     = useState(false)
+  const [slow, setSlow]     = useState(false)
   const [form, setForm]     = useState({ name:'', email:'', phone:'', password:'', role:'CLIENT' })
   const [errs, setErrs]     = useState({})
 

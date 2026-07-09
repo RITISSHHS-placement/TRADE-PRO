@@ -21,7 +21,10 @@ export const registerUser = createAsyncThunk(
       const res = await authAPI.register(data)
       return res.data.data
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || 'Registration failed')
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        return rejectWithValue('Server is waking up — please try again in 10 seconds')
+      }
+      return rejectWithValue(err.response?.data?.message || err.message || 'Registration failed')
     }
   }
 )
@@ -33,7 +36,10 @@ export const loginUser = createAsyncThunk(
       const res = await authAPI.login(data)
       return res.data.data
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || 'Login failed')
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        return rejectWithValue('Server is waking up — please try again in 10 seconds')
+      }
+      return rejectWithValue(err.response?.data?.message || err.message || 'Login failed')
     }
   }
 )
