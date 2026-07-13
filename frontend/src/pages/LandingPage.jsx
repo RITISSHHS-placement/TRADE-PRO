@@ -1,16 +1,16 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, BarChart3, Shield, Sparkles, Zap, TrendingUp } from 'lucide-react'
+import { ArrowRight, BarChart3, Shield, Sparkles, Zap, TrendingUp, TrendingDown } from 'lucide-react'
 import styles from './LandingPage.module.css'
 
 export default function LandingPage() {
   const navigate = useNavigate()
 
   const features = [
-    { icon: <Zap size={20} />,       title: 'Live Market Data',         desc: 'Real-time quotes for equities, F&O, commodities, forex and crypto — refreshed every 5 seconds.', color: 'var(--green)' },
-    { icon: <BarChart3 size={20} />, title: 'Trade Execution',          desc: 'Place market, limit, stop-loss and GTT orders across NSE, BSE and MCX segments instantly.', color: 'var(--red)' },
-    { icon: <Shield size={20} />,    title: 'Institutional Security',   desc: 'JWT auth, TOTP 2FA, device binding and emergency kill switch to protect your capital.', color: 'var(--amber)' },
-    { icon: <TrendingUp size={20} />,title: 'Portfolio Analytics',      desc: 'P&L tracking, allocation charts, win rate analysis and full order history in one dashboard.', color: 'var(--accent)' },
+    { icon: <Zap size={20} />,       title: 'Live Market Data',         desc: 'Real-time quotes for equities, F&O, commodities, forex and crypto — refreshed every 5 seconds.', color: '#2563eb' },
+    { icon: <BarChart3 size={20} />, title: 'Smart Trade Execution',    desc: 'Place market, limit, stop-loss and GTT orders across NSE, BSE and MCX segments instantly.', color: '#7c3aed' },
+    { icon: <Shield size={20} />,    title: 'Bank-Level Security',      desc: 'JWT auth, TOTP 2FA, device binding and emergency kill switch to protect your capital.', color: '#f59e0b' },
+    { icon: <TrendingUp size={20} />,title: 'Portfolio Intelligence',   desc: 'P&L tracking, allocation charts, win rate analysis and full order history in one dashboard.', color: '#06b6d4' },
   ]
 
   return (
@@ -35,68 +35,56 @@ export default function LandingPage() {
 
       {/* ── HERO ── */}
       <section className={styles.hero}>
-        {/* Left copy */}
         <div className={styles.heroCopy}>
           <div className={styles.heroBadge}>
             <span className={styles.bullDot} />
-            Live market intelligence platform
+            Live Markets
           </div>
-
           <h1 className={styles.heroTitle}>
-            Trade with the <span className={styles.bullWord}>Bulls</span>.
-            <br />
-            Survive the <span className={styles.bearWord}>Bears</span>.
+            Trade with <span className={styles.bullWord}>clarity</span>, not <span className={styles.bearWord}>chaos</span>
           </h1>
-
           <p className={styles.heroText}>
-            A professional-grade trading platform with real-time market data,
-            smart order execution, risk controls and portfolio analytics — all in one place.
+            Professional-grade trading platform with real-time data, smart screeners, and portfolio insights. Built for traders who take investing seriously.
           </p>
-
           <div className={styles.heroActions}>
             <button className={styles.btnPrimary} onClick={() => navigate('/register')}>
-              Start Trading Free <ArrowRight size={16} />
+              Get Started Free <ArrowRight size={15} />
             </button>
             <button className={styles.btnSecondary} onClick={() => navigate('/login')}>
               Sign In
             </button>
           </div>
-
           <div className={styles.heroStats}>
             <div className={styles.statItem}>
-              <span className={styles.statVal}>₹2.8K Cr</span>
-              <span className={styles.statLabel}>Daily Volume</span>
+              <span className={styles.statVal}>2M+</span>
+              <span className={styles.statLabel}>Data Points/Day</span>
             </div>
             <div className={styles.statDivider} />
             <div className={styles.statItem}>
-              <span className={styles.statVal}>5s</span>
-              <span className={styles.statLabel}>Data Refresh</span>
+              <span className={styles.statVal}>40ms</span>
+              <span className={styles.statLabel}>Avg Latency</span>
             </div>
             <div className={styles.statDivider} />
             <div className={styles.statItem}>
-              <span className={styles.statVal}>48K+</span>
+              <span className={styles.statVal}>50K+</span>
               <span className={styles.statLabel}>Active Traders</span>
             </div>
           </div>
         </div>
 
-        {/* Right — Bull Bear image */}
         <div className={styles.heroVisual}>
-          <img
-            src="/bull-bear.webp"
-            alt="Bull vs Bear market — TradePro"
-            className={styles.heroImg}
-          />
-          {/* Floating ticker cards */}
-          <div className={`${styles.floatCard} ${styles.floatBull}`}>
-            <span className={styles.floatLabel}>NIFTY 50</span>
-            <span className={styles.floatVal}>24,380</span>
-            <span className={styles.floatChange}>▲ +1.24%</span>
-          </div>
-          <div className={`${styles.floatCard} ${styles.floatBear}`}>
-            <span className={styles.floatLabel}>INFY</span>
-            <span className={styles.floatVal}>1,678</span>
-            <span className={styles.floatChangeDn}>▼ -0.82%</span>
+          <div className={styles.heroVisualsContainer}>
+            <div className={`${styles.floatCard} ${styles.floatBull}`}>
+              <span className={styles.floatLabel}>NIFTY 50</span>
+              <span className={styles.floatVal}>24,856.45</span>
+              <span className={styles.floatChange}>+2.14%</span>
+            </div>
+            <div className={styles.heroChartPlaceholder} />
+            <div className={`${styles.floatCard} ${styles.floatBear}`}>
+              <span className={styles.floatLabel}>NIFTY BANK</span>
+              <span className={styles.floatVal}>52,341.80</span>
+              <span className={styles.floatChangeDn}>-1.23%</span>
+            </div>
           </div>
         </div>
       </section>
@@ -109,9 +97,9 @@ export default function LandingPage() {
           <p>From live quotes to risk management — built for serious traders.</p>
         </div>
         <div className={styles.featuresGrid}>
-          {features.map((f) => (
-            <div key={f.title} className={styles.featureCard}>
-              <div className={styles.featureIcon} style={{ background: f.color + '18', color: f.color }}>{f.icon}</div>
+          {features.map((f, i) => (
+            <div key={f.title} className={styles.featureCard} style={{ '--feature-color': f.color, '--feature-bg': f.color + '15' }}>
+              <div className={styles.featureIcon}>{f.icon}</div>
               <h3>{f.title}</h3>
               <p>{f.desc}</p>
             </div>

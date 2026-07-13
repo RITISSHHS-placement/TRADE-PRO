@@ -7,7 +7,7 @@ import {
 } from 'recharts'
 import {
   TrendingUp, TrendingDown, Zap, Shield,
-  Activity, RefreshCw, Clock, ArrowUpRight, ArrowDownRight,
+  Activity, RefreshCw, Clock, ArrowUpRight, ArrowDownRight, MoreHorizontal,
 } from 'lucide-react'
 import { useDispatch } from 'react-redux'
 import { setKillSwitchModal } from '../store/slices/uiSlice'
@@ -32,11 +32,8 @@ const fmtVol = (n) => {
 const fmtTime = (ts) =>
   ts ? new Date(ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--'
 
-// Key indices to show in ticker
-const TICKER_INDICES = [
-  'NIFTY 50', 'NIFTY BANK', 'NIFTY NEXT 50',
-  'NIFTY IT', 'NIFTY PHARMA', 'NIFTY AUTO', 'INDIA VIX',
-]
+// Key indices to show
+const KEY_INDICES = ['NIFTY 50', 'NIFTY BANK', 'NIFTY IT', 'INDIA VIX']
 
 // Stocks to show in live table
 const WATCHLIST = [
@@ -44,6 +41,33 @@ const WATCHLIST = [
   'HINDUNILVR', 'SBIN', 'BAJFINANCE', 'BHARTIARTL',
   'KOTAKBANK', 'WIPRO', 'LT', 'ITC', 'TATAMOTORS', 'AXISBANK',
 ]
+
+/* ── Index Card ── */
+function IndexCard({ label, data, onClick, isSelected }) {
+  const up = (data?.changePct ?? 0) >= 0
+  return (
+    <div 
+      className={`${styles.indexCard} ${isSelected ? styles.indexCardActive : ''}`}
+      onClick={onClick}
+      role="button" tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
+    >
+      <div className={styles.icHeader}>
+        <span className={styles.icLabel}>{label}</span>
+      </div>
+      <div className={styles.icPrice}>{data ? fmt2(data.price) : '—'}</div>
+      <div className={up ? styles.icChangeUp : styles.icChangeDown}>
+        {data ? (
+          <>
+            {up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+            {up ? '+' : ''}{fmt2(data.change)}
+            <span className={styles.icPercent}>({up ? '+' : ''}{(data.changePct ?? 0).toFixed(2)}%)</span>
+          </>
+        ) : '—'}
+      </div>
+    </div>
+  )
+}
 
 /* ── Stock row ── */
 function StockRow({ sym, quote, isSelected, onSelect }) {
@@ -58,7 +82,7 @@ function StockRow({ sym, quote, isSelected, onSelect }) {
     >
       <div className={styles.srSym}>
         <span className={styles.srName}>{name}</span>
-        <span className={styles.srCode}>NSE: {sym}</span>
+        <span className={styles.srCode}>{sym}</span>
       </div>
       <div className={styles.srPrice}>
         {quote ? `₹${fmt2(quote.price)}` : <span className={styles.srLoading}>—</span>}
@@ -67,17 +91,24 @@ function StockRow({ sym, quote, isSelected, onSelect }) {
         {quote ? (
           <>
             {up ? <ArrowUpRight size={13}/> : <ArrowDownRight size={13}/>}
-            {up ? '+' : ''}{fmt2(quote.change)}
+            {Math.abs(quote.change ?? 0).toFixed(2)}
             <span>({up ? '+' : ''}{(quote.changePct ?? 0).toFixed(2)}%)</span>
           </>
         ) : '—'}
       </div>
-      <div className={styles.srOhlv}>
+      <div className={styles.srStats}>
         {quote ? (
           <>
-            <span>O <b>{fmt2(quote.open)}</b></span>
-            <span>H <b style={{ color: 'var(--green)' }}>{fmt2(quote.high)}</b></span>
-            <span>L <b style={{ color: 'var(--red)' }}>{fmt2(quote.low)}</b></span>
+            <span><b>{fmt2(quote.open)}</b></span>
+            <span style={{ color: '#10b981' }}><b>{fmt2(quote.high)}</b></span>
+            <span style={{ color: '#ef4444' }}><b>{fmt2(quote.low)}</b></span>
+            <span><b>{fmtVol(quote.volume)}</b></span>
+          </>
+        ) : '—'}
+      </div>
+    </div>
+  )
+}
             <span>Vol <b>{fmtVol(quote.volume)}</b></span>
           </>
         ) : '—'}

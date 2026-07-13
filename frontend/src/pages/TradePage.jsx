@@ -1,22 +1,24 @@
 import React, { useState, memo } from 'react'
+import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
+import { Activity, BarChart3, Bell, BrainCircuit, Radar, ShieldCheck, Sparkles, TrendingUp, Zap } from 'lucide-react'
 import { useTrades } from '../hooks'
 import { Button, Input, Select, Card, Badge } from '../components/ui'
 import { SYMBOL_LABELS } from '../services/marketData'
 import styles from './TradePage.module.css'
 
-const SEGMENTS   = [
-  { value: 'EQUITY',    label: 'Equity' },
-  { value: 'FUTURES',   label: 'Futures' },
-  { value: 'OPTIONS',   label: 'Options' },
-  { value: 'CURRENCY',  label: 'Currency' },
+const SEGMENTS = [
+  { value: 'EQUITY', label: 'Equity' },
+  { value: 'FUTURES', label: 'Futures' },
+  { value: 'OPTIONS', label: 'Options' },
+  { value: 'CURRENCY', label: 'Currency' },
   { value: 'COMMODITY', label: 'Commodity' },
 ]
 const ORDER_TYPES = [
-  { value: 'MARKET',           label: 'Market' },
-  { value: 'LIMIT',            label: 'Limit' },
-  { value: 'STOP_LOSS',        label: 'Stop Loss' },
+  { value: 'MARKET', label: 'Market' },
+  { value: 'LIMIT', label: 'Limit' },
+  { value: 'STOP_LOSS', label: 'Stop Loss' },
   { value: 'STOP_LOSS_MARKET', label: 'SL-Market' },
 ]
 const EXCHANGES = [
@@ -24,56 +26,58 @@ const EXCHANGES = [
   { value: 'BSE', label: 'BSE' },
   { value: 'MCX', label: 'MCX' },
 ]
-const WATCH_SYMBOLS = [
-  'NIFTY 50', 'NIFTY BANK',
-  'RELIANCE', 'INFY', 'HDFCBANK',
-  'TCS', 'WIPRO', 'ICICIBANK',
+const WATCH_SYMBOLS = ['NIFTY 50', 'NIFTY BANK', 'RELIANCE', 'INFY', 'HDFCBANK', 'TCS', 'WIPRO', 'ICICIBANK']
+const INSIGHTS = [
+  { title: 'Momentum is accelerating', copy: 'Volatility is cooling while upside breadth improves across large-cap names.', tone: 'positive' },
+  { title: 'Risk posture is balanced', copy: 'Your guardrails are aligned with current market conditions and liquidity.', tone: 'neutral' },
+  { title: 'Smart alerts enabled', copy: 'AI watches for breakout and breakdown patterns around your watchlist.', tone: 'positive' },
 ]
 
-/* ── Market Watch reads from Redux store directly (no polling here) ── */
+const formatPrice = (value) => {
+  if (value == null || Number.isNaN(value)) return '—'
+  return `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
 const MarketWatch = memo(function MarketWatch() {
-  const indices    = useSelector((s) => s.market?.indices    || {})
-  const stocks     = useSelector((s) => s.market?.stocks     || {})
+  const indices = useSelector((s) => s.market?.indices || {})
+  const stocks = useSelector((s) => s.market?.stocks || {})
   const lastUpdated = useSelector((s) => s.market?.lastUpdated)
-  // Merge indices + stocks into one lookup
   const quotes = { ...indices, ...stocks }
 
   return (
     <Card className={styles.watchCard}>
       <div className={styles.cardHeader}>
         <div>
-          <h2 className={styles.cardTitle}>Market Watch</h2>
+          <h2 className={styles.cardTitle}>Market Pulse</h2>
           <div className={styles.marketMeta}>
             <span className={styles.liveBadge}>
               <span className={styles.liveDot} /> Live · auto-refresh every 5s
             </span>
             <span className={styles.marketTime}>
-              {lastUpdated
-                ? new Date(lastUpdated).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-                : 'Connecting…'}
+              {lastUpdated ? new Date(lastUpdated).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Connecting…'}
             </span>
           </div>
         </div>
       </div>
       <div className={styles.watchList}>
         {WATCH_SYMBOLS.map((sym) => {
-          const q  = quotes[sym]
+          const q = quotes[sym]
           const up = (q?.changePct ?? 0) >= 0
+          const height = Math.min(88, Math.max(28, Math.abs(q?.changePct ?? 0) * 8 + 26))
           return (
             <div key={sym} className={styles.watchItem}>
               <div>
                 <div className={styles.watchSym}>{SYMBOL_LABELS[sym] || sym}</div>
-                <div className={styles.watchEx}>
-                  {(sym === 'NIFTY 50' || sym === 'NIFTY BANK') ? 'INDEX' : 'NSE'}
-                </div>
+                <div className={styles.watchEx}>{sym === 'NIFTY 50' || sym === 'NIFTY BANK' ? 'INDEX' : 'NSE'}</div>
               </div>
               <div className={styles.watchRight}>
-                <div className={styles.watchPrice}>
-                  {q ? `₹${q.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
-                </div>
+                <div className={styles.watchPrice}>{q ? formatPrice(q.price) : '—'}</div>
                 <div className={up ? styles.changeUp : styles.changeDown}>
                   {q ? `${up ? '↑' : '↓'} ${Math.abs(q.changePct).toFixed(2)}%` : '—'}
                 </div>
+              </div>
+              <div className={styles.heatCellWrap}>
+                <span className={`${styles.heatCell} ${up ? styles.heatUp : styles.heatDown}`} style={{ height: `${height}%` }} />
               </div>
             </div>
           )
@@ -83,14 +87,16 @@ const MarketWatch = memo(function MarketWatch() {
   )
 })
 
-/* ── Main trade page — isolated from market data polling ── */
 export default function TradePage() {
   const { place, placing, trades } = useTrades()
-  const [side,  setSide]  = useState('BUY')
+  const [side, setSide] = useState('BUY')
   const [isGTT, setIsGTT] = useState(false)
 
   const {
-    register, handleSubmit, reset, watch,
+    register,
+    handleSubmit,
+    reset,
+    watch,
     formState: { errors },
   } = useForm({ defaultValues: { exchange: 'NSE', segment: 'EQUITY', orderType: 'MARKET' } })
 
@@ -98,13 +104,13 @@ export default function TradePage() {
 
   const onSubmit = (data) => {
     place({
-      symbol:       data.symbol.toUpperCase(),
-      exchange:     data.exchange,
-      segment:      data.segment,
-      orderType:    data.orderType,
+      symbol: data.symbol.toUpperCase(),
+      exchange: data.exchange,
+      segment: data.segment,
+      orderType: data.orderType,
       side,
-      quantity:     parseInt(data.quantity),
-      price:        data.price        ? parseFloat(data.price)        : null,
+      quantity: parseInt(data.quantity, 10),
+      price: data.price ? parseFloat(data.price) : null,
       triggerPrice: data.triggerPrice ? parseFloat(data.triggerPrice) : null,
       isGTT,
     })
@@ -115,22 +121,74 @@ export default function TradePage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.grid}>
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className={styles.heroCard}
+      >
+        <div className={styles.heroContent}>
+          <div className={styles.eyebrow}>
+            <Sparkles size={14} /> AI analyst · Intelligent trading command center
+          </div>
+          <h1>Trade with clarity, speed, and conviction.</h1>
+          <p>
+            A premium market workspace that combines live signals, adaptive risk controls, and elegant execution flows in one immersive view.
+          </p>
+          <div className={styles.heroActions}>
+            <button type="button" className={styles.primaryCta}>Explore AI recommendations</button>
+            <button type="button" className={styles.secondaryCta}>Enable smart alerts</button>
+          </div>
+        </div>
+        <div className={styles.heroMetrics}>
+          <div className={styles.metricCard}>
+            <div className={styles.metricIcon}><BrainCircuit size={16} /></div>
+            <div>
+              <div className={styles.metricLabel}>AI confidence</div>
+              <div className={styles.metricValue}>86%</div>
+            </div>
+          </div>
+          <div className={styles.metricCard}>
+            <div className={styles.metricIcon}><ShieldCheck size={16} /></div>
+            <div>
+              <div className={styles.metricLabel}>Risk score</div>
+              <div className={styles.metricValue}>Balanced</div>
+            </div>
+          </div>
+          <div className={styles.metricCard}>
+            <div className={styles.metricIcon}><Zap size={16} /></div>
+            <div>
+              <div className={styles.metricLabel}>Momentum</div>
+              <div className={styles.metricValue}>+1.32%</div>
+            </div>
+          </div>
+        </div>
+      </motion.section>
 
-        {/* ── ORDER FORM ── */}
+      <div className={styles.grid}>
         <Card className={styles.orderCard}>
           <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Place Order</h2>
+            <div>
+              <h2 className={styles.cardTitle}>Place intelligent order</h2>
+              <p className={styles.cardSub}>Built for fast decision-making and premium execution.</p>
+            </div>
             <div className={styles.segmentToggle}>
-              <button className={`${styles.segBtn} ${!isGTT ? styles.segActive : ''}`} onClick={() => setIsGTT(false)}>Regular</button>
-              <button className={`${styles.segBtn} ${isGTT  ? styles.segActive : ''}`} onClick={() => setIsGTT(true)}>GTT</button>
+              <button type="button" className={`${styles.segBtn} ${!isGTT ? styles.segActive : ''}`} onClick={() => setIsGTT(false)}>
+                Regular
+              </button>
+              <button type="button" className={`${styles.segBtn} ${isGTT ? styles.segActive : ''}`} onClick={() => setIsGTT(true)}>
+                GTT
+              </button>
             </div>
           </div>
 
-          {/* BUY / SELL */}
           <div className={styles.sideRow}>
-            <button className={`${styles.sideBtn} ${side === 'BUY'  ? styles.buyActive  : ''}`} onClick={() => setSide('BUY')}>BUY</button>
-            <button className={`${styles.sideBtn} ${side === 'SELL' ? styles.sellActive : ''}`} onClick={() => setSide('SELL')}>SELL</button>
+            <button type="button" className={`${styles.sideBtn} ${side === 'BUY' ? styles.buyActive : ''}`} onClick={() => setSide('BUY')}>
+              Buy
+            </button>
+            <button type="button" className={`${styles.sideBtn} ${side === 'SELL' ? styles.sellActive : ''}`} onClick={() => setSide('SELL')}>
+              Sell
+            </button>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className={styles.form} autoComplete="off">
@@ -147,7 +205,7 @@ export default function TradePage() {
             </div>
 
             <div className={styles.row}>
-              <Select label="Segment"    options={SEGMENTS}    {...register('segment')} />
+              <Select label="Segment" options={SEGMENTS} {...register('segment')} />
               <Select label="Order Type" options={ORDER_TYPES} {...register('orderType')} />
             </div>
 
@@ -190,30 +248,47 @@ export default function TradePage() {
               />
             )}
 
-            {isGTT && (
-              <Input label="GTT Expiry Date" type="date" {...register('gttExpiry')} />
-            )}
+            {isGTT && <Input label="GTT Expiry Date" type="date" {...register('gttExpiry')} />}
 
-            <Button type="submit" fullWidth loading={placing} size="lg"
-              variant={side === 'BUY' ? 'primary' : 'danger'}>
+            <Button type="submit" fullWidth loading={placing} size="lg" variant={side === 'BUY' ? 'primary' : 'danger'}>
               {side === 'BUY' ? '↑ Buy' : '↓ Sell'} {isGTT ? '(GTT)' : ''}
             </Button>
           </form>
 
-          {isGTT && (
-            <div className={styles.gttNote}>
-              GTT orders execute automatically when market conditions meet your criteria.
-            </div>
-          )}
+          {isGTT && <div className={styles.gttNote}>GTT orders execute automatically once your preset conditions are met.</div>}
         </Card>
 
-        {/* ── RIGHT: MARKET WATCH + RECENT ── */}
         <div className={styles.right}>
           <MarketWatch />
 
+          <Card className={styles.insightCard}>
+            <div className={styles.cardHeader}>
+              <div>
+                <h2 className={styles.cardTitle}>AI insights</h2>
+                <p className={styles.cardSub}>Signals curated for your current setup.</p>
+              </div>
+              <div className={styles.iconPill}><Radar size={14} /></div>
+            </div>
+            <div className={styles.insightList}>
+              {INSIGHTS.map((item) => (
+                <div key={item.title} className={styles.insightItem}>
+                  <div className={styles.insightTitleRow}>
+                    <span className={styles.insightTitle}>{item.title}</span>
+                    <span className={`${styles.insightBadge} ${styles[item.tone]}`}>AI</span>
+                  </div>
+                  <p className={styles.insightCopy}>{item.copy}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+
           <Card className={styles.recentCard}>
             <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>Today's Orders</h2>
+              <div>
+                <h2 className={styles.cardTitle}>Today’s orders</h2>
+                <p className={styles.cardSub}>A living audit of your most recent activity.</p>
+              </div>
+              <div className={styles.iconPill}><Bell size={14} /></div>
             </div>
             {recentTrades.length === 0 ? (
               <div className={styles.noTrades}>No orders placed today.</div>
@@ -224,9 +299,9 @@ export default function TradePage() {
                     <div className={styles.watchSym}>{t.symbol}</div>
                     <div className={styles.watchEx}>{t.orderType}</div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div className={styles.recentMeta}>
                     <Badge variant={t.side === 'BUY' ? 'success' : 'danger'}>{t.side}</Badge>
-                    <div className={styles.watchEx} style={{ marginTop: 4 }}>{t.quantity} qty</div>
+                    <div className={styles.watchEx}>{t.quantity} qty</div>
                   </div>
                 </div>
               ))
