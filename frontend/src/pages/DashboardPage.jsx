@@ -13,6 +13,7 @@ import { useDispatch } from 'react-redux'
 import { setKillSwitchModal } from '../store/slices/uiSlice'
 import { useTrades, useMarketData } from '../hooks'
 import { Card, Stat, Badge, EmptyState, Spinner } from '../components/ui'
+import { FadeIn, Stagger } from '../components/animations'
 import { SYMBOL_LABELS } from '../services/marketData'
 import styles from './DashboardPage.module.css'
 
@@ -34,6 +35,9 @@ const fmtTime = (ts) =>
 
 // Key indices to show
 const KEY_INDICES = ['NIFTY 50', 'NIFTY BANK', 'NIFTY IT', 'INDIA VIX']
+
+// Ticker indices
+const TICKER_INDICES = ['NIFTY 50', 'NIFTY BANK', 'SENSEX', 'NIFTY IT', 'INDIA VIX']
 
 // Stocks to show in live table
 const WATCHLIST = [
@@ -109,14 +113,6 @@ function StockRow({ sym, quote, isSelected, onSelect }) {
     </div>
   )
 }
-            <span>Vol <b>{fmtVol(quote.volume)}</b></span>
-          </>
-        ) : '—'}
-      </div>
-      <div className={styles.srPrev}>{quote ? `₹${fmt2(quote.prevClose)}` : '—'}</div>
-    </div>
-  )
-}
 
 /* ── Charges ── */
 function Charges() {
@@ -169,7 +165,8 @@ export default function DashboardPage() {
     <div className={styles.page}>
 
       {/* ── Ticker ── */}
-      <div className={styles.tickerBar}>
+      <FadeIn duration={0.4}>
+        <div className={styles.tickerBar}>
         {TICKER_INDICES.map((key) => {
           const q  = indices[key]
           const up = (q?.changePct ?? 0) >= 0
@@ -195,9 +192,11 @@ export default function DashboardPage() {
           </button>
         </div>
       </div>
+      </FadeIn>
 
       {/* ── Header ── */}
-      <div className={styles.header}>
+      <FadeIn y={15} duration={0.5}>
+        <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Good morning, {user?.name?.split(' ')[0]} 👋</h1>
           <p className={styles.sub}>
@@ -210,9 +209,10 @@ export default function DashboardPage() {
           <TrendingUp size={15}/> Place Order
         </button>
       </div>
+      </FadeIn>
 
       {/* ── Stats ── */}
-      <div className={styles.statsGrid}>
+      <Stagger stagger={0.08} duration={0.4} className={styles.statsGrid}>
         <Stat label="NIFTY 50"
           value={nifty ? fmt2(nifty.price) : '—'}
           change={nifty ? `${nifty.changePct >= 0 ? '+' : ''}${(nifty.changePct ?? 0).toFixed(2)}% today` : 'Loading…'}
@@ -233,7 +233,7 @@ export default function DashboardPage() {
           change={`${completedTrades} completed trades`}
           changeType={totalPnl >= 0 ? 'up' : 'down'}
         />
-      </div>
+      </Stagger>
 
       {/* ── Gainers / Losers ── */}
       <div className={styles.moversRow}>
@@ -264,7 +264,8 @@ export default function DashboardPage() {
 
         {/* Selected quote detail */}
         {selQuote && (
-          <Card className={styles.quoteDetail}>
+          <FadeIn duration={0.4}>
+            <Card className={styles.quoteDetail}>
             <div className={styles.qdSym}>{SYMBOL_LABELS[selectedSym] || selectedSym}</div>
             <div className={`${styles.qdPrice} ${selUp ? styles.qdUp : styles.qdDown}`}>
               ₹{fmt2(selQuote.price)}
@@ -280,11 +281,12 @@ export default function DashboardPage() {
               {selQuote.yearLow && <div className={styles.qdItem}><span>52W Low</span><b>₹{fmt2(selQuote.yearLow)}</b></div>}
             </div>
           </Card>
+          </FadeIn>
         )}
       </div>
 
       {/* ── Quick Actions ── */}
-      <div className={styles.quickRow}>
+      <Stagger stagger={0.1} duration={0.4} className={styles.quickRow}>
         <Card className={styles.quickCard} onClick={() => navigate('/dashboard/security')}>
           <div className={styles.quickIcon} style={{ background: '#ede9fe', color: '#7c3aed' }}><Shield size={20}/></div>
           <div className={styles.quickTitle}>Security</div>
@@ -305,10 +307,11 @@ export default function DashboardPage() {
           <div className={styles.quickTitle}>Mutual Funds</div>
           <div className={styles.quickDesc}>₹0 commission · Direct plans</div>
         </Card>
-      </div>
+      </Stagger>
 
       {/* ── Live Stocks Table ── */}
-      <Card className={styles.stocksCard}>
+      <FadeIn y={20} duration={0.5}>
+        <Card className={styles.stocksCard}>
         <div className={styles.stocksHeader}>
           <div>
             <h2 className={styles.stocksTitle}>Live Market Watch — NIFTY 50</h2>
@@ -333,12 +336,16 @@ export default function DashboardPage() {
           ))}
         </div>
       </Card>
+      </FadeIn>
 
       {/* ── Charges ── */}
-      <Charges />
+      <FadeIn y={20} duration={0.5}>
+        <Charges />
+      </FadeIn>
 
       {/* ── Recent Orders ── */}
-      <Card className={styles.tradesCard}>
+      <FadeIn y={20} duration={0.5}>
+        <Card className={styles.tradesCard}>
         <div className={styles.tradesHeader}>
           <h2 className={styles.tradesTitle}>Recent Orders</h2>
           <button className={styles.viewAll} onClick={() => navigate('/dashboard/portfolio')}>View all →</button>
@@ -371,6 +378,7 @@ export default function DashboardPage() {
           </div>
         )}
       </Card>
+      </SlideUp>
     </div>
   )
 }

@@ -1,10 +1,10 @@
 import React, { useState, memo } from 'react'
-import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import { Activity, BarChart3, Bell, BrainCircuit, Radar, ShieldCheck, Sparkles, TrendingUp, Zap } from 'lucide-react'
 import { useTrades } from '../hooks'
 import { Button, Input, Select, Card, Badge } from '../components/ui'
+import { FadeIn, SlideUp } from '../components/animations'
 import { SYMBOL_LABELS } from '../services/marketData'
 import styles from './TradePage.module.css'
 
@@ -121,10 +121,9 @@ export default function TradePage() {
 
   return (
     <div className={styles.page}>
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
+      <FadeIn
+        y={10}
+        duration={0.35}
         className={styles.heroCard}
       >
         <div className={styles.heroContent}>
@@ -163,7 +162,7 @@ export default function TradePage() {
             </div>
           </div>
         </div>
-      </motion.section>
+      </FadeIn>
 
       <div className={styles.grid}>
         <Card className={styles.orderCard}>

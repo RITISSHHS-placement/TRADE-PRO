@@ -157,3 +157,20 @@ export function useMarketData({ intervalMs = 6000 } = {}) {
 
   return { quotes, indices, stocks, gainers, losers, loading, lastUpdated, error, refresh }
 }
+
+// ---- GSAP Animation Hooks ----
+export {
+  useFadeIn,
+  useSlideUp,
+  useScaleIn,
+} from './useGsapAnimation'
+
+export {
+  useScrollAnimation,
+  useScrollStagger,
+} from './useScrollTrigger'
+
+export {
+  useStagger,
+  useHoverAnimation,
+} from './useGsapTimeline'

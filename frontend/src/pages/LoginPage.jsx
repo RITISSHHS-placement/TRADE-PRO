@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { motion } from 'framer-motion'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../hooks'
 import { Button, Input } from '../components/ui'
+import { FadeIn } from '../components/animations'
 import styles from './AuthPage.module.css'
 
 const quickFeatures = [
@@ -29,12 +29,11 @@ export default function LoginPage() {
   }
 
   return (
-    <motion.div
+    <FadeIn
       className={styles.page}
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -24 }}
-      transition={{ duration: 0.35, ease: 'easeOut' }}
+      y={24}
+      duration={0.35}
+      ease="power2.out"
     >
       <div className={styles.bg} />
       <div className={styles.overlay} />
@@ -95,6 +94,6 @@ export default function LoginPage() {
           </div>
         </section>
       </div>
-    </motion.div>
+    </FadeIn>
   )
 }
