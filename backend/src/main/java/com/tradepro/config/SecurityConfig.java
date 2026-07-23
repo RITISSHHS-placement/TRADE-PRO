@@ -71,6 +71,8 @@ public class SecurityConfig {
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            // Rate limiting filter — apply before authentication
+            .addFilterBefore(new com.tradepro.security.RateLimitFilter(new org.springframework.data.redis.core.StringRedisTemplate()), UsernamePasswordAuthenticationFilter.class)
             // ── Security Headers ──────────────────────────────────────────
             .headers(headers -> headers
                 // X-Frame-Options: DENY — prevents clickjacking
