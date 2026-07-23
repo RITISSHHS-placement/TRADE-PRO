@@ -42,18 +42,14 @@ public class AuthController {
             @Valid @RequestBody RegisterRequest request) {
         try {
             AuthResponse response = authService.register(request);
-            // Set HttpOnly cookies for tokens and remove from response body
             ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
-                .httpOnly(true).secure(true).path("/")
+                .httpOnly(true).path("/")
                 .maxAge(Duration.ofMillis(jwtExpirationMs).getSeconds())
-                .sameSite("Strict").build();
+                .sameSite("Lax").build();
             ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
-                .httpOnly(true).secure(true).path("/api/auth/refresh")
+                .httpOnly(true).path("/")
                 .maxAge(Duration.ofMillis(jwtRefreshExpirationMs).getSeconds())
-                .sameSite("Strict").build();
-
-            response.setToken(null);
-            response.setRefreshToken(null);
+                .sameSite("Lax").build();
 
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -72,18 +68,14 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request) {
         try {
             AuthResponse response = authService.login(request);
-            // Set HttpOnly cookies for tokens and remove from response body
             ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
-                .httpOnly(true).secure(true).path("/")
+                .httpOnly(true).path("/")
                 .maxAge(Duration.ofMillis(jwtExpirationMs).getSeconds())
-                .sameSite("Strict").build();
+                .sameSite("Lax").build();
             ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
-                .httpOnly(true).secure(true).path("/api/auth/refresh")
+                .httpOnly(true).path("/")
                 .maxAge(Duration.ofMillis(jwtRefreshExpirationMs).getSeconds())
-                .sameSite("Strict").build();
-
-            response.setToken(null);
-            response.setRefreshToken(null);
+                .sameSite("Lax").build();
 
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -120,18 +112,14 @@ public class AuthController {
             }
 
             AuthResponse response = authService.refreshToken(refreshToken);
-            // Rotate cookies
             ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
-                    .httpOnly(true).secure(true).path("/")
+                    .httpOnly(true).path("/")
                     .maxAge(Duration.ofMillis(jwtExpirationMs).getSeconds())
-                    .sameSite("Strict").build();
+                    .sameSite("Lax").build();
             ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
-                    .httpOnly(true).secure(true).path("/api/auth/refresh")
+                    .httpOnly(true).path("/")
                     .maxAge(Duration.ofMillis(jwtRefreshExpirationMs).getSeconds())
-                    .sameSite("Strict").build();
-
-            response.setToken(null);
-            response.setRefreshToken(null);
+                    .sameSite("Lax").build();
 
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -180,28 +168,28 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logout(
-            @RequestHeader("Authorization") String token) {
+            @RequestHeader(value = "Authorization", required = false) String token) {
         try {
-            authService.logout(token);
-            // Clear cookies
+            if (token != null) {
+                authService.logout(token);
+            }
             ResponseCookie accessCookie = ResponseCookie.from("access_token", "")
                 .httpOnly(true).secure(true).path("/")
-                .maxAge(0).sameSite("Strict").build();
+                .maxAge(0).sameSite("None").build();
             ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", "")
-                .httpOnly(true).secure(true).path("/api/auth/refresh")
-                .maxAge(0).sameSite("Strict").build();
+                .httpOnly(true).secure(true).path("/")
+                .maxAge(0).sameSite("None").build();
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
             headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
             return ResponseEntity.ok().headers(headers).body(new ApiResponse<>(true, "Logged out successfully", "LOGGED_OUT"));
         } catch (Exception e) {
-            // Always return 200 on logout — don't leak whether token was valid
             ResponseCookie accessCookie = ResponseCookie.from("access_token", "")
                 .httpOnly(true).secure(true).path("/")
-                .maxAge(0).sameSite("Strict").build();
+                .maxAge(0).sameSite("None").build();
             ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", "")
-                .httpOnly(true).secure(true).path("/api/auth/refresh")
-                .maxAge(0).sameSite("Strict").build();
+                .httpOnly(true).secure(true).path("/")
+                .maxAge(0).sameSite("None").build();
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
             headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());

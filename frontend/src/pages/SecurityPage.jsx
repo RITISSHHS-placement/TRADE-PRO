@@ -14,10 +14,9 @@ export default function SecurityPage() {
   const [smsEnabled, setSmsEnabled] = useState(user?.smsOtpEnabled ?? true)
 
   const handleSetupTotp = async () => {
-    if (!user?.id) return
     setLoadingTotp(true)
     try {
-      const res = await authAPI.setupTotp(user.id)
+      const res = await authAPI.setupTotp()
       setTotpSetup(res.data.data)
       toast.success('Scan the QR code with your authenticator app')
     } catch (e) {
@@ -28,10 +27,10 @@ export default function SecurityPage() {
   }
 
   const handleVerifyTotp = async () => {
-    if (!user?.id || !totpCode) return
+    if (!totpCode) return
     setLoadingTotp(true)
     try {
-      const res = await authAPI.verifyTotp(user.id, totpCode)
+      const res = await authAPI.verifyTotp(totpCode)
       if (res.data.success) {
         toast.success('TOTP verified and enabled!')
         setTotpSetup(null)

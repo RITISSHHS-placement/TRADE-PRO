@@ -4,9 +4,9 @@ import toast from 'react-hot-toast'
 
 export const fetchTrades = createAsyncThunk(
   'trades/fetchAll',
-  async (userId, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const res = await tradeAPI.getUserTrades(userId)
+      const res = await tradeAPI.getMyTrades()
       return res.data.data
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || 'Failed to fetch trades')
@@ -16,9 +16,9 @@ export const fetchTrades = createAsyncThunk(
 
 export const fetchPositions = createAsyncThunk(
   'trades/fetchPositions',
-  async (userId, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const res = await tradeAPI.getPositions(userId)
+      const res = await tradeAPI.getMyPositions()
       return res.data.data
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || 'Failed to fetch positions')
@@ -28,9 +28,9 @@ export const fetchPositions = createAsyncThunk(
 
 export const placeTrade = createAsyncThunk(
   'trades/place',
-  async ({ userId, trade }, { rejectWithValue }) => {
+  async (trade, { rejectWithValue }) => {
     try {
-      const res = await tradeAPI.placeTrade(userId, trade)
+      const res = await tradeAPI.placeTrade(trade)
       return res.data.data
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || 'Order failed')
@@ -40,9 +40,9 @@ export const placeTrade = createAsyncThunk(
 
 export const cancelTrade = createAsyncThunk(
   'trades/cancel',
-  async ({ tradeId, userId }, { rejectWithValue }) => {
+  async (tradeId, { rejectWithValue }) => {
     try {
-      const res = await tradeAPI.cancelTrade(tradeId, userId)
+      const res = await tradeAPI.cancelTrade(tradeId)
       return res.data.data
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || 'Cancel failed')

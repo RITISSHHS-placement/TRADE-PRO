@@ -1,7 +1,7 @@
 package com.tradepro.config;
 
 import com.tradepro.security.JwtAuthenticationFilter;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.tradepro.security.RateLimitFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,12 +33,15 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final RateLimitFilter rateLimitFilter;
     private final UserDetailsService userDetailsService;
 
     // Constructor injection — fixes field injection warnings
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
+                          RateLimitFilter rateLimitFilter,
                           UserDetailsService userDetailsService) {
         this.jwtAuthFilter    = jwtAuthFilter;
+        this.rateLimitFilter  = rateLimitFilter;
         this.userDetailsService = userDetailsService;
     }
 
@@ -70,9 +73,8 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
+            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-            // Rate limiting filter — apply before authentication
-            .addFilterBefore(new com.tradepro.security.RateLimitFilter(new org.springframework.data.redis.core.StringRedisTemplate()), UsernamePasswordAuthenticationFilter.class)
             // ── Security Headers ──────────────────────────────────────────
             .headers(headers -> headers
                 // X-Frame-Options: DENY — prevents clickjacking
@@ -118,7 +120,7 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(origins);
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
-        config.setExposedHeaders(List.of("Authorization"));
+        config.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 

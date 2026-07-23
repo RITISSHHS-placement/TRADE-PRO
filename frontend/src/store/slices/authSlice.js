@@ -6,8 +6,12 @@ import toast from 'react-hot-toast'
 let savedToken = null
 let savedUser = null
 try {
-  // Removed localStorage usage for tokens
-  // Implement cookie-based auth flow here
+  const localUser = localStorage.getItem('tp-user')
+  const localToken = localStorage.getItem('tp-token')
+  if (localUser) {
+    savedUser = JSON.parse(localUser)
+    savedToken = localToken || 'cookie'
+  }
 } catch {
   savedToken = null
   savedUser = null
@@ -46,23 +50,27 @@ export const loginUser = createAsyncThunk(
 export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { getState }) => {
-    const token = getState().auth.token
     try {
-      await authAPI.logout(token)
+      await authAPI.logout()
     } catch (_) {}
-    // Removed localStorage cleanup for tokens
-    // Implement cookie cleanup here
+    try {
+      localStorage.removeItem('tp-user')
+      localStorage.removeItem('tp-token')
+    } catch (_) {}
   }
 )
 
 export const refreshToken = createAsyncThunk(
   'auth/refresh',
-  async (_, { getState, rejectWithValue }) => {
-    // Removed localStorage usage for refresh token
+  async (_, { rejectWithValue }) => {
     try {
       const res = await authAPI.refresh()
       return res.data.data
     } catch (err) {
+      try {
+        localStorage.removeItem('tp-user')
+        localStorage.removeItem('tp-token')
+      } catch (_) {}
       return rejectWithValue('Session expired')
     }
   }
@@ -79,7 +87,10 @@ const authSlice = createSlice({
   },
   reducers: {
     clearError: (state) => { state.error = null },
-    setUser: (state, action) => { state.user = action.payload },
+    setUser: (state, action) => {
+      state.user = action.payload
+      try { localStorage.setItem('tp-user', JSON.stringify(action.payload)) } catch (_) {}
+    },
     requireTotp: (state) => { state.totpRequired = true },
     clearTotp: (state) => { state.totpRequired = false },
   },
@@ -89,9 +100,13 @@ const authSlice = createSlice({
       .addCase(registerUser.pending, (state) => { state.loading = true; state.error = null })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false
-        state.token = action.payload.token
-        state.user = action.payload.user
-        // Implement cookie storage for tokens and user data here
+        const tokenVal = action.payload.token || 'cookie'
+        state.token = tokenVal
+        state.user = action.payload.user || action.payload
+        try {
+          localStorage.setItem('tp-user', JSON.stringify(state.user))
+          if (action.payload.token) localStorage.setItem('tp-token', action.payload.token)
+        } catch (_) {}
         toast.success('Account created! Welcome to TradePro.')
       })
       .addCase(registerUser.rejected, (state, action) => {
@@ -105,9 +120,13 @@ const authSlice = createSlice({
       .addCase(loginUser.pending, (state) => { state.loading = true; state.error = null })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false
-        state.token = action.payload.token
-        state.user = action.payload.user
-        // Implement cookie storage for tokens and user data here
+        const tokenVal = action.payload.token || 'cookie'
+        state.token = tokenVal
+        state.user = action.payload.user || action.payload
+        try {
+          localStorage.setItem('tp-user', JSON.stringify(state.user))
+          if (action.payload.token) localStorage.setItem('tp-token', action.payload.token)
+        } catch (_) {}
         toast.success('Welcome back!')
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -127,14 +146,23 @@ const authSlice = createSlice({
     // Refresh
     builder
       .addCase(refreshToken.fulfilled, (state, action) => {
-        state.token = action.payload.token
-        state.user = action.payload.user
-        // Implement cookie storage for tokens here
+        const tokenVal = action.payload.token || state.token || 'cookie'
+        state.token = tokenVal
+        state.user = action.payload.user || state.user
+        if (state.user) {
+          try {
+            localStorage.setItem('tp-user', JSON.stringify(state.user))
+            if (action.payload.token) localStorage.setItem('tp-token', action.payload.token)
+          } catch (_) {}
+        }
       })
       .addCase(refreshToken.rejected, (state) => {
         state.user = null
         state.token = null
-        // Implement cookie cleanup here
+        try {
+          localStorage.removeItem('tp-user')
+          localStorage.removeItem('tp-token')
+        } catch (_) {}
       })
   },
 })

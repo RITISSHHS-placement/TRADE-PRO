@@ -23,7 +23,16 @@ const api = axios.create({
   withCredentials: true, // include HttpOnly auth cookies
 })
 
-// No Authorization header attachment — server uses HttpOnly cookie
+// Request interceptor — attach Authorization header if token exists in localStorage
+api.interceptors.request.use((config) => {
+  try {
+    const token = localStorage.getItem('tp-token')
+    if (token && token !== 'cookie') {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+  } catch (_) {}
+  return config
+})
 
 
 // Response interceptor — handle 401 with refresh
@@ -80,30 +89,30 @@ export const authAPI = {
   login: (data) => api.post('/auth/login', data),
   logout: () => api.post('/auth/logout'),
   refresh: () => api.post('/auth/refresh'),
-  setupTotp: (userId) => api.post('/auth/setup-totp', { userId }),
-  verifyTotp: (userId, token) => api.post('/auth/verify-totp', { userId, token }),
+  setupTotp: () => api.post('/auth/setup-totp'),
+  verifyTotp: (token) => api.post('/auth/verify-totp', { token }),
 }
 
 // ---- Trade API ----
 export const tradeAPI = {
-  placeTrade: (userId, trade) => api.post(`/trades/place/${userId}`, trade),
-  getUserTrades: (userId) => api.get(`/trades/user/${userId}`),
-  getPositions: (userId) => api.get(`/trades/positions/${userId}`),
-  cancelTrade: (tradeId, userId) => api.delete(`/trades/${tradeId}/cancel/${userId}`),
-  getTotalPnl: (userId) => api.get(`/trades/pnl/${userId}`),
+  placeTrade: (trade) => api.post('/trades/place', trade),
+  getMyTrades: () => api.get('/trades/my'),
+  getMyPositions: () => api.get('/trades/positions'),
+  cancelTrade: (tradeId) => api.delete(`/trades/${tradeId}/cancel`),
+  getTotalPnl: () => api.get('/trades/pnl'),
 }
 
 // ---- User API ----
 export const userAPI = {
   getProfile: () => api.get('/users/profile'),
-  toggleKillSwitch: (userId, activate) =>
-    api.post(`/users/${userId}/kill-switch?activate=${activate}`),
-  updateRiskProfile: (userId, profile) =>
-    api.put(`/users/${userId}/risk-profile?profile=${profile}`),
-  updateAutoLogout: (userId, minutes) =>
-    api.put(`/users/${userId}/auto-logout?minutes=${minutes}`),
-  toggleNudges: (userId, enabled) =>
-    api.put(`/users/${userId}/nudges?enabled=${enabled}`),
+  toggleKillSwitch: (activate) =>
+    api.post(`/users/kill-switch?activate=${activate}`),
+  updateRiskProfile: (profile) =>
+    api.put(`/users/risk-profile?profile=${profile}`),
+  updateAutoLogout: (minutes) =>
+    api.put(`/users/auto-logout?minutes=${minutes}`),
+  toggleNudges: (enabled) =>
+    api.put(`/users/nudges?enabled=${enabled}`),
 }
 
 export default api

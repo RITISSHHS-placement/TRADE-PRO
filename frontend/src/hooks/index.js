@@ -39,15 +39,15 @@ export function useTrades() {
   const { list, positions, loading, placing } = useSelector((state) => state.trades)
 
   const loadTrades = () => {
-    if (user?.id) dispatch(fetchTrades(user.id))
+    dispatch(fetchTrades())
   }
 
   const loadPositions = () => {
-    if (user?.id) dispatch(fetchPositions(user.id))
+    dispatch(fetchPositions())
   }
 
   const place = (trade) => {
-    if (user?.id) dispatch(placeTrade({ userId: user.id, trade }))
+    dispatch(placeTrade(trade))
   }
 
   return { trades: list, positions, loading, placing, loadTrades, loadPositions, place }
@@ -60,9 +60,8 @@ export function useKillSwitch() {
   const { killSwitchModal } = useSelector((state) => state.ui)
 
   const activate = async () => {
-    if (!user?.id) return
     try {
-      await userAPI.toggleKillSwitch(user.id, true)
+      await userAPI.toggleKillSwitch(true)
       toast.error('🛑 Kill Switch ACTIVATED — All trading halted', { duration: 5000 })
       dispatch(setKillSwitchModal(false))
     } catch (e) {
@@ -71,9 +70,8 @@ export function useKillSwitch() {
   }
 
   const deactivate = async () => {
-    if (!user?.id) return
     try {
-      await userAPI.toggleKillSwitch(user.id, false)
+      await userAPI.toggleKillSwitch(false)
       toast.success('Kill switch deactivated')
     } catch (e) {
       toast.error('Failed to deactivate kill switch')

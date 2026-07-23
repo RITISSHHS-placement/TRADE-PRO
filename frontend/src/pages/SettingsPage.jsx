@@ -20,13 +20,13 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
 
   const save = async () => {
-    if (!user?.id) return
+    if (!user) return
     setSaving(true)
     try {
       await Promise.all([
-        userAPI.updateRiskProfile(user.id, riskProfile),
-        userAPI.updateAutoLogout(user.id, autoLogout),
-        userAPI.toggleNudges(user.id, nudges),
+        userAPI.updateRiskProfile(riskProfile),
+        userAPI.updateAutoLogout(autoLogout),
+        userAPI.toggleNudges(nudges),
       ])
       dispatch(setUser({ ...user, riskProfile, autoLogoutTime: autoLogout, nudgesEnabled: nudges }))
       toast.success('Settings saved')
