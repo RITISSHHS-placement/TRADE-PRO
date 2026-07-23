@@ -6,9 +6,8 @@ import toast from 'react-hot-toast'
 let savedToken = null
 let savedUser = null
 try {
-  savedToken = localStorage.getItem('tp_token')
-  const rawUser = localStorage.getItem('tp_user')
-  if (rawUser) savedUser = JSON.parse(rawUser)
+  // Removed localStorage usage for tokens
+  // Implement cookie-based auth flow here
 } catch {
   savedToken = null
   savedUser = null
@@ -51,19 +50,17 @@ export const logoutUser = createAsyncThunk(
     try {
       await authAPI.logout(token)
     } catch (_) {}
-    localStorage.removeItem('tp_token')
-    localStorage.removeItem('tp_refresh')
-    localStorage.removeItem('tp_user')
+    // Removed localStorage cleanup for tokens
+    // Implement cookie cleanup here
   }
 )
 
 export const refreshToken = createAsyncThunk(
   'auth/refresh',
   async (_, { getState, rejectWithValue }) => {
-    const refresh = localStorage.getItem('tp_refresh')
-    if (!refresh) return rejectWithValue('No refresh token')
+    // Removed localStorage usage for refresh token
     try {
-      const res = await authAPI.refresh(refresh)
+      const res = await authAPI.refresh()
       return res.data.data
     } catch (err) {
       return rejectWithValue('Session expired')
@@ -94,9 +91,7 @@ const authSlice = createSlice({
         state.loading = false
         state.token = action.payload.token
         state.user = action.payload.user
-        localStorage.setItem('tp_token', action.payload.token)
-        localStorage.setItem('tp_refresh', action.payload.refreshToken)
-        localStorage.setItem('tp_user', JSON.stringify(action.payload.user))
+        // Implement cookie storage for tokens and user data here
         toast.success('Account created! Welcome to TradePro.')
       })
       .addCase(registerUser.rejected, (state, action) => {
@@ -112,9 +107,7 @@ const authSlice = createSlice({
         state.loading = false
         state.token = action.payload.token
         state.user = action.payload.user
-        localStorage.setItem('tp_token', action.payload.token)
-        localStorage.setItem('tp_refresh', action.payload.refreshToken)
-        localStorage.setItem('tp_user', JSON.stringify(action.payload.user))
+        // Implement cookie storage for tokens and user data here
         toast.success('Welcome back!')
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -136,13 +129,12 @@ const authSlice = createSlice({
       .addCase(refreshToken.fulfilled, (state, action) => {
         state.token = action.payload.token
         state.user = action.payload.user
-        localStorage.setItem('tp_token', action.payload.token)
-        localStorage.setItem('tp_refresh', action.payload.refreshToken)
+        // Implement cookie storage for tokens here
       })
       .addCase(refreshToken.rejected, (state) => {
         state.user = null
         state.token = null
-        localStorage.clear()
+        // Implement cookie cleanup here
       })
   },
 })

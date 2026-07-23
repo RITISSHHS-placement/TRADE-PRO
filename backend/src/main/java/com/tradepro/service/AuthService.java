@@ -201,37 +201,53 @@ public class AuthService {
     public TotpSetupResponse setupTotp(Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
-        
+        return doSetupTotp(user);
+    }
+
+    /** SECURITY: email-based variant for use from JWT principal */
+    public TotpSetupResponse setupTotpByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        return doSetupTotp(user);
+    }
+
+    private TotpSetupResponse doSetupTotp(User user) {
         GoogleAuthenticatorKey key = gAuth.createCredentials();
         String secret = key.getKey();
-        
-        // Save secret to user
         user.setTotpSecret(secret);
         userRepository.save(user);
-        
-        // Generate QR code URL
         String qrCodeUrl = GoogleAuthenticatorQRGenerator.getOtpAuthTotpURL(
             totpIssuer, user.getEmail(), key);
-        
+        // SECURITY: manualEntryKey intentionally equals secret here for app setup
         return new TotpSetupResponse(secret, qrCodeUrl, secret);
     }
-    
+
     public boolean verifyTotp(Long userId, String code) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
-        
+        return doVerifyTotp(user, code);
+    }
+
+    /** SECURITY: email-based variant */
+    public boolean verifyTotpByEmail(String email, String code) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        return doVerifyTotp(user, code);
+    }
+
+    private boolean doVerifyTotp(User user, String code) {
         if (user.getTotpSecret() == null) {
             throw new RuntimeException("TOTP not set up for this user");
         }
-        
+        // SECURITY: validate code is numeric only before parsing
+        if (!code.matches("\\d{6}")) {
+            return false;
+        }
         boolean isValid = gAuth.authorize(user.getTotpSecret(), Integer.parseInt(code));
-        
         if (isValid && !user.getTotpEnabled()) {
-            // Enable TOTP for user
             user.setTotpEnabled(true);
             userRepository.save(user);
         }
-        
         return isValid;
     }
     

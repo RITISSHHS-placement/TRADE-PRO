@@ -4,9 +4,9 @@ services:
     image: postgres:16-alpine
     container_name: tradepro-db
     environment:
-      POSTGRES_DB: tradeprodb
-      POSTGRES_USER: tradepro
-      POSTGRES_PASSWORD: tradepro123
+      POSTGRES_DB: ${POSTGRES_DB:-tradeprodb}
+      POSTGRES_USER: ${POSTGRES_USER:-tradepro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -29,10 +29,10 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: tradeprodb
-      DB_USERNAME: tradepro
-      DB_PASSWORD: tradepro123
-      JWT_SECRET: change-this-secret-in-production-must-be-very-long
+      DB_NAME: ${DB_NAME:-tradeprodb}
+      DB_USERNAME: ${DB_USERNAME:-tradepro}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
       CORS_ORIGINS: http://localhost:3000
     depends_on:
       postgres:

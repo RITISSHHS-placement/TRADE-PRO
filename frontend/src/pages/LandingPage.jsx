@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, ChevronDown, Plus, Minus, ExternalLink, Globe, Sparkles, BookOpen } from 'lucide-react'
+import { ArrowRight, ChevronDown, Plus, Minus, BookOpen, Zap, TrendingUp, Shield, Activity } from 'lucide-react'
 import { FadeIn, Stagger } from '../components/animations'
+import ParticleBackground from '../components/ParticleBackground'
+import { GlassCard, GlassButton, GlassBadge } from '../components/Glassmorphism'
 import styles from './LandingPage.module.css'
 
 export default function LandingPage({ setPage, indices, onOpenAuth }) {
@@ -91,6 +93,8 @@ export default function LandingPage({ setPage, indices, onOpenAuth }) {
 
   return (
     <div className={styles.page}>
+      {/* Particle Background */}
+      <ParticleBackground theme="dark" particleCount={1500} connectionDistance={120} mouseInteraction={true} />
 
       {/* ── NAV ── */}
       <nav className={styles.nav}>
@@ -196,19 +200,51 @@ export default function LandingPage({ setPage, indices, onOpenAuth }) {
         </FadeIn>
         <Stagger stagger={0.1} duration={0.5} className={styles.stocksGrid}>
           {trendingStocks.map((stock) => (
-            <div key={stock.sym} className={styles.stockCard} onClick={() => handleNav('login')}>
+            <GlassCard key={stock.sym} className={styles.stockCard} onClick={() => handleNav('login')} intensity="light">
               <div className={styles.stockIcon}>
                 {stock.sym.slice(0, 2)}
               </div>
               <div className={styles.stockInfo}>
                 <span className={styles.stockName}>{stock.name}</span>
-                <span className={stock.up ? styles.stockChangeUp : styles.stockChangeDn}>
+                <GlassBadge variant={stock.up ? 'success' : 'danger'}>
                   {stock.up ? '▲' : '▼'} {Math.abs(stock.change).toFixed(2)}%
-                </span>
+                </GlassBadge>
               </div>
-            </div>
+            </GlassCard>
           ))}
         </Stagger>
+      </section>
+
+      {/* ── FEATURES SECTION ── */}
+      <section className={styles.themesSection}>
+        <div className={styles.themesInner}>
+          <FadeIn y={30} duration={0.6}>
+            <h2 className={styles.sectionTitle}>Why TradePro?</h2>
+            <p style={{ color: '#6b7280', marginTop: 8, marginBottom: 32 }}>
+              Experience the future of trading with cutting-edge technology
+            </p>
+          </FadeIn>
+          <Stagger stagger={0.15} duration={0.5} className={styles.themesGrid}>
+            {[
+              { icon: Zap, title: 'Lightning Fast', desc: 'Execute trades in milliseconds with our low-latency infrastructure', color: 'indigo' },
+              { icon: TrendingUp, title: 'Advanced Analytics', desc: 'Real-time market data with professional-grade charting tools', color: 'green' },
+              { icon: Shield, title: 'Bank-Grade Security', desc: 'Military-grade encryption with 2FA and biometric authentication', color: 'blue' },
+              { icon: Activity, title: 'Real-Time Alerts', desc: 'Instant notifications for price movements and market events', color: 'purple' },
+            ].map((feature, i) => (
+              <GlassCard key={i} className={styles.themeCard} intensity="medium">
+                <div className={styles.themeHeader}>
+                  <div className={styles.themeIconBox} style={{ background: `rgba(99, 102, 241, 0.1)`, color: '#6366f1' }}>
+                    <feature.icon size={20} />
+                  </div>
+                  <h3 className={styles.themeTitle}>{feature.title}</h3>
+                </div>
+                <p style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.6 }}>
+                  {feature.desc}
+                </p>
+              </GlassCard>
+            ))}
+          </Stagger>
+        </div>
       </section>
 
       {/* ── TRENDING THEMES ── */}
@@ -219,7 +255,7 @@ export default function LandingPage({ setPage, indices, onOpenAuth }) {
           </FadeIn>
           <Stagger stagger={0.15} duration={0.5} className={styles.themesGrid}>
             {themes.map((theme) => (
-              <div key={theme.title} className={styles.themeCard}>
+              <GlassCard key={theme.title} className={styles.themeCard} intensity="light">
                 <div className={styles.themeHeader}>
                   <div className={styles.themeIconBox}>{theme.icon}</div>
                   <h3 className={styles.themeTitle}>{theme.title}</h3>
@@ -233,7 +269,7 @@ export default function LandingPage({ setPage, indices, onOpenAuth }) {
                       </div>
                       <div className={styles.holdingValues}>
                         <span className={styles.holdingPrice}>{item.price}</span>
-                        <span className={item.up ? styles.holdingChangeUp : styles.holdingChangeDn}>{item.change}</span>
+                        <GlassBadge variant={item.up ? 'success' : 'danger'}>{item.change}</GlassBadge>
                       </div>
                     </div>
                   ))}
@@ -241,7 +277,7 @@ export default function LandingPage({ setPage, indices, onOpenAuth }) {
                 <button className={styles.themeLink} onClick={() => handleNav('login')}>
                   See holdings <ArrowRight size={13} />
                 </button>
-              </div>
+              </GlassCard>
             ))}
           </Stagger>
         </div>
@@ -254,16 +290,16 @@ export default function LandingPage({ setPage, indices, onOpenAuth }) {
         </FadeIn>
         <Stagger stagger={0.1} duration={0.5} className={styles.learnGrid}>
           {articles.map((art) => (
-            <div key={art.title} className={styles.articleCard}>
+            <GlassCard key={art.title} className={styles.articleCard} intensity="light">
               <div className={styles.articleImg}>
                 <BookOpen size={32} />
               </div>
               <h3 className={styles.articleTitle}>{art.title}</h3>
               <div className={styles.articleFooter}>
                 <span>{art.date}</span>
-                <span>{art.readTime}</span>
+                <GlassBadge variant="info">{art.readTime}</GlassBadge>
               </div>
-            </div>
+            </GlassCard>
           ))}
         </Stagger>
       </section>
@@ -276,7 +312,7 @@ export default function LandingPage({ setPage, indices, onOpenAuth }) {
           </FadeIn>
           <Stagger stagger={0.1} duration={0.4} className={styles.faqList}>
             {faqs.map((faq, index) => (
-              <div key={index} className={`${styles.faqItem} ${activeFaq === index ? styles.faqItemActive : ''}`}>
+              <GlassCard key={index} className={`${styles.faqItem} ${activeFaq === index ? styles.faqItemActive : ''}`} intensity="light">
                 <button className={styles.faqHeader} onClick={() => toggleFaq(index)}>
                   <span>{faq.q}</span>
                   {activeFaq === index ? <Minus size={16} className={styles.faqIcon} /> : <Plus size={16} className={styles.faqIcon} />}
@@ -286,7 +322,7 @@ export default function LandingPage({ setPage, indices, onOpenAuth }) {
                     {faq.a}
                   </div>
                 )}
-              </div>
+              </GlassCard>
             ))}
           </Stagger>
         </div>
@@ -311,8 +347,8 @@ export default function LandingPage({ setPage, indices, onOpenAuth }) {
                 </div>
               </div>
               <div className={styles.downloadBtns}>
-                <button className={styles.btnStore} onClick={() => handleNav('register')}>Download App</button>
-                <button className={styles.btnStore} onClick={() => handleNav('register')} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>Learn More</button>
+                <GlassButton variant="primary" onClick={() => handleNav('register')}>Download App</GlassButton>
+                <GlassButton variant="secondary" onClick={() => handleNav('register')}>Learn More</GlassButton>
               </div>
             </div>
           </FadeIn>
@@ -338,54 +374,107 @@ export default function LandingPage({ setPage, indices, onOpenAuth }) {
 
       {/* ── FOOTER ── */}
       <footer className={styles.footer}>
+        {/* Main columns */}
         <div className={styles.footerInner}>
+          {/* About */}
           <div className={styles.footerAbout}>
-            <div className={styles.brand} onClick={() => handleNav('home')} style={{ cursor: 'pointer', marginBottom: 12 }}>
-              <span className={styles.logoIcon} /> Trade<span>Pro</span>
+            <div className={styles.footerBrand} onClick={() => handleNav('home')}>
+              <span className={styles.footerLogoBox}>T</span>
+              <span className={styles.footerLogoText}>TradePro</span>
             </div>
-            <p>TradePro provides data, information, and content for Indian and global equities, mutual funds, ETFs, and indices.</p>
+            <div className={styles.footerSmallcase}>from ⊕ smallcase</div>
+            <p className={styles.footerDesc}>
+              TradePro provides data, information &amp; content for Indian stocks, mutual funds, ETFs &amp; indices.
+            </p>
             <div className={styles.footerAddress}>
               TradePro Technologies Private Limited,<br />
-              Anchorage Offices, Level 2, Richmond Road,<br />
-              Bengaluru, Karnataka - 560025
+              #51, 3rd Floor, Le Parc Richmonde,<br />
+              Richmond Road, Shenthala Nagar,<br />
+              Richmond Town, Bangalore - 560025
             </div>
           </div>
+
+          {/* Products */}
           <div className={styles.footerCol}>
             <span className={styles.footerColTitle}>Products</span>
-            <button onClick={() => handleNav('login')}>IN Stocks</button>
-            <button onClick={() => handleNav('login')}>Mutual Funds</button>
-            <button onClick={() => handleNav('login')}>US Stocks</button>
-            <button onClick={() => handleNav('login')}>Digital Gold</button>
+            {['IN Stocks','Mutual Funds','US Stocks','LAS','LAMF','Digital Gold'].map(t => (
+              <button key={t} onClick={() => handleNav('login')}>{t}</button>
+            ))}
           </div>
+
+          {/* Tools */}
           <div className={styles.footerCol}>
             <span className={styles.footerColTitle}>Tools</span>
-            <button onClick={() => handleNav('login')}>Stock Screener</button>
-            <button onClick={() => handleNav('login')}>MF Screener</button>
-            <button onClick={() => handleNav('login')}>Market Movers</button>
-            <button onClick={() => handleNav('login')}>Market Mood (MMI)</button>
+            {['MMI','Stock Screener','MF Screener','US Screener','Market Movers','Stock Collections','Mutual Fund Collections'].map(t => (
+              <button key={t} onClick={() => handleNav('login')}>{t}</button>
+            ))}
           </div>
+
+          {/* Learn & Share */}
           <div className={styles.footerCol}>
-            <span className={styles.footerColTitle}>Learn & Share</span>
-            <button onClick={() => handleNav('login')}>Blog</button>
-            <button onClick={() => handleNav('login')}>Glossary</button>
-            <button onClick={() => handleNav('login')}>Research Reports</button>
-            <button onClick={() => handleNav('login')}>Community Guidelines</button>
+            <span className={styles.footerColTitle}>Learn &amp; Share</span>
+            {['Social','Learn','Blog','Glossary','Stock Collections','Mutual Fund Collections'].map(t => (
+              <button key={t} onClick={() => handleNav('login')}>{t}</button>
+            ))}
           </div>
+
+          {/* Fine Print */}
           <div className={styles.footerCol}>
             <span className={styles.footerColTitle}>Fine Print</span>
-            <button onClick={() => handleNav('login')}>Pricing</button>
-            <button onClick={() => handleNav('login')}>Disclosures</button>
-            <button onClick={() => handleNav('login')}>Privacy Policy</button>
-            <button onClick={() => handleNav('login')}>Terms & Conditions</button>
+            {['Pricing','Disclosures','Terms & Conditions','Privacy Policy','Analytical & Information Tools','Community Guidelines'].map(t => (
+              <button key={t} onClick={() => handleNav('login')}>{t}</button>
+            ))}
           </div>
         </div>
+
+        {/* Social / Support / Rating row */}
+        <div className={styles.footerMid}>
+          <div className={styles.footerSocialCol}>
+            <div className={styles.footerMidLabel}>Find Us On</div>
+            <div className={styles.footerSocialRow}>
+              {[
+                { label: 'YouTube', sym: '▶' },
+                { label: 'Instagram', sym: '◉' },
+                { label: 'X', sym: '𝕏' },
+                { label: 'LinkedIn', sym: 'in' },
+              ].map(s => (
+                <button key={s.label} className={styles.socialIcon} aria-label={s.label}>{s.sym}</button>
+              ))}
+            </div>
+          </div>
+          <div className={styles.footerSupportCol}>
+            <div className={styles.footerMidLabel}>Help and Support</div>
+            <a href="mailto:support@tradepro.in" className={styles.footerEmail}>support@tradepro.in</a>
+          </div>
+          <div className={styles.footerRatingCol}>
+            <div className={styles.footerMidLabel}>Loving TradePro? Rate Us</div>
+            <div className={styles.footerRating}>
+              <span className={styles.footerRatingDl}>65L+ downloads</span>
+              <span className={styles.footerRatingStar}>⭐ 4.2 App Rating</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Explore accordion */}
+        <div className={styles.footerExplore}>
+          <div className={styles.footerExploreTitle}>Explore | Most Popular on TradePro</div>
+          <div className={styles.footerAccordionGrid}>
+            {[
+              'Stock Collections','Indices','Sectoral Mutual Funds','Trending ETFs',
+              'ETF Collections','Equity Mutual Funds','Debt Mutual Funds','Hybrid Mutual Funds',
+              'Trending Stocks','US Stocks','US ETFs','Screeners',
+            ].map(item => (
+              <button key={item} className={styles.footerAccordionItem}>
+                <span>{item}</span>
+                <ChevronDown size={14} style={{ flexShrink: 0 }} />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Copyright */}
         <div className={styles.footerBottom}>
           <p className={styles.copyright}>© 2026 TradePro. SEBI Investment Adviser registration INA200029581.</p>
-          <div className={styles.footerSocial}>
-            <button className={styles.socialIcon}>𝕏</button>
-            <button className={styles.socialIcon}>in</button>
-            <button className={styles.socialIcon}>yt</button>
-          </div>
         </div>
       </footer>
     </div>

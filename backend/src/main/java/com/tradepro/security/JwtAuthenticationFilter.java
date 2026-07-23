@@ -35,12 +35,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        String jwt = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+        } else {
+            // Fallback: check HttpOnly cookie named access_token
+            if (request.getCookies() != null) {
+                for (jakarta.servlet.http.Cookie c : request.getCookies()) {
+                    if ("access_token".equals(c.getName())) {
+                        jwt = c.getValue();
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        final String jwt = authHeader.substring(7);
         final String userEmail;
 
         try {

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -30,22 +32,24 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthFilter;
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final UserDetailsService userDetailsService;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
+    // Constructor injection — fixes field injection warnings
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
+                          UserDetailsService userDetailsService) {
+        this.jwtAuthFilter    = jwtAuthFilter;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Value("${cors.allowed-origins:http://localhost:3000}")
     private String allowedOrigins;
 
-    // Public endpoints — no token required
+    // Only these endpoints are public — H2 console removed from PUBLIC_URLS (security fix)
     private static final String[] PUBLIC_URLS = {
         "/api/auth/**",
-        "/api/test",
         "/api/health",
         "/api/market/**",
-        "/h2-console/**",
         "/actuator/health",
         "/actuator/info"
     };
@@ -53,19 +57,51 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            // CSRF disabled because we use stateless JWT — acceptable for pure REST APIs
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers(PUBLIC_URLS).permitAll()
+                // H2 console only in dev — require auth even there
+                .requestMatchers("/h2-console/**").denyAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
-        // Allow H2 console iframes in dev
-        http.headers(headers -> headers.frameOptions().disable());
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            // ── Security Headers ──────────────────────────────────────────
+            .headers(headers -> headers
+                // X-Frame-Options: DENY — prevents clickjacking
+                .frameOptions(frame -> frame.deny())
+                // X-Content-Type-Options: nosniff
+                .contentTypeOptions(cto -> {})
+                // HSTS — enforce HTTPS for 1 year incl. subdomains
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .maxAgeInSeconds(31_536_000)
+                    .includeSubDomains(true)
+                    .preload(true))
+                // Referrer-Policy: no-referrer
+                .referrerPolicy(ref -> ref
+                    .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+                // Content Security Policy
+                .contentSecurityPolicy(csp -> csp
+                    .policyDirectives(
+                        "default-src 'self'; " +
+                        "script-src 'self'; " +
+                        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+                        "font-src 'self' https://fonts.gstatic.com; " +
+                        "img-src 'self' data: https:; " +
+                        "connect-src 'self'; " +
+                        "frame-ancestors 'none'; " +
+                        "object-src 'none'; " +
+                        "base-uri 'self'"
+                    ))
+                // X-XSS-Protection (legacy browsers)
+                .xssProtection(xss -> xss.headerValue(
+                    org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+            );
 
         return http.build();
     }
@@ -73,15 +109,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Use setAllowedOriginPatterns so wildcard patterns work with allowCredentials=true
-        // Trim each origin to avoid issues with spaces after commas in the env var
         List<String> origins = Arrays.stream(allowedOrigins.split(","))
             .map(String::trim)
             .filter(s -> !s.isEmpty())
             .toList();
         config.setAllowedOriginPatterns(origins);
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
@@ -105,6 +140,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        // BCrypt with strength 12 — slower brute-force
+        return new BCryptPasswordEncoder(12);
     }
 }

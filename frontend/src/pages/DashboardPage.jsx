@@ -346,39 +346,40 @@ export default function DashboardPage() {
       {/* ── Recent Orders ── */}
       <FadeIn y={20} duration={0.5}>
         <Card className={styles.tradesCard}>
-        <div className={styles.tradesHeader}>
-          <h2 className={styles.tradesTitle}>Recent Orders</h2>
-          <button className={styles.viewAll} onClick={() => navigate('/dashboard/portfolio')}>View all →</button>
-        </div>
-        {tradesLoading ? (
-          <div className={styles.tradesLoading}><Spinner size={32}/></div>
-        ) : trades.length === 0 ? (
-          <EmptyState icon="◳" title="No orders yet" description="Place your first order to see it here." />
-        ) : (
-          <div className={styles.tradesTable}>
-            <div className={styles.tableHeader}>
-              <span>Symbol</span><span>Type</span><span>Qty</span>
-              <span>Price</span><span>Status</span><span>P&L</span>
-            </div>
-            {trades.slice(0, 8).map((t) => (
-              <div key={t.id} className={styles.tableRow}>
-                <div>
-                  <div className={styles.symbol}>{t.symbol}</div>
-                  <div className={styles.exchange}>{t.exchange} · {t.segment}</div>
-                </div>
-                <div><Badge variant={t.side === 'BUY' ? 'success' : 'danger'}>{t.side}</Badge></div>
-                <div className={styles.qty}>{t.quantity}</div>
-                <div className={styles.price}>₹{(t.executedPrice || t.price || 0).toLocaleString('en-IN')}</div>
-                <div><Badge variant={STATUS_COLORS[t.status] || 'default'}>{t.status}</Badge></div>
-                <div className={t.pnl >= 0 ? styles.pnlUp : styles.pnlDown}>
-                  {t.pnl >= 0 ? '+' : ''}₹{(t.pnl || 0).toLocaleString('en-IN')}
-                </div>
-              </div>
-            ))}
+          <div className={styles.tradesHeader}>
+            <h2 className={styles.tradesTitle}>Recent Orders</h2>
+            <button className={styles.viewAll} onClick={() => navigate('/dashboard/portfolio')}>View all →</button>
           </div>
-        )}
-      </Card>
-      </SlideUp>
+          {tradesLoading ? (
+            <div className={styles.tradesLoading}><Spinner size={32}/></div>
+          ) : trades.length === 0 ? (
+            <EmptyState icon="◳" title="No orders yet" description="Place your first order to see it here." />
+          ) : (
+            <div className={styles.tradesTable}>
+              <div className={styles.tableHeader}>
+                <span>Symbol</span><span>Type</span><span>Qty</span>
+                <span>Price</span><span>Status</span><span>P&L</span>
+              </div>
+              {trades.slice(0, 8).map((t) => (
+                <div key={t.id} className={styles.tableRow}>
+                  <div>
+                    <div className={styles.symbol}>{t.symbol}</div>
+                    <div className={styles.exchange}>{t.exchange} · {t.segment}</div>
+                  </div>
+                  <div><Badge variant={t.side === 'BUY' ? 'success' : 'danger'}>{t.side}</Badge></div>
+                  <div className={styles.qty}>{t.quantity}</div>
+                  <div className={styles.price}>₹{(t.executedPrice || t.price || 0).toLocaleString('en-IN')}</div>
+                  <div><Badge variant={STATUS_COLORS[t.status] || 'default'}>{t.status}</Badge></div>
+                  <div className={t.pnl >= 0 ? styles.pnlUp : styles.pnlDown}>
+                    {t.pnl >= 0 ? '+' : ''}₹{(t.pnl || 0).toLocaleString('en-IN')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </FadeIn>
+
     </div>
   )
 }

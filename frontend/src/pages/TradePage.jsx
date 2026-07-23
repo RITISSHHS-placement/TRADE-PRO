@@ -6,6 +6,9 @@ import { useTrades } from '../hooks'
 import { Button, Input, Select, Card, Badge } from '../components/ui'
 import { FadeIn, SlideUp } from '../components/animations'
 import { SYMBOL_LABELS } from '../services/marketData'
+import { GlassCard, GlassButton, GlassBadge, GlassTabs } from '../components/Glassmorphism'
+import CandlestickChart from '../components/CandlestickChart'
+import OrderBook, { MiniOrderBook } from '../components/OrderBook'
 import styles from './TradePage.module.css'
 
 const SEGMENTS = [
@@ -36,6 +39,35 @@ const INSIGHTS = [
 const formatPrice = (value) => {
   if (value == null || Number.isNaN(value)) return '—'
   return `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+// Generate sample candlestick chart data
+const generateSampleChartData = () => {
+  const data = []
+  let basePrice = 2500
+  const now = Date.now()
+  
+  for (let i = 0; i < 50; i++) {
+    const volatility = Math.random() * 20 - 10
+    const open = basePrice
+    const close = basePrice + volatility
+    const high = Math.max(open, close) + Math.random() * 15
+    const low = Math.min(open, close) - Math.random() * 15
+    const volume = Math.floor(Math.random() * 1000000) + 500000
+    
+    data.push({
+      timestamp: now - (50 - i) * 86400000,
+      open,
+      high,
+      low,
+      close,
+      volume,
+    })
+    
+    basePrice = close
+  }
+  
+  return data
 }
 
 const MarketWatch = memo(function MarketWatch() {
@@ -260,7 +292,27 @@ export default function TradePage() {
         <div className={styles.right}>
           <MarketWatch />
 
-          <Card className={styles.insightCard}>
+          {/* Advanced Chart */}
+          <GlassCard className={styles.chartCard} intensity="medium">
+            <CandlestickChart 
+              data={generateSampleChartData()}
+              height={300}
+              showSMA={true}
+              showEMA={true}
+              showBollinger={false}
+              showRSI={true}
+            />
+          </GlassCard>
+
+          {/* Order Book */}
+          <OrderBook 
+            symbol="RELIANCE"
+            basePrice={2500}
+            showDepthChart={true}
+            maxRows={6}
+          />
+
+          <GlassCard className={styles.insightCard} intensity="light">
             <div className={styles.cardHeader}>
               <div>
                 <h2 className={styles.cardTitle}>AI insights</h2>
@@ -273,18 +325,18 @@ export default function TradePage() {
                 <div key={item.title} className={styles.insightItem}>
                   <div className={styles.insightTitleRow}>
                     <span className={styles.insightTitle}>{item.title}</span>
-                    <span className={`${styles.insightBadge} ${styles[item.tone]}`}>AI</span>
+                    <GlassBadge variant={item.tone === 'positive' ? 'success' : 'info'}>AI</GlassBadge>
                   </div>
                   <p className={styles.insightCopy}>{item.copy}</p>
                 </div>
               ))}
             </div>
-          </Card>
+          </GlassCard>
 
-          <Card className={styles.recentCard}>
+          <GlassCard className={styles.recentCard} intensity="light">
             <div className={styles.cardHeader}>
               <div>
-                <h2 className={styles.cardTitle}>Today’s orders</h2>
+                <h2 className={styles.cardTitle}>Today's orders</h2>
                 <p className={styles.cardSub}>A living audit of your most recent activity.</p>
               </div>
               <div className={styles.iconPill}><Bell size={14} /></div>
@@ -299,13 +351,13 @@ export default function TradePage() {
                     <div className={styles.watchEx}>{t.orderType}</div>
                   </div>
                   <div className={styles.recentMeta}>
-                    <Badge variant={t.side === 'BUY' ? 'success' : 'danger'}>{t.side}</Badge>
+                    <GlassBadge variant={t.side === 'BUY' ? 'success' : 'danger'}>{t.side}</GlassBadge>
                     <div className={styles.watchEx}>{t.quantity} qty</div>
                   </div>
                 </div>
               ))
             )}
-          </Card>
+          </GlassCard>
         </div>
       </div>
     </div>

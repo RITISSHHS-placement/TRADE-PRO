@@ -81,3 +81,32 @@ export const useScrollStagger = (target, options = {}) => {
     return () => ctx.revert();
   }, [target, duration, stagger, y, ease, start]);
 };
+
+/**
+ * Parallax scroll effect hook
+ * @param {React.RefObject} target - Target ref to apply parallax to
+ * @param {Object} options - { speed, direction }
+ */
+export const useParallax = (target, options = {}) => {
+  const { speed = 0.5, direction = 'y' } = options;
+
+  useEffect(() => {
+    if (!target.current) return;
+
+    const ctx = gsap.context(() => {
+      gsap.to(target.current, {
+        [direction]: () => -ScrollTrigger.maxScroll(window) * speed,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: target.current,
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: true,
+          invalidateOnRefresh: true,
+        },
+      });
+    }, target);
+
+    return () => ctx.revert();
+  }, [target, speed, direction]);
+};

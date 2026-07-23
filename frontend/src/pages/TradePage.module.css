@@ -52,7 +52,7 @@
 .metricLabel { font-size: 10px; color: var(--gray-4); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
 .metricValue { font-size: 15px; font-weight: 800; color: var(--gray-1); margin-top: 2px; }
 .grid { display: grid; grid-template-columns: minmax(360px, 460px) 1fr; gap: 18px; align-items: start; }
-.orderCard, .watchCard, .recentCard, .insightCard { overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.orderCard, .watchCard, .recentCard, .insightCard, .chartCard { overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
 .cardHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 18px 22px; border-bottom: 1px solid var(--border); background: var(--surface-1); }
 .cardTitle { font-size: 14px; font-weight: 800; color: var(--gray-1); margin-bottom: 4px; }
 .cardSub { font-size: 11px; color: var(--gray-4); line-height: 1.5; max-width: 220px; }

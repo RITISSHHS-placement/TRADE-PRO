@@ -1,5 +1,7 @@
 package com.tradepro.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +13,8 @@ import java.sql.DriverManager;
 
 @Configuration
 public class DatabaseConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(DatabaseConfig.class);
 
     @Bean
     @Primary
@@ -48,9 +52,9 @@ public class DatabaseConfig {
                 }
                 String dbUrl = "jdbc:postgresql://" + hostAndPort + dbUri.getPath();
 
-                System.out.println("Testing connection to database using parsed DATABASE_URL: " + dbUrl);
+                log.debug("Attempting database connection using parsed DATABASE_URL");
                 try (Connection conn = DriverManager.getConnection(dbUrl, username, password)) {
-                    System.out.println("✅ Successfully connected to PostgreSQL database!");
+                    log.info("Successfully connected to PostgreSQL database (DATABASE_URL)");
                     return DataSourceBuilder.create()
                             .url(dbUrl)
                             .username(username)
@@ -58,10 +62,10 @@ public class DatabaseConfig {
                             .driverClassName("org.postgresql.Driver")
                             .build();
                 } catch (Exception connEx) {
-                    System.err.println("❌ Failed to connect to PostgreSQL database via DATABASE_URL: " + connEx.getMessage());
+                    log.warn("Failed to connect to PostgreSQL database via DATABASE_URL: {}", connEx.getMessage());
                 }
             } catch (Exception e) {
-                System.err.println("Failed to parse DATABASE_URL: " + e.getMessage());
+                log.warn("Failed to parse DATABASE_URL: {}", e.getMessage());
             }
         }
 
@@ -87,9 +91,9 @@ public class DatabaseConfig {
 
                 String dbUrl = "jdbc:postgresql://" + host + ":" + port + "/" + dbName;
 
-                System.out.println("Testing connection to database using host config: " + dbUrl);
+                log.debug("Attempting database connection using host configuration");
                 try (Connection conn = DriverManager.getConnection(dbUrl, user, password)) {
-                    System.out.println("✅ Successfully connected to PostgreSQL database!");
+                    log.info("Successfully connected to PostgreSQL database (host config)");
                     return DataSourceBuilder.create()
                             .url(dbUrl)
                             .username(user)
@@ -97,15 +101,15 @@ public class DatabaseConfig {
                             .driverClassName("org.postgresql.Driver")
                             .build();
                 } catch (Exception connEx) {
-                    System.err.println("❌ Failed to connect to PostgreSQL database via host config: " + connEx.getMessage());
+                    log.warn("Failed to connect to PostgreSQL database via host config: {}", connEx.getMessage());
                 }
             } catch (Exception e) {
-                System.err.println("Failed to build host config database connection: " + e.getMessage());
+                log.warn("Failed to build host config database connection: {}", e.getMessage());
             }
         }
 
         // 3. Fallback: Use in-memory H2 database
-        System.out.println("⚠️ Falling back to in-memory H2 database.");
+        log.info("Falling back to in-memory H2 database.");
         return DataSourceBuilder.create()
                 .url("jdbc:h2:mem:tradeprodb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE")
                 .username("sa")

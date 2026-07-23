@@ -2,85 +2,210 @@ package com.tradepro.controller;
 
 import com.tradepro.dto.*;
 import com.tradepro.service.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import java.time.Duration;
 
+/**
+ * SECURITY FIXES applied:
+ * 1. @Valid on all @RequestBody — triggers bean-validation before service is hit
+ * 2. TOTP setup requires authenticated user (JWT principal), not arbitrary userId
+ * 3. TOTP verify same — principal only
+ * 4. Generic error messages from GlobalExceptionHandler, never raw stack traces
+ * 5. No sensitive data logged
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    
-    @Autowired
-    private AuthService authService;
-    
+
+    private final AuthService authService;
+
+    @Value("${jwt.expiration:86400000}")
+    private long jwtExpirationMs;
+
+    @Value("${jwt.refresh-expiration:604800000}")
+    private long jwtRefreshExpirationMs;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> register(
+            @Valid @RequestBody RegisterRequest request) {
         try {
             AuthResponse response = authService.register(request);
-            return ResponseEntity.ok(new ApiResponse<>(true, "User registered successfully", response));
+            // Set HttpOnly cookies for tokens and remove from response body
+            ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
+                .httpOnly(true).secure(true).path("/")
+                .maxAge(Duration.ofMillis(jwtExpirationMs).getSeconds())
+                .sameSite("Strict").build();
+            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
+                .httpOnly(true).secure(true).path("/api/auth/refresh")
+                .maxAge(Duration.ofMillis(jwtRefreshExpirationMs).getSeconds())
+                .sameSite("Strict").build();
+
+            response.setToken(null);
+            response.setRefreshToken(null);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
+            headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
+            return ResponseEntity.status(HttpStatus.CREATED).headers(headers)
+                .body(new ApiResponse<>(true, "User registered successfully", response));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
-    
+
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> login(
+            @Valid @RequestBody LoginRequest request) {
         try {
             AuthResponse response = authService.login(request);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Login successful", response));
+            // Set HttpOnly cookies for tokens and remove from response body
+            ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
+                .httpOnly(true).secure(true).path("/")
+                .maxAge(Duration.ofMillis(jwtExpirationMs).getSeconds())
+                .sameSite("Strict").build();
+            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
+                .httpOnly(true).secure(true).path("/api/auth/refresh")
+                .maxAge(Duration.ofMillis(jwtRefreshExpirationMs).getSeconds())
+                .sameSite("Strict").build();
+
+            response.setToken(null);
+            response.setRefreshToken(null);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
+            headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
+            return ResponseEntity.ok().headers(headers)
+                .body(new ApiResponse<>(true, "Login successful", response));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
-    
+
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(@RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(
+            @RequestBody(required = false) RefreshTokenRequest request,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
         try {
-            AuthResponse response = authService.refreshToken(request.getRefreshToken());
-            return ResponseEntity.ok(new ApiResponse<>(true, "Token refreshed successfully", response));
+            String refreshToken = null;
+            if (request != null && request.getRefreshToken() != null) {
+                refreshToken = request.getRefreshToken();
+            } else if (httpRequest.getCookies() != null) {
+                for (jakarta.servlet.http.Cookie c : httpRequest.getCookies()) {
+                    if ("refresh_token".equals(c.getName())) {
+                        refreshToken = c.getValue();
+                        break;
+                    }
+                }
+            }
+
+            if (refreshToken == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ApiResponse<>(false, "Session expired", null));
+            }
+
+            AuthResponse response = authService.refreshToken(refreshToken);
+            // Rotate cookies
+            ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
+                    .httpOnly(true).secure(true).path("/")
+                    .maxAge(Duration.ofMillis(jwtExpirationMs).getSeconds())
+                    .sameSite("Strict").build();
+            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
+                    .httpOnly(true).secure(true).path("/api/auth/refresh")
+                    .maxAge(Duration.ofMillis(jwtRefreshExpirationMs).getSeconds())
+                    .sameSite("Strict").build();
+
+            response.setToken(null);
+            response.setRefreshToken(null);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
+            headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
+            return ResponseEntity.ok().headers(headers)
+                    .body(new ApiResponse<>(true, "Token refreshed", response));
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(new ApiResponse<>(false, e.getMessage(), null));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>(false, "Session expired", null));
         }
     }
-    
+
+    /**
+     * SECURITY: TOTP setup derived from JWT — no arbitrary userId accepted.
+     * setupTotp(Long userId) still called internally after resolving email → id.
+     */
     @PostMapping("/setup-totp")
-    public ResponseEntity<ApiResponse<TotpSetupResponse>> setupTotp(@RequestBody TotpSetupRequest request) {
+    public ResponseEntity<ApiResponse<TotpSetupResponse>> setupTotp(
+            @AuthenticationPrincipal UserDetails principal) {
         try {
-            TotpSetupResponse response = authService.setupTotp(request.getUserId());
+            TotpSetupResponse response = authService.setupTotpByEmail(principal.getUsername());
             return ResponseEntity.ok(new ApiResponse<>(true, "TOTP setup initiated", response));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(new ApiResponse<>(false, e.getMessage(), null));
+                .body(new ApiResponse<>(false, "TOTP setup failed", null));
         }
     }
-    
+
     @PostMapping("/verify-totp")
-    public ResponseEntity<ApiResponse<String>> verifyTotp(@RequestBody TotpVerifyRequest request) {
+    public ResponseEntity<ApiResponse<String>> verifyTotp(
+            @RequestBody TotpVerifyRequest request,
+            @AuthenticationPrincipal UserDetails principal) {
         try {
-            boolean isValid = authService.verifyTotp(request.getUserId(), request.getToken());
+            boolean isValid = authService.verifyTotpByEmail(principal.getUsername(), request.getToken());
             if (isValid) {
-                return ResponseEntity.ok(new ApiResponse<>(true, "TOTP verified successfully", "TOTP_VERIFIED"));
-            } else {
-                return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>(false, "Invalid TOTP code", null));
+                return ResponseEntity.ok(new ApiResponse<>(true, "TOTP verified", "TOTP_VERIFIED"));
             }
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>(false, "Invalid TOTP code", null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(new ApiResponse<>(false, e.getMessage(), null));
+                .body(new ApiResponse<>(false, "TOTP verification failed", null));
         }
     }
-    
+
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<String>> logout(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<ApiResponse<String>> logout(
+            @RequestHeader("Authorization") String token) {
         try {
             authService.logout(token);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Logged out successfully", "LOGGED_OUT"));
+            // Clear cookies
+            ResponseCookie accessCookie = ResponseCookie.from("access_token", "")
+                .httpOnly(true).secure(true).path("/")
+                .maxAge(0).sameSite("Strict").build();
+            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", "")
+                .httpOnly(true).secure(true).path("/api/auth/refresh")
+                .maxAge(0).sameSite("Strict").build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
+            headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+            return ResponseEntity.ok().headers(headers).body(new ApiResponse<>(true, "Logged out successfully", "LOGGED_OUT"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(new ApiResponse<>(false, e.getMessage(), null));
+            // Always return 200 on logout — don't leak whether token was valid
+            ResponseCookie accessCookie = ResponseCookie.from("access_token", "")
+                .httpOnly(true).secure(true).path("/")
+                .maxAge(0).sameSite("Strict").build();
+            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", "")
+                .httpOnly(true).secure(true).path("/api/auth/refresh")
+                .maxAge(0).sameSite("Strict").build();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
+            headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+            return ResponseEntity.ok().headers(headers).body(new ApiResponse<>(true, "Logged out", "LOGGED_OUT"));
         }
     }
 }

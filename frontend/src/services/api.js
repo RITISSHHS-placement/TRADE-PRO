@@ -20,19 +20,11 @@ const api = axios.create({
   baseURL: BASE_URL,
   timeout: 60000,  // 60s — Render free tier cold start can take 30-45s
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true, // include HttpOnly auth cookies
 })
 
-// Request interceptor — attach JWT
-api.interceptors.request.use(
-  (config) => {
-    const token = getStore()?.getState().auth.token
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
+// No Authorization header attachment — server uses HttpOnly cookie
+
 
 // Response interceptor — handle 401 with refresh
 let isRefreshing = false
@@ -51,14 +43,13 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
         })
           .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`
-            return api(originalRequest)
+                return api(originalRequest)
           })
           .catch((err) => Promise.reject(err))
       }
@@ -66,11 +57,9 @@ api.interceptors.response.use(
       originalRequest._retry = true
       isRefreshing = true
 
-      try {
+        try {
         await getStore().dispatch(_refreshToken())
-        const newToken = getStore().getState().auth.token
-        processQueue(null, newToken)
-        originalRequest.headers.Authorization = `Bearer ${newToken}`
+        processQueue(null, null)
         return api(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError, null)
@@ -89,10 +78,8 @@ api.interceptors.response.use(
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
-  logout: (token) => api.post('/auth/logout', null, {
-    headers: { Authorization: `Bearer ${token}` }
-  }),
-  refresh: (refreshToken) => api.post('/auth/refresh', { refreshToken }),
+  logout: () => api.post('/auth/logout'),
+  refresh: () => api.post('/auth/refresh'),
   setupTotp: (userId) => api.post('/auth/setup-totp', { userId }),
   verifyTotp: (userId, token) => api.post('/auth/verify-totp', { userId, token }),
 }

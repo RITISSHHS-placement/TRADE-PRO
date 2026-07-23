@@ -12,27 +12,13 @@
  * equity-stockIndices requires a cookie session (returns 404 without it).
  */
 
-const EDGE = '/api/market'   // Vercel edge function (same origin, no CORS)
-const FALLBACK = (import.meta.env.VITE_API_URL || '/backend') + '/market'
+const BACKEND = (import.meta.env.VITE_API_URL || '/backend') + '/market'
 
 async function nse(endpoint) {
-  // Primary: Vercel edge function
   try {
-    const r = await fetch(`${EDGE}?endpoint=${endpoint}`, {
-      signal: AbortSignal.timeout(8000),
-    })
-    if (r.ok) {
-      const j = await r.json()
-      if (!j.error) return j
-    }
-  } catch (_) {}
-
-  // Fallback: Render proxy
-  try {
-    const r = await fetch(`${FALLBACK}/${endpoint}`, { signal: AbortSignal.timeout(10000) })
+    const r = await fetch(`${BACKEND}/${endpoint}`, { signal: AbortSignal.timeout(10000) })
     if (r.ok) return r.json()
   } catch (_) {}
-
   throw new Error(`Market data unavailable for ${endpoint}`)
 }
 
@@ -40,7 +26,7 @@ async function nse(endpoint) {
    ALL NSE INDICES  (NIFTY 50, BANK NIFTY, VIX, etc.)
 ───────────────────────────────────────────────────── */
 export async function fetchNSEIndices() {
-  const data = await nse('allIndices')
+  const data = await nse('indices')
   const map  = {}
   for (const x of (data.data || [])) {
     const key = x.index?.toUpperCase()
