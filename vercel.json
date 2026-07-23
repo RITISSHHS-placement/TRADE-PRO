@@ -1,0 +1,16 @@
+{
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "cd frontend && npm install",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/backend/:path*",
+      "destination": "https://tradepro-backend-erfj.onrender.com/api/:path*"
+    },
+    {
+      "source": "/((?!api|backend).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
