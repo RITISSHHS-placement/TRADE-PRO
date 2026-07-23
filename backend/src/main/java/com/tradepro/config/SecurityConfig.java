@@ -45,7 +45,7 @@ public class SecurityConfig {
         this.userDetailsService = userDetailsService;
     }
 
-    @Value("${cors.allowed-origins:http://localhost:3000}")
+    @Value("${cors.allowed-origins:http://localhost:3000,https://trade-pro-t7l6.vercel.app}")
     private String allowedOrigins;
 
     // Only these endpoints are public — H2 console removed from PUBLIC_URLS (security fix)
