@@ -1,0 +1,13 @@
+rules:
+  - id: insecure-tls-usage
+    patterns:
+      - pattern: |
+          new URL("http://$HOST$PATH")
+    message: "Avoid constructing URLs with plain HTTP in production. Use HTTPS."
+    severity: WARNING
+
+  - id: jwt-hardcoded-secret
+    pattern: |
+      "jwt.secret":
+    message: "Do not commit JWT secrets in config files. Use environment variables or secret manager."
+    severity: ERROR
