@@ -61,6 +61,7 @@ const MORE_LEARN = [
 
 /* ── Top nav items ── */
 const NAV_ITEMS = [
+  { to: '/dashboard/trade',          label: 'Trade' },
   { to: '/dashboard/portfolio',       label: 'Portfolio' },
   { to: '/dashboard/digital-gold',    label: 'Gold' },
   { to: '/dashboard/screener-landing',label: 'Screener' },

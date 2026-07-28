@@ -1,53 +1,63 @@
-.page { display: flex; flex-direction: column; gap: 18px; }
+.page { display: flex; flex-direction: column; gap: 24px; }
 .heroCard {
-  display: grid; grid-template-columns: 1.4fr 0.9fr; gap: 16px;
-  padding: 24px;
+  display: grid; grid-template-columns: 1.4fr 0.9fr; gap: 20px;
+  padding: 32px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  background: linear-gradient(135deg, rgba(5, 150, 105, 0.14), rgba(15, 32, 64, 0.06));
-  box-shadow: var(--shadow-md);
+  border-radius: 24px;
+  background: rgba(17, 17, 21, 0.8);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
+  position: relative;
+}
+.heroCard::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--violet));
 }
 .heroContent h1 {
-  font-size: clamp(24px, 3vw, 34px);
+  font-size: clamp(28px, 3.5vw, 40px);
   font-weight: 900;
-  letter-spacing: -0.04em;
-  color: var(--gray-1);
-  margin: 10px 0 10px;
+  letter-spacing: -0.05em;
+  color: var(--text-1);
+  margin: 12px 0 12px;
   line-height: 1.05;
 }
-.heroContent p { font-size: 14px; line-height: 1.7; color: var(--gray-3); max-width: 650px; }
+.heroContent p { font-size: 15px; line-height: 1.7; color: var(--text-3); max-width: 650px; }
 .eyebrow {
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 7px 12px; border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(5, 150, 105, 0.14);
-  color: var(--green-dark);
-  font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 8px 14px; border-radius: 24px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: var(--accent);
+  font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
 }
-.heroActions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.heroActions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
 .primaryCta, .secondaryCta {
-  border: none; cursor: pointer; padding: 10px 14px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; transition: all 0.2s ease;
+  border: none; cursor: pointer; padding: 12px 18px; border-radius: 12px; font-size: 14px; font-weight: 700; transition: all 0.3s ease;
 }
 .primaryCta {
-  background: linear-gradient(135deg, var(--green), var(--green-dark));
-  color: white; box-shadow: 0 10px 24px rgba(0, 168, 68, 0.22);
+  background: linear-gradient(135deg, var(--accent), var(--violet));
+  color: white; box-shadow: 0 0 30px var(--accent-glow);
 }
+.primaryCta:hover { transform: translateY(-2px); box-shadow: 0 0 40px var(--accent-glow); }
 .secondaryCta {
-  background: rgba(255, 255, 255, 0.65); border: 1px solid var(--border); color: var(--gray-1);
+  background: var(--bg-2); border: 1px solid var(--border); color: var(--text-1);
 }
-.primaryCta:hover, .secondaryCta:hover { transform: translateY(-1px); }
-.heroMetrics { display: grid; gap: 10px; }
+.secondaryCta:hover { background: var(--bg-3); border-color: var(--border-strong); }
+.heroMetrics { display: grid; gap: 12px; }
 .metricCard {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 16px; border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(15, 32, 64, 0.08);
-  backdrop-filter: blur(14px);
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px; border-radius: 16px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  transition: all 0.3s;
 }
+.metricCard:hover { border-color: var(--border-strong); }
 .metricIcon {
-  display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--green-dim), rgba(15, 32, 64, 0.06)); color: var(--green-dark);
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px;
+  background: var(--accent-dim); color: var(--accent);
 }
 .metricLabel { font-size: 10px; color: var(--gray-4); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
 .metricValue { font-size: 15px; font-weight: 800; color: var(--gray-1); margin-top: 2px; }

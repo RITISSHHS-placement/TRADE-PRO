@@ -2,6 +2,7 @@ package com.tradepro.controller;
 
 import com.tradepro.dto.*;
 import com.tradepro.service.AuthService;
+import com.tradepro.service.OtpService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +27,7 @@ import java.time.Duration;
 public class AuthController {
 
     private final AuthService authService;
+    private final OtpService otpService;
 
     @Value("${jwt.expiration:86400000}")
     private long jwtExpirationMs;
@@ -33,8 +35,9 @@ public class AuthController {
     @Value("${jwt.refresh-expiration:604800000}")
     private long jwtRefreshExpirationMs;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, OtpService otpService) {
         this.authService = authService;
+        this.otpService = otpService;
     }
 
     @PostMapping("/register")
@@ -194,6 +197,34 @@ public class AuthController {
             headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
             headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
             return ResponseEntity.ok().headers(headers).body(new ApiResponse<>(true, "Logged out", "LOGGED_OUT"));
+        }
+    }
+
+    @PostMapping("/send-otp")
+    public ResponseEntity<ApiResponse<String>> sendOtp(@Valid @RequestBody OtpRequest request) {
+        try {
+            String otp = otpService.generateOtp();
+            otpService.sendOtpEmail(request.getEmail(), otp);
+            otpService.storeOtp(request.getEmail(), otp);
+            return ResponseEntity.ok(new ApiResponse<>(true, "OTP sent to email", "OTP_SENT"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>(false, "Failed to send OTP: " + e.getMessage(), null));
+        }
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<String>> verifyOtp(@Valid @RequestBody OtpVerifyRequest request) {
+        try {
+            boolean isValid = otpService.verifyOtp(request.getEmail(), request.getOtp());
+            if (isValid) {
+                return ResponseEntity.ok(new ApiResponse<>(true, "OTP verified successfully", "OTP_VERIFIED"));
+            }
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>(false, "Invalid or expired OTP", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>(false, "OTP verification failed", null));
         }
     }
 }

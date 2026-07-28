@@ -91,6 +91,8 @@ export const authAPI = {
   refresh: () => api.post('/auth/refresh'),
   setupTotp: () => api.post('/auth/setup-totp'),
   verifyTotp: (token) => api.post('/auth/verify-totp', { token }),
+  sendOtp: (email) => api.post('/auth/send-otp', { email }),
+  verifyOtp: (email, otp) => api.post('/auth/verify-otp', { email, otp }),
 }
 
 // ---- Trade API ----
