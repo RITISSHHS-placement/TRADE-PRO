@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/backend/:path*",
-      "destination": "https://REPLACE_WITH_YOUR_RAILWAY_URL/api/:path*"
+      "destination": "https://tradepro-backend-erfj.onrender.com/:path*"
     },
     {
       "source": "/((?!api|backend).*)",
