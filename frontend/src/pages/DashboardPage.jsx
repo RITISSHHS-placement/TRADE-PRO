@@ -2,12 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import {
-  AreaChart, Area, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, CartesianGrid,
-} from 'recharts'
-import {
   TrendingUp, TrendingDown, Zap, Shield,
-  Activity, RefreshCw, Clock, ArrowUpRight, ArrowDownRight, MoreHorizontal,
+  Activity, RefreshCw, Clock, ArrowUpRight, ArrowDownRight,
+  BarChart2, Newspaper, Globe, PieChart, Star,
 } from 'lucide-react'
 import { useDispatch } from 'react-redux'
 import { setKillSwitchModal } from '../store/slices/uiSlice'
@@ -152,6 +149,14 @@ export default function DashboardPage() {
 
   const totalPnl        = trades.reduce((a, t) => a + (t.pnl || 0), 0)
   const completedTrades = trades.filter((t) => t.status === 'COMPLETE').length
+  
+  // Portfolio calculations
+  const investedAmount = trades.reduce((a, t) => a + ((t.quantity || 0) * (t.price || 0)), 0)
+  const currentValue  = trades.reduce((a, t) => a + ((t.quantity || 0) * (t.executedPrice || t.price || 0)), 0)
+  const availableBalance = 500000 // Mock value - should come from backend
+  const totalPortfolioValue = availableBalance + currentValue
+  const overallReturn = totalPortfolioValue - (availableBalance + investedAmount)
+  const returnPercentage = investedAmount > 0 ? (overallReturn / investedAmount) * 100 : 0
 
   const nifty  = indices['NIFTY 50']
   const bank   = indices['NIFTY BANK']
@@ -209,6 +214,49 @@ export default function DashboardPage() {
           <TrendingUp size={15}/> Place Order
         </button>
       </div>
+      </FadeIn>
+
+      {/* ── Portfolio Overview ── */}
+      <FadeIn y={20} duration={0.5}>
+        <Card className={styles.portfolioCard}>
+          <div className={styles.portfolioHeader}>
+            <div>
+              <h2 className={styles.portfolioTitle}>Portfolio Overview</h2>
+              <p className={styles.portfolioSub}>Your investment performance at a glance</p>
+            </div>
+            <button className={styles.viewAll} onClick={() => navigate('/dashboard/portfolio')}>View Portfolio →</button>
+          </div>
+          <div className={styles.portfolioGrid}>
+            <div className={styles.portfolioItem}>
+              <span className={styles.piLabel}>Total Portfolio Value</span>
+              <div className={styles.piValue}>₹{fmt0(totalPortfolioValue)}</div>
+            </div>
+            <div className={styles.portfolioItem}>
+              <span className={styles.piLabel}>Available Balance</span>
+              <div className={styles.piValue}>₹{fmt0(availableBalance)}</div>
+            </div>
+            <div className={styles.portfolioItem}>
+              <span className={styles.piLabel}>Invested Amount</span>
+              <div className={styles.piValue}>₹{fmt0(investedAmount)}</div>
+            </div>
+            <div className={styles.portfolioItem}>
+              <span className={styles.piLabel}>Current Value</span>
+              <div className={styles.piValue}>₹{fmt0(currentValue)}</div>
+            </div>
+            <div className={styles.portfolioItem}>
+              <span className={styles.piLabel}>Overall Return</span>
+              <div className={`${styles.piValue} ${overallReturn >= 0 ? styles.piUp : styles.piDown}`}>
+                {overallReturn >= 0 ? '+' : ''}₹{fmt0(overallReturn)}
+              </div>
+            </div>
+            <div className={styles.portfolioItem}>
+              <span className={styles.piLabel}>Return %</span>
+              <div className={`${styles.piValue} ${returnPercentage >= 0 ? styles.piUp : styles.piDown}`}>
+                {returnPercentage >= 0 ? '+' : ''}{returnPercentage.toFixed(2)}%
+              </div>
+            </div>
+          </div>
+        </Card>
       </FadeIn>
 
       {/* ── Stats ── */}
@@ -287,25 +335,45 @@ export default function DashboardPage() {
 
       {/* ── Quick Actions ── */}
       <Stagger stagger={0.1} duration={0.4} className={styles.quickRow}>
+        <Card className={styles.quickCard} onClick={() => navigate('/dashboard/market')}>
+          <div className={styles.quickIcon} style={{ background: '#e8f0fe', color: '#1a73e8' }}><BarChart2 size={20}/></div>
+          <div className={styles.quickTitle}>Markets</div>
+          <div className={styles.quickDesc}>Live NSE/BSE · Indices · Movers</div>
+        </Card>
+        <Card className={styles.quickCard} onClick={() => navigate('/dashboard/screener')}>
+          <div className={styles.quickIcon} style={{ background: '#e8f5e9', color: '#0f9d58' }}><Star size={20}/></div>
+          <div className={styles.quickTitle}>Screener</div>
+          <div className={styles.quickDesc}>50+ filters · 4,000+ stocks</div>
+        </Card>
+        <Card className={styles.quickCard} onClick={() => navigate('/dashboard/news')}>
+          <div className={styles.quickIcon} style={{ background: '#fef3c7', color: '#d97706' }}><Newspaper size={20}/></div>
+          <div className={styles.quickTitle}>Market News</div>
+          <div className={styles.quickDesc}>Live news · Events · IPO</div>
+        </Card>
+        <Card className={styles.quickCard} onClick={() => navigate('/dashboard/digital-gold')}>
+          <div className={styles.quickIcon} style={{ background: '#fef9ec', color: '#b45309' }}><Globe size={20}/></div>
+          <div className={styles.quickTitle}>Digital Gold</div>
+          <div className={styles.quickDesc}>24K · SIP from ₹1</div>
+        </Card>
+        <Card className={styles.quickCard} onClick={() => navigate('/dashboard/portfolio')}>
+          <div className={styles.quickIcon} style={{ background: '#ede9fe', color: '#7c3aed' }}><PieChart size={20}/></div>
+          <div className={styles.quickTitle}>Portfolio</div>
+          <div className={styles.quickDesc}>P&L · Holdings · Orders</div>
+        </Card>
         <Card className={styles.quickCard} onClick={() => navigate('/dashboard/security')}>
-          <div className={styles.quickIcon} style={{ background: '#ede9fe', color: '#7c3aed' }}><Shield size={20}/></div>
+          <div className={styles.quickIcon} style={{ background: '#fce8e6', color: '#ea4335' }}><Shield size={20}/></div>
           <div className={styles.quickTitle}>Security</div>
-          <div className={styles.quickDesc}>2FA, TOTP, device management</div>
+          <div className={styles.quickDesc}>2FA · TOTP · Devices</div>
         </Card>
         <Card className={styles.quickCard} onClick={() => navigate('/dashboard/settings')}>
-          <div className={styles.quickIcon} style={{ background: '#fef3c7', color: '#d97706' }}><Activity size={20}/></div>
+          <div className={styles.quickIcon} style={{ background: '#f3f4f6', color: '#5f6368' }}><Activity size={20}/></div>
           <div className={styles.quickTitle}>Risk Controls</div>
-          <div className={styles.quickDesc}>Kill switch, limits, watchdogs</div>
+          <div className={styles.quickDesc}>Kill switch · Limits</div>
         </Card>
         <Card className={`${styles.quickCard} ${styles.killCard}`} onClick={() => dispatch(setKillSwitchModal(true))}>
           <div className={styles.quickIcon} style={{ background: 'var(--red-dim)', color: 'var(--red-dark)' }}><Zap size={20}/></div>
           <div className={styles.quickTitle}>Kill Switch</div>
           <div className={styles.quickDesc}>Pause all trading instantly</div>
-        </Card>
-        <Card className={styles.quickCard} onClick={() => navigate('/dashboard/mf')}>
-          <div className={styles.quickIcon} style={{ background: 'var(--green-dim)', color: 'var(--green-dark)' }}><TrendingUp size={20}/></div>
-          <div className={styles.quickTitle}>Mutual Funds</div>
-          <div className={styles.quickDesc}>₹0 commission · Direct plans</div>
         </Card>
       </Stagger>
 

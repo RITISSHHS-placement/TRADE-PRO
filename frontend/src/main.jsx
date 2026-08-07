@@ -13,11 +13,11 @@ injectStore(store)
 injectActions(logoutUser, refreshToken)
 
 try {
-  document.documentElement.setAttribute('data-theme', localStorage.getItem('tp-theme') || 'dark')
+  document.documentElement.setAttribute('data-theme', localStorage.getItem('tp-theme') || 'light')
 } catch {}
 
 store.subscribe(() => {
-  const theme = store.getState().ui?.theme || 'dark'
+  const theme = store.getState().ui?.theme || 'light'
   document.documentElement.setAttribute('data-theme', theme)
 })
 

@@ -1,132 +1,202 @@
-/* ═══════════════════════════════════════════════════════
-   TradePro — Stunning Dark Design System
-═══════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   TradePro — Microsoft MAI-Inspired Design System
+   Light-first · Typography-driven · Restrained color
+   Palette: White surfaces · Charcoal text · Blue accents
+   Semantic: Green=gain/buy · Red=loss/sell · Amber=warning
+═══════════════════════════════════════════════════════════════ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
-/* ── Stunning Dark Theme (Default) ── */
 :root {
-  /* Brand - Purple/Violet Accent */
-  --accent:       #6366f1;
-  --accent-light: #818cf8;
-  --accent-dark:  #4f46e5;
-  --accent-glow:  rgba(99, 102, 241, 0.3);
-  --accent-dim:   rgba(99, 102, 241, 0.15);
+  /* ── Surfaces ── */
+  --surface-page:    #f6f7f9;
+  --surface-1:       #ffffff;
+  --surface-2:       #f9fafb;
+  --surface-3:       #f3f4f6;
+  --surface-hover:   #f0f1f3;
+  --surface-active:  #e8eaed;
 
-  /* Secondary - Violet */
-  --violet:       #8b5cf6;
-  --violet-dim:   rgba(139, 92, 246, 0.15);
+  /* ── Text hierarchy ── */
+  --text-primary:    #111827;
+  --text-secondary:  #374151;
+  --text-tertiary:   #6b7280;
+  --text-muted:      #9ca3af;
+  --text-disabled:   #d1d5db;
 
-  /* Backgrounds - Deep Dark */
-  --bg:         #09090b;
-  --bg-page:    #09090b;
-  --bg-2:       #111115;
-  --bg-3:       #17171c;
-  --bg-alt:     #0f0f12;
-  --surface-1:  rgba(17, 17, 21, 0.8);
-  --surface-2:  rgba(23, 23, 28, 0.8);
+  /* Aliases for backward-compat */
+  --gray-1: #111827;
+  --gray-2: #374151;
+  --gray-3: #6b7280;
+  --gray-4: #9ca3af;
+  --bg:     #ffffff;
+  --bg-page: #f6f7f9;
+  --bg-2:   #f9fafb;
+  --bg-3:   #f3f4f6;
+  --bg-alt: #f6f7f9;
 
-  /* Borders - Subtle */
-  --border:        rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.12);
-  --border-green:  rgba(34, 197, 94, 0.3);
-  --border-red:    rgba(239, 68, 68, 0.3);
+  /* ── Borders ── */
+  --border:        #e5e7eb;
+  --border-strong: #d1d5db;
+  --border-focus:  #3b82f6;
 
-  /* Text - High Contrast */
-  --text-1: #f4f4f6;
-  --text-2: #d4d4d8;
-  --text-3: #8b8b9e;
-  --text-4: #52525f;
-  --gray-1: #f4f4f6;
-  --gray-2: #d4d4d8;
-  --gray-3: #8b8b9e;
-  --gray-4: #52525f;
+  /* ── Brand blue — Copilot / MAI inspired ── */
+  --blue:        #2563eb;
+  --blue-light:  #dbeafe;
+  --blue-hover:  #1d4ed8;
+  --blue-dim:    rgba(37,99,235,.08);
+  --accent:      #2563eb;
+  --accent-dim:  rgba(37,99,235,.08);
+  --tt-blue:     #2563eb;
+  --tt-blue-light: #dbeafe;
+  --tt-blue-hover: #1d4ed8;
 
-  /* Green (gains) */
-  --green:       #22c55e;
-  --green-dark:  #16a34a;
-  --green-dim:   rgba(34, 197, 94, 0.15);
-  --green-light: rgba(34, 197, 94, 0.1);
+  /* ── Semantic: green = gain/buy/success ── */
+  --green:       #059669;
+  --green-dark:  #047857;
+  --green-dim:   rgba(5,150,105,.08);
+  --green-light: rgba(5,150,105,.06);
+  --border-green: rgba(5,150,105,.25);
 
-  /* Red (losses) */
-  --red:        #ef4444;
-  --red-dark:   #dc2626;
-  --red-dim:    rgba(239, 68, 68, 0.15);
+  /* ── Semantic: red = loss/sell/danger ── */
+  --red:         #dc2626;
+  --red-dark:    #b91c1c;
+  --red-dim:     rgba(220,38,38,.08);
+  --border-red:  rgba(220,38,38,.25);
 
-  /* Amber */
-  --amber:     #f59e0b;
-  --amber-dim: rgba(245, 158, 11, 0.15);
+  /* ── Semantic: amber = warning/pending ── */
+  --amber:     #d97706;
+  --amber-dim: rgba(217,119,6,.08);
 
-  /* Blue (for compatibility) */
-  --tt-blue:       #6366f1;
-  --tt-blue-light: rgba(99, 102, 241, 0.15);
-  --tt-blue-hover: #4f46e5;
+  /* ── Surface aliases ── */
+  --surface-1-alias: #ffffff;
 
-  /* Shadows - Enhanced */
-  --shadow-xs: 0 2px 4px rgba(0,0,0,0.3);
-  --shadow-sm: 0 4px 8px rgba(0,0,0,0.4);
-  --shadow-md: 0 8px 16px rgba(0,0,0,0.5);
-  --shadow-lg: 0 16px 32px rgba(0,0,0,0.6);
-  --shadow-xl: 0 24px 48px rgba(0,0,0,0.7);
-  --glow-green: 0 0 30px rgba(34, 197, 94, 0.3);
-  --glow-accent: 0 0 40px rgba(99, 102, 241, 0.3);
+  /* ── Elevation shadows — extremely subtle ── */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 8px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.04);
+  --shadow-lg: 0 8px 16px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-xl: 0 16px 32px rgba(0,0,0,.10), 0 4px 8px rgba(0,0,0,.04);
+  --glow-green: 0 0 0 3px rgba(5,150,105,.12);
+  --glow-blue:  0 0 0 3px rgba(37,99,235,.12);
 
-  /* Radius - More Rounded */
-  --radius-xs:   4px;
-  --radius-sm:   8px;
-  --radius-md:   12px;
-  --radius-lg:   16px;
-  --radius-xl:   20px;
-  --radius-2xl:  24px;
+  /* ── Radius — MAI uses moderate rounding ── */
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   8px;
+  --radius-xl:   12px;
+  --radius-2xl:  16px;
   --radius-full: 9999px;
 
-  /* Typography */
-  --font:      'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  /* ── Typography ── */
+  --font:      'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
 
-  /* Spacing */
-  --sidebar-w: 240px;
-  --sidebar-collapsed-w: 64px;
-  --topbar-h: 56px;
+  /* ── Sidebar ── */
+  --sidebar-w:           220px;
+  --sidebar-collapsed-w: 60px;
+  --topbar-h:            56px;
 }
 
-/* ── Reset ── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Dark theme ── */
+[data-theme="dark"] {
+  --surface-page:   #0d0f12;
+  --surface-1:      #161b22;
+  --surface-2:      #1c2128;
+  --surface-3:      #21262d;
+  --surface-hover:  #242a31;
+  --surface-active: #2d333b;
 
-html { font-size: 14px; }
+  --text-primary:   #e6edf3;
+  --text-secondary: #adbac7;
+  --text-tertiary:  #768390;
+  --text-muted:     #545d68;
+  --text-disabled:  #3d444d;
+
+  --gray-1: #e6edf3;
+  --gray-2: #adbac7;
+  --gray-3: #768390;
+  --gray-4: #545d68;
+  --bg:     #161b22;
+  --bg-page: #0d0f12;
+  --bg-2:   #1c2128;
+  --bg-3:   #21262d;
+  --bg-alt: #1c2128;
+
+  --border:        rgba(255,255,255,.1);
+  --border-strong: rgba(255,255,255,.16);
+
+  --blue-light:  rgba(37,99,235,.2);
+  --blue-dim:    rgba(37,99,235,.15);
+  --green-dim:   rgba(5,150,105,.15);
+  --green-light: rgba(5,150,105,.10);
+  --red-dim:     rgba(220,38,38,.15);
+  --amber-dim:   rgba(217,119,6,.15);
+  --accent-dim:  rgba(37,99,235,.15);
+  --tt-blue-light: rgba(37,99,235,.2);
+
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.2);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 8px rgba(0,0,0,.4);
+  --shadow-lg: 0 8px 16px rgba(0,0,0,.5);
+  --shadow-xl: 0 16px 32px rgba(0,0,0,.6);
+}
+
+/* ══════════════════════════════════════
+   Reset
+══════════════════════════════════════ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html { font-size: 14px; scroll-behavior: smooth; }
 
 body {
   font-family: var(--font);
-  background: var(--bg-page);
-  color: var(--text-1);
+  background: var(--surface-page);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;
 }
 
-button { font-family: inherit; cursor: pointer; border: none; background: none; }
+button  { font-family: inherit; cursor: pointer; border: none; background: none; }
 input, select, textarea { font-family: inherit; }
 a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
 
-/* ── Scrollbar — Tickertape thin style ── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
+/* ── Scrollbar ── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-4); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 /* ── Selection ── */
-::selection { background: var(--tt-blue-light); color: var(--tt-blue); }
+::selection { background: var(--blue-light); color: var(--blue); }
 
-/* ── Utilities ── */
-.tt-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.tt-green { color: var(--green) !important; }
-.tt-red   { color: var(--red) !important; }
+/* ── Focus ring ── */
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 
-/* ── Animations ── */
-@keyframes tt-spin    { to   { transform: rotate(360deg); } }
-@keyframes tt-pulse   { 0%,100%{opacity:1} 50%{opacity:.5} }
-@keyframes tt-slide-up { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-@keyframes tt-marquee  { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-@keyframes tt-shimmer  {
+/* ── Keyframes ── */
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:.4} }
+@keyframes fade-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+@keyframes shimmer {
   from { background-position: -200% center; }
   to   { background-position:  200% center; }
+}
+@keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+/* ── Utilities ── */
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.up   { color: var(--green) !important; }
+.dn   { color: var(--red)   !important; }
+
+/* ── Shimmer skeleton ── */
+.shimmer {
+  background: linear-gradient(90deg, var(--surface-3) 25%, var(--surface-hover) 50%, var(--surface-3) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
 }

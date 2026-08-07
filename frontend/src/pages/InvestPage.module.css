@@ -1,0 +1,50 @@
+/* InvestPage — MAI Design */
+.page { display:flex; flex-direction:column; gap:20px; max-width:640px; margin:0 auto; width:100%; }
+.header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.title    { font-size:22px; font-weight:700; color:var(--text-primary); letter-spacing:-.4px; margin-bottom:2px; }
+.subtitle { font-size:13px; color:var(--text-muted); }
+.securityBadge { display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:var(--radius-full); background:var(--green-dim); color:var(--green-dark); font-size:11px; font-weight:700; border:1px solid var(--border-green); }
+.progress { display:flex; align-items:center; gap:12px; padding:4px 0; }
+.step { display:flex; align-items:center; gap:8px; }
+.stepNumber { width:26px; height:26px; border-radius:50%; background:var(--surface-3); border:1px solid var(--border); color:var(--text-muted); font-size:12px; font-weight:700; display:grid; place-items:center; }
+.stepActive .stepNumber { background:var(--blue); border-color:var(--blue); color:#fff; }
+.stepLabel { font-size:12px; font-weight:600; color:var(--text-muted); }
+.stepActive .stepLabel { color:var(--text-primary); font-weight:700; }
+.card { overflow:hidden; }
+.stepContent { padding:24px; display:flex; flex-direction:column; gap:18px; }
+.stepTitle { font-size:17px; font-weight:700; color:var(--text-primary); letter-spacing:-.3px; }
+.stepDesc  { font-size:13px; color:var(--text-muted); margin-top:-12px; }
+.amountGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.amountBtn { padding:11px; border-radius:var(--radius-md); border:1.5px solid var(--border); background:var(--surface-1); color:var(--text-secondary); font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; text-align:center; }
+.amountBtn:hover { border-color:var(--blue); color:var(--blue); }
+.amountBtnActive { background:var(--blue-dim); border-color:var(--blue); color:var(--blue); font-weight:700; }
+.customAmount { display:flex; flex-direction:column; gap:6px; }
+.label { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+.customInput { }
+.summary { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px; display:flex; flex-direction:column; gap:8px; }
+.summaryItem { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--text-secondary); }
+.summaryValue { font-weight:700; color:var(--text-primary); font-variant-numeric:tabular-nums; }
+.summaryDivider { height:1px; background:var(--border); margin:4px 0; }
+.summaryTotal { font-weight:700; color:var(--text-primary); font-size:14px; }
+.paymentGrid  { display:flex; flex-direction:column; gap:10px; }
+.paymentBtn   { display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:var(--radius-lg); border:1.5px solid var(--border); background:var(--surface-1); cursor:pointer; transition:all .15s; text-align:left; }
+.paymentBtn:hover { border-color:var(--blue); }
+.paymentBtnActive { background:var(--blue-dim); border-color:var(--blue); }
+.paymentIcon  { width:38px; height:38px; border-radius:9px; background:var(--surface-2); display:grid; place-items:center; color:var(--text-secondary); flex-shrink:0; }
+.paymentInfo  { flex:1; }
+.paymentLabel { font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:2px; }
+.paymentDesc  { font-size:11px; color:var(--text-muted); }
+.paymentCheck { color:var(--blue); margin-left:auto; }
+.paymentSummary { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px 16px; }
+.successIcon  { display:flex; justify-content:center; margin-bottom:8px; color:var(--green); }
+.successTitle { font-size:20px; font-weight:700; color:var(--text-primary); text-align:center; }
+.successDesc  { font-size:13px; color:var(--text-muted); text-align:center; line-height:1.6; }
+.successSummary { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px; display:flex; flex-direction:column; gap:10px; }
+.statusSuccess { color:var(--green); font-weight:700; }
+.nextSteps { border-top:1px solid var(--border); padding-top:16px; }
+.nextStepsTitle { font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:10px; }
+.nextStepItem { display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-secondary); margin-bottom:8px; }
+.actions  { display:flex; gap:10px; padding:16px 20px; border-top:1px solid var(--border); }
+.backBtn     { flex:0 0 auto; }
+.continueBtn { flex:1; }
+.securityNote { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted); padding:12px 16px; background:var(--green-dim); border-radius:var(--radius-md); }

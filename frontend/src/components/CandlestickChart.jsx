@@ -20,7 +20,7 @@ const Candlestick = (props) => {
   if (!payload) return null
   
   const isBullish = close >= open
-  const color = isBullish ? '#22c55e' : '#ef4444'
+  const color = isBullish ? '#0f9d58' : '#ea4335'
   const bodyHeight = Math.abs(close - open) || 1
   const bodyTop = Math.max(close, open)
   
@@ -73,15 +73,15 @@ const CustomTooltip = ({ active, payload, label }) => {
   
   return (
     <div style={{
-      background: 'rgba(9, 9, 11, 0.95)',
-      border: '1px solid #1f1f27',
+      background: 'rgba(255, 255, 255, 0.98)',
+      border: '1px solid #e0e0e0',
       borderRadius: 12,
       padding: 16,
       minWidth: 200,
       backdropFilter: 'blur(10px)',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+      boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08)',
     }}>
-      <div style={{ fontSize: 12, color: '#8b8b9e', marginBottom: 8 }}>
+      <div style={{ fontSize: 12, color: '#5f6368', marginBottom: 8 }}>
         {new Date(label).toLocaleDateString('en-IN', { 
           day: '2-digit', 
           month: 'short', 
@@ -91,38 +91,38 @@ const CustomTooltip = ({ active, payload, label }) => {
       
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <div>
-          <div style={{ fontSize: 10, color: '#52525f', marginBottom: 2 }}>Open</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#f4f4f6' }}>
+          <div style={{ fontSize: 10, color: '#9aa0a6', marginBottom: 2 }}>Open</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>
             ₹{data.open?.toFixed(2)}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: '#52525f', marginBottom: 2 }}>Close</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: isBullish ? '#22c55e' : '#ef4444' }}>
+          <div style={{ fontSize: 10, color: '#9aa0a6', marginBottom: 2 }}>Close</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: isBullish ? '#0f9d58' : '#ea4335' }}>
             ₹{data.close?.toFixed(2)}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: '#52525f', marginBottom: 2 }}>High</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#22c55e' }}>
+          <div style={{ fontSize: 10, color: '#9aa0a6', marginBottom: 2 }}>High</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#0f9d58' }}>
             ₹{data.high?.toFixed(2)}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: '#52525f', marginBottom: 2 }}>Low</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#ef4444' }}>
+          <div style={{ fontSize: 10, color: '#9aa0a6', marginBottom: 2 }}>Low</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#ea4335' }}>
             ₹{data.low?.toFixed(2)}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: '#52525f', marginBottom: 2 }}>Volume</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#f4f4f6' }}>
+          <div style={{ fontSize: 10, color: '#9aa0a6', marginBottom: 2 }}>Volume</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>
             {(data.volume / 1e6).toFixed(2)}M
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: '#52525f', marginBottom: 2 }}>Change</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: isBullish ? '#22c55e' : '#ef4444' }}>
+          <div style={{ fontSize: 10, color: '#9aa0a6', marginBottom: 2 }}>Change</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: isBullish ? '#0f9d58' : '#ea4335' }}>
             {isBullish ? '+' : ''}{((data.close - data.open) / data.open * 100).toFixed(2)}%
           </div>
         </div>
@@ -271,7 +271,7 @@ export default function CandlestickChart({
             <div style={{ 
               fontSize: 24, 
               fontWeight: 700, 
-              color: '#f4f4f6' 
+              color: '#1a1a1a' 
             }}>
               ₹{currentPrice.toFixed(2)}
             </div>
@@ -281,8 +281,8 @@ export default function CandlestickChart({
               gap: 4,
               padding: '4px 8px',
               borderRadius: 6,
-              background: isBullish ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-              color: isBullish ? '#22c55e' : '#ef4444',
+              background: isBullish ? 'rgba(15, 157, 88, 0.1)' : 'rgba(234, 67, 53, 0.1)',
+              color: isBullish ? '#0f9d58' : '#ea4335',
               fontSize: 12,
               fontWeight: 600,
             }}>
@@ -290,7 +290,7 @@ export default function CandlestickChart({
               {isBullish ? '+' : ''}{priceChangePercent.toFixed(2)}%
             </div>
           </div>
-          <div style={{ fontSize: 12, color: '#8b8b9e', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: '#5f6368', marginTop: 4 }}>
             {data.length} candles · Real-time
           </div>
         </div>
@@ -304,9 +304,9 @@ export default function CandlestickChart({
               style={{
                 padding: '6px 12px',
                 borderRadius: 6,
-                border: indicator === ind ? '1px solid #6366f1' : '1px solid #1f1f27',
-                background: indicator === ind ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-                color: indicator === ind ? '#6366f1' : '#8b8b9e',
+                border: indicator === ind ? '1px solid #1a73e8' : '1px solid #e0e0e0',
+                background: indicator === ind ? 'rgba(26, 115, 232, 0.1)' : 'transparent',
+                color: indicator === ind ? '#1a73e8' : '#5f6368',
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -325,17 +325,17 @@ export default function CandlestickChart({
           <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             <CartesianGrid 
               strokeDasharray="3 3" 
-              stroke="#1f1f27" 
+              stroke="#e0e0e0" 
               vertical={false}
             />
             <XAxis 
               dataKey="timestamp" 
-              tick={{ fill: '#52525f', fontSize: 11 }}
-              axisLine={{ stroke: '#1f1f27' }}
+              tick={{ fill: '#5f6368', fontSize: 11 }}
+              axisLine={{ stroke: '#e0e0e0' }}
               tickLine={false}
             />
             <YAxis 
-              tick={{ fill: '#52525f', fontSize: 11 }}
+              tick={{ fill: '#5f6368', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               domain={['auto', 'auto']}
@@ -356,7 +356,7 @@ export default function CandlestickChart({
             {showVolume && (
               <Bar
                 dataKey="volume"
-                fill="#6366f1"
+                fill="#1a73e8"
                 opacity={0.15}
                 yAxisId="volume"
               />
@@ -367,17 +367,17 @@ export default function CandlestickChart({
               <>
                 <Area
                   dataKey="bollingerUpper"
-                  fill="rgba(99, 102, 241, 0.1)"
+                  fill="rgba(26, 115, 232, 0.1)"
                   stroke="none"
                 />
                 <Area
                   dataKey="bollingerLower"
-                  fill="rgba(99, 102, 241, 0.1)"
+                  fill="rgba(26, 115, 232, 0.1)"
                   stroke="none"
                 />
                 <Line
                   dataKey="bollingerMiddle"
-                  stroke="#6366f1"
+                  stroke="#1a73e8"
                   strokeWidth={1.5}
                   dot={false}
                 />
@@ -389,14 +389,14 @@ export default function CandlestickChart({
               <>
                 <Line
                   dataKey="sma20"
-                  stroke="#f59e0b"
+                  stroke="#d97706"
                   strokeWidth={1.5}
                   dot={false}
                   name="SMA 20"
                 />
                 <Line
                   dataKey="sma50"
-                  stroke="#06b6d4"
+                  stroke="#0891b2"
                   strokeWidth={1.5}
                   dot={false}
                   name="SMA 50"
@@ -409,14 +409,14 @@ export default function CandlestickChart({
               <>
                 <Line
                   dataKey="ema12"
-                  stroke="#8b5cf6"
+                  stroke="#7c3aed"
                   strokeWidth={1.5}
                   dot={false}
                   name="EMA 12"
                 />
                 <Line
                   dataKey="ema26"
-                  stroke="#ec4899"
+                  stroke="#db2777"
                   strokeWidth={1.5}
                   dot={false}
                   name="EMA 26"
@@ -428,7 +428,7 @@ export default function CandlestickChart({
             {/* For now, using Line as placeholder */}
             <Line
               dataKey="close"
-              stroke="#22c55e"
+              stroke="#0f9d58"
               strokeWidth={2}
               dot={false}
               name="Price"
@@ -444,26 +444,26 @@ export default function CandlestickChart({
             <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid 
                 strokeDasharray="3 3" 
-                stroke="#1f1f27" 
+                stroke="#e0e0e0" 
                 vertical={false}
               />
               <XAxis 
                 dataKey="timestamp" 
-                tick={{ fill: '#52525f', fontSize: 11 }}
-                axisLine={{ stroke: '#1f1f27' }}
+                tick={{ fill: '#5f6368', fontSize: 11 }}
+                axisLine={{ stroke: '#e0e0e0' }}
                 tickLine={false}
               />
               <YAxis 
-                tick={{ fill: '#52525f', fontSize: 11 }}
+                tick={{ fill: '#5f6368', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
                 domain={[0, 100]}
               />
-              <ReferenceLine y={70} stroke="#ef4444" strokeDasharray="3 3" />
-              <ReferenceLine y={30} stroke="#22c55e" strokeDasharray="3 3" />
+              <ReferenceLine y={70} stroke="#ea4335" strokeDasharray="3 3" />
+              <ReferenceLine y={30} stroke="#0f9d58" strokeDasharray="3 3" />
               <Line
                 dataKey="rsi"
-                stroke="#6366f1"
+                stroke="#1a73e8"
                 strokeWidth={2}
                 dot={false}
                 name="RSI"
@@ -479,24 +479,24 @@ export default function CandlestickChart({
         gap: 16, 
         marginTop: 12, 
         fontSize: 11, 
-        color: '#8b8b9e' 
+        color: '#5f6368' 
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }} />
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#0f9d58' }} />
           <span>Bullish</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ea4335' }} />
           <span>Bearish</span>
         </div>
         {indicator === 'SMA' && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 8, height: 2, background: '#f59e0b' }} />
+              <div style={{ width: 8, height: 2, background: '#d97706' }} />
               <span>SMA 20</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 8, height: 2, background: '#06b6d4' }} />
+              <div style={{ width: 8, height: 2, background: '#0891b2' }} />
               <span>SMA 50</span>
             </div>
           </>
@@ -504,11 +504,11 @@ export default function CandlestickChart({
         {indicator === 'EMA' && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 8, height: 2, background: '#8b5cf6' }} />
+              <div style={{ width: 8, height: 2, background: '#7c3aed' }} />
               <span>EMA 12</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 8, height: 2, background: '#ec4899' }} />
+              <div style={{ width: 8, height: 2, background: '#db2777' }} />
               <span>EMA 26</span>
             </div>
           </>

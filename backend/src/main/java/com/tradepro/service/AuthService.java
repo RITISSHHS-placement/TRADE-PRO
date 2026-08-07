@@ -108,6 +108,28 @@ public class AuthService {
         return new AuthResponse(accessToken, refreshToken, userDto);
     }
     
+    public boolean verifyCredentials(String email, String password) {
+        // Find user by email
+        User user = userRepository.findByEmail(email)
+            .orElse(null);
+        
+        if (user == null) {
+            return false;
+        }
+        
+        // Check password
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            return false;
+        }
+        
+        // Check if trading is enabled (kill switch)
+        if (!user.getTradingEnabled()) {
+            throw new RuntimeException("Trading is disabled. Please contact support.");
+        }
+        
+        return true;
+    }
+    
     public AuthResponse login(LoginRequest request) {
         // Find user by email
         User user = userRepository.findByEmail(request.getEmail())

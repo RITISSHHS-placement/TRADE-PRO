@@ -16,7 +16,7 @@ import java.util.function.Function;
 @Service
 public class JwtService {
     
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret:trade-pro-super-secret-key-for-jwt-token-generation-must-be-at-least-256-bits-long-here}")
     private String secretKey;
     
     @Value("${jwt.expiration:86400000}") // 24 hours

@@ -6,16 +6,17 @@ import {
   Filter, ChevronDown, ChevronUp, ArrowUpRight, ArrowDownRight,
   Bookmark, BookmarkCheck, Clock, Layers, X, BarChart2,
 } from 'lucide-react'
+import styles from './MarketPage.module.css'
 
 /* ── COLOR TOKENS ─────────────────────────────────────────── */
 const T = {
-  white:'#ffffff', bg:'#f4f6f8', bgHover:'#eef1f4', surface:'#ffffff',
-  border:'#e2e6ea', border2:'#f0f2f5',
-  text:'#1a1f2e', textSub:'#5c677d', textMute:'#9aa3b2',
-  green:'#1db954', greenBg:'#e8f8ee', greenDark:'#0f9140',
-  red:'#e53935', redBg:'#fdecea', redDark:'#b71c1c',
-  blue:'#1565c0', blueBg:'#e3f2fd', navy:'#0a1628',
-  gold:'#c7920a', goldBg:'#fef9e7',
+  white:'#ffffff', bg:'#ffffff', bgHover:'#f8f9fa', surface:'#ffffff',
+  border:'#e0e0e0', border2:'#f0f0f0',
+  text:'#1a1a1a', textSub:'#5f6368', textMute:'#9aa0a6',
+  green:'#0f9d58', greenBg:'#e8f0fe', greenDark:'#0f9d58',
+  red:'#ea4335', redBg:'#fce8e6', redDark:'#ea4335',
+  blue:'#1a73e8', blueBg:'#e8f0fe', navy:'#1a1a1a',
+  gold:'#d97706', goldBg:'#fef3c7',
 }
 
 /* ── HELPERS ──────────────────────────────────────────────── */

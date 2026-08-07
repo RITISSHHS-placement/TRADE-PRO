@@ -1,480 +1,342 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, ChevronDown, Plus, Minus, BookOpen, Zap, TrendingUp, Shield, Activity } from 'lucide-react'
-import { FadeIn, Stagger } from '../components/animations'
-import ParticleBackground from '../components/ParticleBackground'
-import { GlassCard, GlassButton, GlassBadge } from '../components/Glassmorphism'
-import styles from './LandingPage.module.css'
+import {
+  TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight,
+  BarChart2, Search, Zap, Shield, Globe, ChevronRight,
+  Check, Star,
+} from 'lucide-react'
 
-export default function LandingPage({ setPage, indices, onOpenAuth }) {
+/* ── static data ── */
+const TICKER_ITEMS = [
+  { sym:'NIFTY 50', price:'24,856.45', chg:'+2.14%', up:true },
+  { sym:'SENSEX',   price:'81,240.18', chg:'+1.98%', up:true },
+  { sym:'BANK NIFTY',price:'52,341.80',chg:'-1.23%', up:false },
+  { sym:'RELIANCE', price:'2,450.40',  chg:'+1.25%', up:true },
+  { sym:'TCS',      price:'3,420.15',  chg:'-0.45%', up:false },
+  { sym:'INFY',     price:'1,480.20',  chg:'-1.15%', up:false },
+  { sym:'HDFCBANK', price:'1,610.80',  chg:'+0.85%', up:true },
+  { sym:'SBIN',     price:'780.25',    chg:'-0.80%', up:false },
+  { sym:'INDIA VIX',price:'14.82',     chg:'+3.20%', up:true },
+]
+
+const FEATURES = [
+  { icon:'📈', title:'Live Market Data', desc:'Real-time NSE/BSE prices, indices, gainers and losers updated every 6 seconds.' },
+  { icon:'🔍', title:'Stock Screener', desc:'Filter 4,000+ stocks using 50+ fundamental, technical & ownership parameters.' },
+  { icon:'💼', title:'Portfolio Tracking', desc:'Live P&L, sector allocation, XIRR, and complete trade history in one place.' },
+  { icon:'🌐', title:'US Stocks', desc:'Invest in Apple, NVIDIA, Tesla and 500+ US stocks with live USD/INR pricing.' },
+  { icon:'🪙', title:'Digital Gold', desc:'Buy 24K digital gold starting ₹1. Stored in insured vaults, zero storage fees.' },
+  { icon:'💰', title:'Mutual Funds', desc:'₹0 commission direct mutual funds. SIP from ₹500. 16,000+ schemes.' },
+]
+
+const STATS = [
+  { val:'₹2,840 Cr+', label:'Daily Volume' },
+  { val:'4.1L+',      label:'Active Clients' },
+  { val:'₹0',         label:'Equity Delivery' },
+  { val:'50+',        label:'Indices Tracked' },
+]
+
+const PLANS = [
+  {
+    name:'Free', price:'₹0', period:'/forever',
+    features:['Equity delivery (₹0)', 'Live market data', 'Portfolio tracking', 'Mutual funds (₹0)', 'Basic screener'],
+    cta:'Get Started', highlight:false,
+  },
+  {
+    name:'Pro', price:'₹20', period:'/trade',
+    badge:'Most Popular',
+    features:['Everything in Free', 'Intraday & F&O', 'Advanced screener', 'US Stocks access', 'Digital Gold', 'GTT orders', 'Priority support'],
+    cta:'Start Trading', highlight:true,
+  },
+]
+
+const TESTIMONIALS = [
+  { name:'Priya Sharma', role:'Retail Investor', text:'Switched from Zerodha. The screener alone is worth it — 50+ filters and they actually work.', stars:5 },
+  { name:'Rohit Mehta',  role:'Day Trader',      text:'Best execution speed I have seen. Orders hit NSE in under 50ms. Kill switch feature is a lifesaver.', stars:5 },
+  { name:'Ananya Iyer',  role:'MF Investor',     text:'₹0 commission on mutual funds and the digital gold SIP is seamless. Great app.', stars:5 },
+]
+
+const T = {
+  white:'#fff', bg:'#f8f9fa', text:'#1a1a1a', textSub:'#5f6368', textMute:'#9aa0a6',
+  border:'#e0e0e0', blue:'#1a73e8', blueBg:'#e8f0fe', green:'#0f9d58', greenBg:'#e8f5e9',
+  red:'#ea4335', redBg:'#fce8e6', navy:'#0f1624', gold:'#d97706',
+}
+
+export default function LandingPage({ indices }) {
   const navigate = useNavigate()
-  const [activeFaq, setActiveFaq] = useState(null)
-
   const nifty = indices?.['NIFTY 50']
   const bank  = indices?.['NIFTY BANK']
+  const vix   = indices?.['INDIA VIX']
 
-  const handleNav = (target) => {
-    if ((target === 'login' || target === 'register') && onOpenAuth) {
-      onOpenAuth(target)
-    } else {
-      if (setPage) {
-        setPage(target)
-      }
-      navigate(`/${target}`)
-    }
-  }
-
-  const toggleFaq = (index) => {
-    setActiveFaq(activeFaq === index ? null : index)
-  }
-
-  // Sample data to match Screenshot 1
-  const trendingStocks = [
-    { name: 'Reliance Industries', sym: 'RELIANCE', price: 2450.40, change: 1.25, up: true },
-    { name: 'TCS', sym: 'TCS', price: 3420.15, change: -0.45, up: false },
-    { name: 'HDFC Bank', sym: 'HDFCBANK', price: 1610.80, change: 0.85, up: true },
-    { name: 'Infosys', sym: 'INFY', price: 1480.20, change: -1.15, up: false },
-    { name: 'Bharti Airtel', sym: 'BHARTIARTL', price: 920.65, change: 2.10, up: true }
-  ]
-
-  const themes = [
-    {
-      title: 'Space Economy',
-      icon: '🚀',
-      stocks: [
-        { name: 'Space Exploration Tech', price: '₹14,241', change: '+2.35%', up: true },
-        { name: 'Rocket Lab USA Inc', price: '₹600.01', change: '+4.20%', up: true },
-        { name: 'Astra Space', price: '₹70.31', change: '-1.09%', up: false }
-      ]
-    },
-    {
-      title: 'AI Leaders',
-      icon: '🤖',
-      stocks: [
-        { name: 'NVIDIA Corporation', price: '₹20,420', change: '+0.40%', up: true },
-        { name: 'Microsoft Corporation', price: '₹30,351', change: '-1.90%', up: false },
-        { name: 'Alphabet Inc Class A', price: '₹13,541', change: '+0.46%', up: true }
-      ]
-    },
-    {
-      title: 'Core Semiconductors',
-      icon: '🔌',
-      stocks: [
-        { name: 'NVIDIA Corporation', price: '₹20,420', change: '+0.40%', up: true },
-        { name: 'Taiwan Semiconductor', price: '₹41,257', change: '-0.65%', up: false },
-        { name: 'Broadcom Inc', price: '₹88,007', change: '+1.59%', up: true }
-      ]
-    },
-    {
-      title: 'Commodities & Metals',
-      icon: '🪙',
-      stocks: [
-        { name: 'SPDR Gold Shares', price: '₹31,379', change: '+1.81%', up: true },
-        { name: 'Global X Uranium ETF', price: '₹4,120', change: '+1.57%', up: true },
-        { name: 'iShares Silver Trust', price: '₹5,822', change: '+2.04%', up: true }
-      ]
-    }
-  ]
-
-  const articles = [
-    { title: 'What Should First-Time Global Investors Choose?', date: '2026-01-22', readTime: '5 min read' },
-    { title: 'How to invest in US Stocks from India: Step-by-Step Guide', date: '2026-01-23', readTime: '6 min read' },
-    { title: 'Why Indian Investors are Increasingly Investing in US Stocks?', date: '2026-01-24', readTime: '4 min read' },
-    { title: 'Understanding Tickertape\'s Pricing for Investing in US Stocks', date: '2026-01-25', readTime: '3 min read' }
-  ]
-
-  const faqs = [
-    { q: 'How can I invest in US stocks from India?', a: 'You can easily invest in fractional shares of top US tech companies through our integrated trading gateway. All accounts are compliant with RBI LRS regulations, allowing you to invest up to $250,000 per year.' },
-    { q: 'How does TradePro enable access to the US stock market?', a: 'TradePro partners with licensed custodians and brokerage partners to route and settle orders directly on US exchanges, ensuring high-speed execution and safety for capital assets.' },
-    { q: 'What charges apply for investing in US stocks & ETFs?', a: 'TradePro offers zero-commission investing for US stocks. There are no account maintenance fees, though standard regulatory charges, foreign currency conversion fees, and wire fees apply.' },
-    { q: 'Is investing in US stocks legal in India?', a: 'Yes. The Reserve Bank of India permits resident individuals to acquire shares of listed foreign companies under the Liberalised Remittance Scheme (LRS) framework.' },
-    { q: 'Why do I need a different broker account?', a: 'Under Indian regulations, domestic brokerages require a dedicated clearing partnership to handle foreign security custody. Creating a TradePro profile automatically establishes this global access node.' }
-  ]
+  const liveTicker = TICKER_ITEMS.map(item => {
+    if (item.sym === 'NIFTY 50' && nifty) return { ...item, price: nifty.price?.toFixed(2) || item.price, chg: `${nifty.changePct >= 0 ? '+' : ''}${nifty.changePct?.toFixed(2)}%`, up: nifty.changePct >= 0 }
+    if (item.sym === 'BANK NIFTY' && bank) return { ...item, price: bank.price?.toFixed(2) || item.price, chg: `${bank.changePct >= 0 ? '+' : ''}${bank.changePct?.toFixed(2)}%`, up: bank.changePct >= 0 }
+    return item
+  })
 
   return (
-    <div className={styles.page}>
-      {/* Particle Background */}
-      <ParticleBackground theme="dark" particleCount={1500} connectionDistance={120} mouseInteraction={true} />
+    <div style={{ fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif', minHeight: '100vh', background: T.white }}>
 
-      {/* ── NAV ── */}
-      <nav className={styles.nav}>
-        <div className={styles.navInner}>
-          <div className={styles.brand} onClick={() => handleNav('home')} style={{ cursor: 'pointer' }}>
-            <span className={styles.logoIcon} /> Trade<span>Pro</span>
+      {/* ── Top Nav ── */}
+      <header style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
+        background: 'rgba(255,255,255,.95)', backdropFilter: 'blur(12px)',
+        borderBottom: `1px solid ${T.border}`,
+      }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 7, background: T.blue, display: 'grid', placeItems: 'center' }}>
+              <TrendingUp size={15} color="#fff" />
+            </div>
+            <span style={{ fontSize: 17, fontWeight: 800, color: T.text, letterSpacing: '-0.4px' }}>TradePro</span>
           </div>
-          <div className={styles.navLinks}>
-            <button onClick={() => document.getElementById('trending')?.scrollIntoView({ behavior: 'smooth' })}>Markets</button>
-            <button onClick={() => document.getElementById('themes')?.scrollIntoView({ behavior: 'smooth' })}>Themes</button>
-            <button onClick={() => document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' })}>FAQs</button>
+          <nav style={{ display: 'flex', gap: 4, marginLeft: 20 }}>
+            {['Markets', 'Screener', 'Mutual Funds', 'US Stocks', 'Pricing'].map(link => (
+              <button key={link} style={{ padding: '6px 12px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: T.textSub, borderRadius: 6 }}
+                onMouseEnter={e => { e.currentTarget.style.background = T.bg; e.currentTarget.style.color = T.text }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = T.textSub }}
+                onClick={() => navigate(link === 'Pricing' ? '/dashboard/pricing' : '/login')}
+              >{link}</button>
+            ))}
+          </nav>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            <button onClick={() => navigate('/login')} style={{ padding: '7px 16px', border: `1px solid ${T.border}`, borderRadius: 7, background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: T.text }}>Sign In</button>
+            <button onClick={() => navigate('/register')} style={{ padding: '7px 16px', border: 'none', borderRadius: 7, background: T.blue, cursor: 'pointer', fontSize: 13, fontWeight: 700, color: '#fff', boxShadow: '0 2px 8px rgba(26,115,232,.25)' }}>Get Started</button>
           </div>
-          <div className={styles.navActions}>
-            <button className={styles.btnGhost} onClick={() => handleNav('login')}>Sign in</button>
-            <button className={styles.btnPrimary} onClick={() => handleNav('register')}>
-              Open Account <ArrowRight size={14} />
+        </div>
+      </header>
+
+      {/* ── Ticker strip ── */}
+      <div style={{ marginTop: 56, background: T.navy, height: 36, overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'inline-flex', animation: 'lpTicker 50s linear infinite', whiteSpace: 'nowrap' }}>
+          {[...liveTicker, ...liveTicker, ...liveTicker].map((item, i) => (
+            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0 20px', borderRight: '1px solid rgba(255,255,255,.1)', fontSize: 12 }}>
+              <span style={{ color: 'rgba(255,255,255,.5)', fontWeight: 600 }}>{item.sym}</span>
+              <span style={{ color: '#fff', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{item.price}</span>
+              <span style={{ color: item.up ? '#4ade80' : '#f87171', fontWeight: 700 }}>{item.up ? '▲' : '▼'} {item.chg}</span>
+            </span>
+          ))}
+        </div>
+        <style>{`@keyframes lpTicker { 0%{transform:translateX(0)} 100%{transform:translateX(-33.333%)} }`}</style>
+      </div>
+
+      {/* ── Hero ── */}
+      <section style={{ maxWidth: 1200, margin: '0 auto', padding: '72px 24px 64px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
+        <div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, background: T.blueBg, border: `1px solid ${T.blue}30`, marginBottom: 24 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green, display: 'inline-block' }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: T.blue }}>NSE & BSE · Live Data · Free Delivery</span>
+          </div>
+          <h1 style={{ fontSize: 'clamp(32px,4vw,54px)', fontWeight: 800, color: T.text, lineHeight: 1.1, letterSpacing: '-0.5px', marginBottom: 20 }}>
+            The professional<br /><span style={{ color: T.blue }}>trading platform</span><br />for India.
+          </h1>
+          <p style={{ fontSize: 16, color: T.textSub, lineHeight: 1.7, marginBottom: 32, maxWidth: 460 }}>
+            Real-time NSE/BSE data, institutional-grade order execution, stock screener, portfolio analytics, mutual funds — all in one place.
+          </p>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 40, flexWrap: 'wrap' }}>
+            <button onClick={() => navigate('/register')} style={{ padding: '12px 28px', borderRadius: 8, background: T.blue, border: 'none', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              Start for free <ChevronRight size={15} />
+            </button>
+            <button onClick={() => navigate('/login')} style={{ padding: '12px 24px', borderRadius: 8, background: 'none', border: `1px solid ${T.border}`, color: T.text, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              Sign In
             </button>
           </div>
-        </div>
-      </nav>
-
-      {/* ── HERO ── */}
-      <FadeIn className={styles.hero} y={20} duration={0.8}>
-        <div className={styles.heroInner}>
-          <div className={styles.heroCopy}>
-            <div className={styles.heroBadge}>
-              <span className={styles.bullDot} /> Live Global Quotes
-            </div>
-            <h1 className={styles.heroTitle}>
-              Invest in US Stocks<br />& ETFs from India
-            </h1>
-            <p className={styles.heroText}>
-              Access a premium brokerage interface designed for convinction. Track global sectors, place instant fractional orders, and build conviction with zero friction.
-            </p>
-            <div className={styles.heroActions}>
-              <button className={styles.heroBtnWhite} onClick={() => handleNav('register')}>
-                Get Started
-              </button>
-              <button className={styles.btnSecondary} onClick={() => handleNav('login')}>
-                Explore Platform
-              </button>
-            </div>
-            <div className={styles.heroCompliancy}>
-              100% compliant with RBI LRS regulations · Direct SEC-registered custody
-            </div>
-          </div>
-
-          <div className={styles.heroVisual}>
-            {/* Orbiting assets visual */}
-            <div className={styles.orbitWrapper}>
-              <div className={styles.orbitGlobe} />
-              <div className={styles.orbitRing}>
-                {/* Tesla */}
-                <div className={styles.orbitItem} style={{ background: '#fef2f2' }} title="Tesla">
-                  <span style={{ color: '#e63946', fontWeight: 900, fontSize: 16 }}>T</span>
-                </div>
-                {/* Nvidia */}
-                <div className={styles.orbitItem} style={{ background: '#f0fdf4' }} title="Nvidia">
-                  <span style={{ color: '#10b981', fontWeight: 900, fontSize: 16 }}>N</span>
-                </div>
-                {/* Amazon */}
-                <div className={styles.orbitItem} style={{ background: '#fffbeb' }} title="Amazon">
-                  <span style={{ color: '#f59e0b', fontWeight: 900, fontSize: 16 }}>a</span>
-                </div>
-                {/* Google */}
-                <div className={styles.orbitItem} style={{ background: '#eff6ff' }} title="Google">
-                  <span style={{ color: '#3b82f6', fontWeight: 900, fontSize: 16 }}>G</span>
-                </div>
-                {/* Apple */}
-                <div className={styles.orbitItem} style={{ background: '#f9fafb' }} title="Apple">
-                  <span style={{ color: '#1f2937', fontWeight: 900, fontSize: 16 }}></span>
-                </div>
-              </div>
-
-              {/* Floating index tags */}
-              <div className={`${styles.floatCard} ${styles.floatBull}`}>
-                <span className={styles.floatLabel}>NIFTY 50</span>
-                <span className={styles.floatVal}>
-                  {nifty ? Number(nifty.price).toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '24,856.45'}
-                </span>
-                <span className={(nifty?.changePct ?? 2.14) >= 0 ? styles.floatChange : styles.floatChangeDn}>
-                  {nifty ? `${nifty.changePct >= 0 ? '+' : ''}${nifty.changePct.toFixed(2)}%` : '+2.14%'}
-                </span>
-              </div>
-              <div className={`${styles.floatCard} ${styles.floatBear}`}>
-                <span className={styles.floatLabel}>NIFTY BANK</span>
-                <span className={styles.floatVal}>
-                  {bank ? Number(bank.price).toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '52,341.80'}
-                </span>
-                <span className={(bank?.changePct ?? -1.23) >= 0 ? styles.floatChange : styles.floatChangeDn}>
-                  {bank ? `${bank.changePct >= 0 ? '+' : ''}${bank.changePct.toFixed(2)}%` : '-1.23%'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </FadeIn>
-
-      {/* ── TRENDING STOCKS ── */}
-      <section className={styles.trendingSection} id="trending">
-        <FadeIn y={30} duration={0.6}>
-          <h2 className={styles.sectionTitle}>Trending Stocks</h2>
-        </FadeIn>
-        <Stagger stagger={0.1} duration={0.5} className={styles.stocksGrid}>
-          {trendingStocks.map((stock) => (
-            <GlassCard key={stock.sym} className={styles.stockCard} onClick={() => handleNav('login')} intensity="light">
-              <div className={styles.stockIcon}>
-                {stock.sym.slice(0, 2)}
-              </div>
-              <div className={styles.stockInfo}>
-                <span className={styles.stockName}>{stock.name}</span>
-                <GlassBadge variant={stock.up ? 'success' : 'danger'}>
-                  {stock.up ? '▲' : '▼'} {Math.abs(stock.change).toFixed(2)}%
-                </GlassBadge>
-              </div>
-            </GlassCard>
-          ))}
-        </Stagger>
-      </section>
-
-      {/* ── FEATURES SECTION ── */}
-      <section className={styles.themesSection}>
-        <div className={styles.themesInner}>
-          <FadeIn y={30} duration={0.6}>
-            <h2 className={styles.sectionTitle}>Why TradePro?</h2>
-            <p style={{ color: '#6b7280', marginTop: 8, marginBottom: 32 }}>
-              Experience the future of trading with cutting-edge technology
-            </p>
-          </FadeIn>
-          <Stagger stagger={0.15} duration={0.5} className={styles.themesGrid}>
+          {/* Live index chips */}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {[
-              { icon: Zap, title: 'Lightning Fast', desc: 'Execute trades in milliseconds with our low-latency infrastructure', color: 'indigo' },
-              { icon: TrendingUp, title: 'Advanced Analytics', desc: 'Real-time market data with professional-grade charting tools', color: 'green' },
-              { icon: Shield, title: 'Bank-Grade Security', desc: 'Military-grade encryption with 2FA and biometric authentication', color: 'blue' },
-              { icon: Activity, title: 'Real-Time Alerts', desc: 'Instant notifications for price movements and market events', color: 'purple' },
-            ].map((feature, i) => (
-              <GlassCard key={i} className={styles.themeCard} intensity="medium">
-                <div className={styles.themeHeader}>
-                  <div className={styles.themeIconBox} style={{ background: `rgba(99, 102, 241, 0.1)`, color: '#6366f1' }}>
-                    <feature.icon size={20} />
-                  </div>
-                  <h3 className={styles.themeTitle}>{feature.title}</h3>
-                </div>
-                <p style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.6 }}>
-                  {feature.desc}
-                </p>
-              </GlassCard>
+              ['NIFTY 50', nifty],
+              ['BANK NIFTY', bank],
+              ['INDIA VIX', vix],
+            ].map(([label, q]) => (
+              <div key={label} style={{ padding: '8px 14px', borderRadius: 8, background: T.bg, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: T.textMute }}>{label}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: T.text, fontVariantNumeric: 'tabular-nums' }}>
+                  {q ? q.price.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '—'}
+                </span>
+                {q && <span style={{ fontSize: 11, fontWeight: 700, color: q.changePct >= 0 ? T.green : T.red }}>
+                  {q.changePct >= 0 ? '▲' : '▼'}{Math.abs(q.changePct).toFixed(2)}%
+                </span>}
+              </div>
             ))}
-          </Stagger>
+          </div>
+        </div>
+
+        {/* Hero card visual */}
+        <div style={{ position: 'relative' }}>
+          <div style={{ background: T.navy, borderRadius: 20, padding: '28px', boxShadow: '0 20px 60px rgba(0,0,0,.15)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 7, background: T.blue, display: 'grid', placeItems: 'center' }}>
+                <TrendingUp size={14} color="#fff" />
+              </div>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>TradePro Dashboard</span>
+              <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: '#4ade80', fontWeight: 700 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', display: 'inline-block' }} />LIVE
+              </span>
+            </div>
+            {/* Mini stock rows */}
+            {[
+              { sym: 'RELIANCE', price: '₹2,450', chg: '+1.25%', up: true },
+              { sym: 'TCS',      price: '₹3,420', chg: '-0.45%', up: false },
+              { sym: 'HDFCBANK', price: '₹1,610', chg: '+0.85%', up: true },
+              { sym: 'INFY',     price: '₹1,480', chg: '-1.15%', up: false },
+            ].map(s => (
+              <div key={s.sym} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,.07)' }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{s.sym}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>NSE · Equity</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{s.price}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: s.up ? '#4ade80' : '#f87171' }}>{s.chg}</div>
+                </div>
+              </div>
+            ))}
+            {/* Bottom cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16 }}>
+              <div style={{ background: 'rgba(255,255,255,.06)', borderRadius: 10, padding: '12px' }}>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', marginBottom: 4 }}>PORTFOLIO P&L</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#4ade80' }}>+₹2,34,800</div>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,.06)', borderRadius: 10, padding: '12px' }}>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', marginBottom: 4 }}>ORDERS TODAY</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>12</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ── TRENDING THEMES ── */}
-      <section className={styles.themesSection} id="themes">
-        <div className={styles.themesInner}>
-          <FadeIn y={30} duration={0.6}>
-            <h2 className={styles.sectionTitle}>Trending Themes</h2>
-          </FadeIn>
-          <Stagger stagger={0.15} duration={0.5} className={styles.themesGrid}>
-            {themes.map((theme) => (
-              <GlassCard key={theme.title} className={styles.themeCard} intensity="light">
-                <div className={styles.themeHeader}>
-                  <div className={styles.themeIconBox}>{theme.icon}</div>
-                  <h3 className={styles.themeTitle}>{theme.title}</h3>
-                </div>
-                <div className={styles.themeHoldings}>
-                  {theme.stocks.map((item) => (
-                    <div key={item.name} className={styles.holdingRow}>
-                      <div className={styles.holdingDetails}>
-                        <span className={styles.holdingIcon}>{item.name.charAt(0)}</span>
-                        <span className={styles.holdingName}>{item.name}</span>
-                      </div>
-                      <div className={styles.holdingValues}>
-                        <span className={styles.holdingPrice}>{item.price}</span>
-                        <GlassBadge variant={item.up ? 'success' : 'danger'}>{item.change}</GlassBadge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button className={styles.themeLink} onClick={() => handleNav('login')}>
-                  See holdings <ArrowRight size={13} />
-                </button>
-              </GlassCard>
-            ))}
-          </Stagger>
-        </div>
-      </section>
-
-      {/* ── LEARN MORE (ARTICLES) ── */}
-      <section className={styles.learnSection}>
-        <FadeIn y={30} duration={0.6}>
-          <h2 className={styles.sectionTitle}>Learn More</h2>
-        </FadeIn>
-        <Stagger stagger={0.1} duration={0.5} className={styles.learnGrid}>
-          {articles.map((art) => (
-            <GlassCard key={art.title} className={styles.articleCard} intensity="light">
-              <div className={styles.articleImg}>
-                <BookOpen size={32} />
-              </div>
-              <h3 className={styles.articleTitle}>{art.title}</h3>
-              <div className={styles.articleFooter}>
-                <span>{art.date}</span>
-                <GlassBadge variant="info">{art.readTime}</GlassBadge>
-              </div>
-            </GlassCard>
+      {/* ── Stats bar ── */}
+      <div style={{ background: T.bg, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)' }}>
+          {STATS.map((s, i) => (
+            <div key={s.label} style={{ padding: '24px', borderRight: i < 3 ? `1px solid ${T.border}` : 'none', textAlign: 'center' }}>
+              <div style={{ fontSize: 26, fontWeight: 800, color: T.blue, letterSpacing: '-0.5px' }}>{s.val}</div>
+              <div style={{ fontSize: 12, color: T.textMute, marginTop: 4 }}>{s.label}</div>
+            </div>
           ))}
-        </Stagger>
+        </div>
+      </div>
+
+      {/* ── Features ── */}
+      <section style={{ maxWidth: 1200, margin: '0 auto', padding: '72px 24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <h2 style={{ fontSize: 36, fontWeight: 800, color: T.text, letterSpacing: '-0.5px', marginBottom: 12 }}>Everything in one terminal</h2>
+          <p style={{ fontSize: 16, color: T.textSub }}>Built for traders who demand precision and speed.</p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 }}>
+          {FEATURES.map(f => (
+            <div key={f.title} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '24px', transition: 'all .2s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = T.blue; e.currentTarget.style.boxShadow = '0 4px 20px rgba(26,115,232,.1)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}>
+              <div style={{ fontSize: 32, marginBottom: 14 }}>{f.icon}</div>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 8 }}>{f.title}</h3>
+              <p style={{ fontSize: 13, color: T.textSub, lineHeight: 1.65 }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
-      {/* ── FAQs ── */}
-      <section className={styles.faqSection} id="faq">
-        <div className={styles.faqInner}>
-          <FadeIn y={30} duration={0.6}>
-            <h2 className={styles.sectionTitle} style={{ textAlign: 'center' }}>Frequently Asked Questions</h2>
-          </FadeIn>
-          <Stagger stagger={0.1} duration={0.4} className={styles.faqList}>
-            {faqs.map((faq, index) => (
-              <GlassCard key={index} className={`${styles.faqItem} ${activeFaq === index ? styles.faqItemActive : ''}`} intensity="light">
-                <button className={styles.faqHeader} onClick={() => toggleFaq(index)}>
-                  <span>{faq.q}</span>
-                  {activeFaq === index ? <Minus size={16} className={styles.faqIcon} /> : <Plus size={16} className={styles.faqIcon} />}
-                </button>
-                {activeFaq === index && (
-                  <div className={styles.faqContent}>
-                    {faq.a}
-                  </div>
+      {/* ── Pricing ── */}
+      <section style={{ background: T.bg, padding: '72px 24px', borderTop: `1px solid ${T.border}` }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <h2 style={{ fontSize: 36, fontWeight: 800, color: T.text, letterSpacing: '-0.5px', marginBottom: 12 }}>Simple, transparent pricing</h2>
+            <p style={{ fontSize: 16, color: T.textSub }}>No hidden charges. No annual fee. No surprises.</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            {PLANS.map(p => (
+              <div key={p.name} style={{
+                background: p.highlight ? T.navy : T.white,
+                border: `1.5px solid ${p.highlight ? T.navy : T.border}`,
+                borderRadius: 16, padding: '28px', position: 'relative',
+              }}>
+                {p.badge && (
+                  <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: T.blue, color: '#fff', fontSize: 10, fontWeight: 800, padding: '4px 12px', borderRadius: 20 }}>{p.badge}</div>
                 )}
-              </GlassCard>
-            ))}
-          </Stagger>
-        </div>
-      </section>
-
-      {/* ── MOBILE BANNER ── */}
-      <section className={styles.downloadSection}>
-        <div className={styles.downloadInner}>
-          <FadeIn y={30} duration={0.6}>
-            <div className={styles.downloadCopy}>
-              <h2 className={styles.downloadTitle}>
-                Everything you need to<br />redefine your investing
-              </h2>
-              <div className={styles.downloadStats}>
-                <div className={styles.dStat}>
-                  <span className={styles.dStatVal}>60,500 Cr+</span>
-                  <span className={styles.dStatLbl}>Assets Tracked</span>
+                <div style={{ fontSize: 13, fontWeight: 700, color: p.highlight ? 'rgba(255,255,255,.6)' : T.textMute, marginBottom: 8 }}>{p.name}</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 6 }}>
+                  <span style={{ fontSize: 40, fontWeight: 900, color: p.highlight ? '#fff' : T.text }}>{p.price}</span>
+                  <span style={{ fontSize: 13, color: p.highlight ? 'rgba(255,255,255,.5)' : T.textMute }}>{p.period}</span>
                 </div>
-                <div className={styles.dStat}>
-                  <span className={styles.dStatVal}>6.2M+</span>
-                  <span className={styles.dStatLbl}>Traders Onboarded</span>
-                </div>
-              </div>
-              <div className={styles.downloadBtns}>
-                <GlassButton variant="primary" onClick={() => handleNav('register')}>Download App</GlassButton>
-                <GlassButton variant="secondary" onClick={() => handleNav('register')}>Learn More</GlassButton>
-              </div>
-            </div>
-          </FadeIn>
-          <div className={styles.downloadVisual}>
-            <div className={styles.mobileMockup}>
-              <div className={styles.mockHeader} />
-              <div className={styles.mockScreen}>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Your Portfolio</div>
-                <div className={styles.mockPrice}>₹20,27,567.00</div>
-                <div style={{ color: '#00b386', fontSize: 12, fontWeight: 700 }}>▲ +2.14% Today</div>
-                <div className={styles.mockCard}>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>EQUITY MOVER</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700 }}>Reliance Ind.</span>
-                    <span style={{ color: '#00b386', fontWeight: 700 }}>+1.40%</span>
+                <div style={{ height: 1, background: p.highlight ? 'rgba(255,255,255,.1)' : T.border, margin: '16px 0' }} />
+                {p.features.map(feat => (
+                  <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <Check size={14} color={p.highlight ? '#4ade80' : T.green} />
+                    <span style={{ fontSize: 13, color: p.highlight ? 'rgba(255,255,255,.8)' : T.textSub }}>{feat}</span>
                   </div>
-                </div>
+                ))}
+                <button onClick={() => navigate('/register')} style={{
+                  width: '100%', marginTop: 20, padding: '11px', borderRadius: 8,
+                  background: p.highlight ? T.blue : T.text, border: 'none', color: '#fff',
+                  fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                }}>{p.cta}</button>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className={styles.footer}>
-        {/* Main columns */}
-        <div className={styles.footerInner}>
-          {/* About */}
-          <div className={styles.footerAbout}>
-            <div className={styles.footerBrand} onClick={() => handleNav('home')}>
-              <span className={styles.footerLogoBox}>T</span>
-              <span className={styles.footerLogoText}>TradePro</span>
-            </div>
-            <div className={styles.footerSmallcase}>from ⊕ smallcase</div>
-            <p className={styles.footerDesc}>
-              TradePro provides data, information &amp; content for Indian stocks, mutual funds, ETFs &amp; indices.
-            </p>
-            <div className={styles.footerAddress}>
-              TradePro Technologies Private Limited,<br />
-              #51, 3rd Floor, Le Parc Richmonde,<br />
-              Richmond Road, Shenthala Nagar,<br />
-              Richmond Town, Bangalore - 560025
-            </div>
-          </div>
-
-          {/* Products */}
-          <div className={styles.footerCol}>
-            <span className={styles.footerColTitle}>Products</span>
-            {['IN Stocks','Mutual Funds','US Stocks','LAS','LAMF','Digital Gold'].map(t => (
-              <button key={t} onClick={() => handleNav('login')}>{t}</button>
-            ))}
-          </div>
-
-          {/* Tools */}
-          <div className={styles.footerCol}>
-            <span className={styles.footerColTitle}>Tools</span>
-            {['MMI','Stock Screener','MF Screener','US Screener','Market Movers','Stock Collections','Mutual Fund Collections'].map(t => (
-              <button key={t} onClick={() => handleNav('login')}>{t}</button>
-            ))}
-          </div>
-
-          {/* Learn & Share */}
-          <div className={styles.footerCol}>
-            <span className={styles.footerColTitle}>Learn &amp; Share</span>
-            {['Social','Learn','Blog','Glossary','Stock Collections','Mutual Fund Collections'].map(t => (
-              <button key={t} onClick={() => handleNav('login')}>{t}</button>
-            ))}
-          </div>
-
-          {/* Fine Print */}
-          <div className={styles.footerCol}>
-            <span className={styles.footerColTitle}>Fine Print</span>
-            {['Pricing','Disclosures','Terms & Conditions','Privacy Policy','Analytical & Information Tools','Community Guidelines'].map(t => (
-              <button key={t} onClick={() => handleNav('login')}>{t}</button>
-            ))}
-          </div>
+      {/* ── Testimonials ── */}
+      <section style={{ maxWidth: 1200, margin: '0 auto', padding: '72px 24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, letterSpacing: '-0.5px' }}>Trusted by investors</h2>
         </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 20 }}>
+          {TESTIMONIALS.map(t => (
+            <div key={t.name} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 14, padding: '24px' }}>
+              <div style={{ display: 'flex', gap: 2, marginBottom: 14 }}>
+                {Array.from({ length: t.stars }).map((_, i) => <Star key={i} size={14} fill="#f59e0b" color="#f59e0b" />)}
+              </div>
+              <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.7, marginBottom: 16 }}>"{t.text}"</p>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{t.name}</div>
+                <div style={{ fontSize: 11, color: T.textMute }}>{t.role}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-        {/* Social / Support / Rating row */}
-        <div className={styles.footerMid}>
-          <div className={styles.footerSocialCol}>
-            <div className={styles.footerMidLabel}>Find Us On</div>
-            <div className={styles.footerSocialRow}>
-              {[
-                { label: 'YouTube', sym: '▶' },
-                { label: 'Instagram', sym: '◉' },
-                { label: 'X', sym: '𝕏' },
-                { label: 'LinkedIn', sym: 'in' },
-              ].map(s => (
-                <button key={s.label} className={styles.socialIcon} aria-label={s.label}>{s.sym}</button>
+      {/* ── CTA Banner ── */}
+      <section style={{ background: T.navy, padding: '64px 24px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: 36, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px', marginBottom: 16 }}>Start trading in 2 minutes</h2>
+        <p style={{ fontSize: 16, color: 'rgba(255,255,255,.6)', marginBottom: 32 }}>Join 4.1 lakh+ investors already on TradePro.</p>
+        <button onClick={() => navigate('/register')} style={{ padding: '14px 36px', borderRadius: 9, background: T.blue, border: 'none', color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          Open Free Account <ChevronRight size={16} />
+        </button>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer style={{ background: T.white, borderTop: `1px solid ${T.border}`, padding: '40px 24px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 32 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 7, background: T.blue, display: 'grid', placeItems: 'center' }}>
+                <TrendingUp size={14} color="#fff" />
+              </div>
+              <span style={{ fontSize: 15, fontWeight: 800, color: T.text }}>TradePro</span>
+            </div>
+            <p style={{ fontSize: 12, color: T.textMute, lineHeight: 1.7 }}>SEBI registered broker. Equity delivery free.</p>
+          </div>
+          {[
+            { title: 'Products', links: ['Stocks', 'Mutual Funds', 'US Stocks', 'Digital Gold', 'F&O'] },
+            { title: 'Tools', links: ['Screener', 'Portfolio', 'Watchlist', 'Market News', 'Alerts'] },
+            { title: 'Company', links: ['About', 'Pricing', 'Blog', 'Careers', 'Contact'] },
+          ].map(col => (
+            <div key={col.title}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.text, textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 12 }}>{col.title}</div>
+              {col.links.map(link => (
+                <div key={link} style={{ fontSize: 13, color: T.textSub, marginBottom: 6, cursor: 'pointer' }}
+                  onMouseEnter={e => e.currentTarget.style.color = T.blue}
+                  onMouseLeave={e => e.currentTarget.style.color = T.textSub}
+                >{link}</div>
               ))}
             </div>
-          </div>
-          <div className={styles.footerSupportCol}>
-            <div className={styles.footerMidLabel}>Help and Support</div>
-            <a href="mailto:support@tradepro.in" className={styles.footerEmail}>support@tradepro.in</a>
-          </div>
-          <div className={styles.footerRatingCol}>
-            <div className={styles.footerMidLabel}>Loving TradePro? Rate Us</div>
-            <div className={styles.footerRating}>
-              <span className={styles.footerRatingDl}>65L+ downloads</span>
-              <span className={styles.footerRatingStar}>⭐ 4.2 App Rating</span>
-            </div>
-          </div>
+          ))}
         </div>
-
-        {/* Explore accordion */}
-        <div className={styles.footerExplore}>
-          <div className={styles.footerExploreTitle}>Explore | Most Popular on TradePro</div>
-          <div className={styles.footerAccordionGrid}>
-            {[
-              'Stock Collections','Indices','Sectoral Mutual Funds','Trending ETFs',
-              'ETF Collections','Equity Mutual Funds','Debt Mutual Funds','Hybrid Mutual Funds',
-              'Trending Stocks','US Stocks','US ETFs','Screeners',
-            ].map(item => (
-              <button key={item} className={styles.footerAccordionItem}>
-                <span>{item}</span>
-                <ChevronDown size={14} style={{ flexShrink: 0 }} />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Copyright */}
-        <div className={styles.footerBottom}>
-          <p className={styles.copyright}>© 2026 TradePro. SEBI Investment Adviser registration INA200029581.</p>
+        <div style={{ maxWidth: 1200, margin: '28px auto 0', paddingTop: 20, borderTop: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <p style={{ fontSize: 11.5, color: T.textMute }}>© 2026 TradePro Technologies Pvt. Ltd. · SEBI Reg. No. INZ000000000 · NSE · BSE · MCX</p>
+          <p style={{ fontSize: 11.5, color: T.textMute }}>Investments in securities are subject to market risk. Read all documents carefully.</p>
         </div>
       </footer>
     </div>

@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react'
-import { Search, ChevronDown, ChevronUp, X, Bookmark, BookmarkCheck, Filter, RefreshCw } from 'lucide-react'
+import React, { useState, useMemo, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import { Search, ChevronDown, ChevronUp, Bookmark, BookmarkCheck, RefreshCw } from 'lucide-react'
 
 const C = {
   green:'#00B386',greenBg:'#E6F9F4',red:'#E84040',redBg:'#FEF0F0',
@@ -137,6 +138,7 @@ const SCREENS = [
 ]
 
 export default function ScreenerPage({ onSelectStock }) {
+  const location = useLocation()
   const [view, setView] = useState('collections')
   const [screenName, setScreenName] = useState('Wealth Compounders')
   const [f, setF] = useState(INIT_FILTERS)
@@ -145,6 +147,22 @@ export default function ScreenerPage({ onSelectStock }) {
   const [search, setSearch] = useState('')
 
   const upF = patch => setF(p=>({...p,...patch}))
+
+  // Parse URL query params to apply preset filters from ScreenerLandingPage
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    if (params.size === 0) return
+    const preset = params.get('preset')
+    const newFilters = { ...INIT_FILTERS }
+    params.forEach((val, key) => {
+      if (key === 'preset') return
+      if (key === 'cap') newFilters.cap = val
+      else if (key in newFilters) newFilters[key] = val
+    })
+    setF(newFilters)
+    if (preset) setScreenName(preset.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
+    setView('interactive')
+  }, [location.search])
 
   const activeCount = useMemo(()=>{
     let n=0

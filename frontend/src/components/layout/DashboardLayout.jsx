@@ -10,23 +10,23 @@ import {
 import { logoutUser } from '../../store/slices/authSlice'
 import { toggleTheme } from '../../store/slices/uiSlice'
 import KillSwitchModal from '../ui/KillSwitchModal'
-import { useAutoLogout } from '../../hooks'
+import { useAutoLogout, useMarketData } from '../../hooks'
 import styles from './DashboardLayout.module.css'
 
-/* ── Stock ticker data ── */
-const TICKER_ITEMS = [
-  { sym: 'NIFTY 50',     price: 24856.45, chg: 2.14 },
-  { sym: 'NIFTY BANK',   price: 52341.80, chg: -1.23 },
-  { sym: 'BAJFINANCE',   price: 7124.55,  chg: 1.85 },
-  { sym: 'BHARTIARTL',   price: 920.65,   chg: 2.10 },
-  { sym: 'HDFCBANK',     price: 1610.80,  chg: 0.85 },
-  { sym: 'HINDUNILVR',   price: 2480.30,  chg: -0.42 },
-  { sym: 'INDIGO',       price: 4120.60,  chg: 3.21 },
-  { sym: 'RELIANCE',     price: 2450.40,  chg: 1.25 },
-  { sym: 'TCS',          price: 3420.15,  chg: -0.45 },
-  { sym: 'INFY',         price: 1480.20,  chg: -1.15 },
-  { sym: 'WIPRO',        price: 540.70,   chg: 0.60 },
-  { sym: 'SBIN',         price: 780.25,   chg: -0.80 },
+/* ── Fallback static ticker data (used when live data not yet loaded) ── */
+const STATIC_TICKER = [
+  { sym: 'NIFTY 50',   price: 24856.45, chg: 2.14 },
+  { sym: 'NIFTY BANK', price: 52341.80, chg: -1.23 },
+  { sym: 'BAJFINANCE', price: 7124.55,  chg: 1.85 },
+  { sym: 'BHARTIARTL', price: 920.65,   chg: 2.10 },
+  { sym: 'HDFCBANK',   price: 1610.80,  chg: 0.85 },
+  { sym: 'HINDUNILVR', price: 2480.30,  chg: -0.42 },
+  { sym: 'RELIANCE',   price: 2450.40,  chg: 1.25 },
+  { sym: 'TCS',        price: 3420.15,  chg: -0.45 },
+  { sym: 'INFY',       price: 1480.20,  chg: -1.15 },
+  { sym: 'WIPRO',      price: 540.70,   chg: 0.60 },
+  { sym: 'SBIN',       price: 780.25,   chg: -0.80 },
+  { sym: 'INDIA VIX',  price: 14.82,    chg: 3.20 },
 ]
 
 /* ── More dropdown data with routes ── */
@@ -42,7 +42,7 @@ const MORE_PRODUCTS = [
   { icon: '₹',  bg: '#16a34a', label: 'LAS',                        to: '/dashboard/pricing' },
 ]
 const MORE_TOOLS = [
-  { icon: '◉',  bg: '#2563eb', label: 'Stock Screener',             to: '/dashboard/screener-landing' },
+  { icon: '◉',  bg: '#2563eb', label: 'Stock Screener',             to: '/dashboard/screener' },
   { icon: '◉',  bg: '#7c3aed', label: 'MF Screener',               to: '/dashboard/mf' },
   { icon: '$',  bg: '#16a34a', label: 'US Screener', badge: 'New',  to: '/dashboard/us-stocks' },
   { icon: '↑↓', bg: '#ea580c', label: 'Market Movers',              to: '/dashboard/market' },
@@ -51,6 +51,7 @@ const MORE_TOOLS = [
   { icon: '🔖', bg: '#7c3aed', label: 'Watchlist',                  to: '/dashboard/watchlist' },
   { icon: '🔔', bg: '#16a34a', label: 'Alerts',                     to: '/dashboard/settings' },
   { icon: '🌐', bg: '#06b6d4', label: 'News and Events',            to: '/dashboard/news' },
+  { icon: '🔢', bg: '#7c3aed', label: 'IPO Watch',                  to: '/dashboard/market' },
 ]
 const MORE_LEARN = [
   { icon: '📖', bg: '#2563eb', label: 'Learn',                      to: '/dashboard/market' },
@@ -62,10 +63,12 @@ const MORE_LEARN = [
 /* ── Top nav items ── */
 const NAV_ITEMS = [
   { to: '/dashboard/trade',          label: 'Trade' },
-  { to: '/dashboard/portfolio',       label: 'Portfolio' },
-  { to: '/dashboard/digital-gold',    label: 'Gold' },
-  { to: '/dashboard/screener-landing',label: 'Screener' },
-  { to: '/dashboard/us-stocks',       label: 'US Stocks' },
+  { to: '/dashboard/invest',         label: 'Invest' },
+  { to: '/dashboard/portfolio',      label: 'Portfolio' },
+  { to: '/dashboard/digital-gold',   label: 'Gold' },
+  { to: '/dashboard/screener',       label: 'Screener' },
+  { to: '/dashboard/us-stocks',      label: 'US Stocks' },
+  { to: '/dashboard/news',           label: 'News' },
 ]
 
 /* ── More Dropdown Component ── */
@@ -117,16 +120,32 @@ function MoreDropdown({ open, onClose }) {
   )
 }
 
-/* ── Ticker strip ── */
+/* ── Ticker strip — merges live data with static fallback ── */
 function TickerStrip() {
-  const doubled = [...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS]
+  const { indices, stocks } = useMarketData()
+
+  // Build live ticker: prefer live indices/stocks, fall back to static
+  const liveItems = STATIC_TICKER.map(item => {
+    const liveIndex = indices[item.sym]
+    const liveStock = stocks[item.sym]
+    const live = liveIndex || liveStock
+    if (live) {
+      return { sym: item.sym, price: live.price || item.price, chg: live.changePct ?? item.chg }
+    }
+    return item
+  })
+
+  const tripled = [...liveItems, ...liveItems, ...liveItems]
+
   return (
     <div className={styles.tickerWrap}>
       <div className={styles.tickerTrack}>
-        {doubled.map((item, i) => (
+        {tripled.map((item, i) => (
           <span key={i} className={styles.tickerItem}>
             <span className={styles.tickerSym}>{item.sym}</span>
-            <span className={styles.tickerPrice}>{item.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className={styles.tickerPrice}>
+              {Number(item.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
             <span className={item.chg >= 0 ? styles.tickerUp : styles.tickerDn}>
               {item.chg >= 0 ? '▲' : '▼'} {Math.abs(item.chg).toFixed(2)}%
             </span>
@@ -174,9 +193,15 @@ export default function DashboardLayout() {
             <Search size={14} className={styles.navSearchIcon} />
             <input
               className={styles.navSearchInput}
-              placeholder="Search for Mutual Funds"
+              placeholder="Search stocks, MF, news…"
               value={searchVal}
               onChange={e => setSearchVal(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && searchVal.trim()) {
+                  navigate('/dashboard/screener?q=' + encodeURIComponent(searchVal.trim()))
+                  setSearchVal('')
+                }
+              }}
             />
             <span className={styles.navSearchShortcut}>/</span>
           </div>

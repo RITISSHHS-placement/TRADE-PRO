@@ -37,45 +37,49 @@ import WatchlistPage        from './pages/WatchlistPage'
 import NotFoundPage         from './pages/NotFoundPage'
 import DashboardLayout      from './components/layout/DashboardLayout'
 import ScreenerLandingPage  from './pages/ScreenerLandingPage'
+import ScreenerPage         from './pages/ScreenerPage'
 import DigitalGoldPage      from './pages/DigitalGoldPage'
+import InvestPage           from './pages/InvestPage'
+import NewsPage             from './pages/NewsPage'
 
 gsap.registerPlugin(ScrollTrigger)
 
 /* ─────────────────────────────────────────────────────
-   DESIGN TOKENS
+   DESIGN TOKENS - LIGHT THEME
 ───────────────────────────────────────────────────── */
 const DS = {
   // Backgrounds
-  bg:       '#09090b',
-  bgSub:    '#0f0f12',
-  bgCard:   '#111115',
-  bgHover:  '#18181d',
-  bgActive: '#1e1e26',
+  bg:       '#ffffff',
+  bgSub:    '#f8f9fa',
+  bgCard:   '#ffffff',
+  bgHover:  '#f1f3f4',
+  bgActive: '#e8eaed',
   // Borders
-  border:   '#1f1f27',
-  borderMd: '#2a2a36',
-  borderLg: '#363643',
+  border:   '#e0e0e0',
+  borderMd: '#d0d0d0',
+  borderLg: '#c0c0c0',
   // Text
-  text:     '#f4f4f6',
-  textSub:  '#8b8b9e',
-  textMuted:'#52525f',
+  text:     '#1a1a1a',
+  textSub:  '#5f6368',
+  textMuted:'#9aa0a6',
   // Brand
-  accent:   '#6366f1',
-  accentDim:'#312e81',
-  accentGlow:'rgba(99,102,241,0.2)',
+  accent:   '#1a73e8',
+  accentDim:'#e8f0fe',
+  accentGlow:'rgba(26,115,232,0.1)',
   // Bull/Bear
-  bull:     '#22c55e',
-  bullDim:  'rgba(34,197,94,0.12)',
-  bullDark: '#16a34a',
-  bear:     '#ef4444',
-  bearDim:  'rgba(239,68,68,0.12)',
-  bearDark: '#dc2626',
+  bull:     '#0f9d58',
+  bullDim:  'rgba(15,157,88,0.08)',
+  bullDark: '#0d8a4c',
+  bear:     '#ea4335',
+  bearDim:  'rgba(234,67,53,0.08)',
+  bearDark: '#d93025',
   // Amber
-  amber:    '#f59e0b',
-  amberDim: 'rgba(245,158,11,0.12)',
+  amber:    '#f9ab00',
+  amberDim: 'rgba(249,171,0,0.08)',
   // Misc
   white:    '#ffffff',
-  overlay:  'rgba(9,9,11,0.85)',
+  overlay:  'rgba(255,255,255,0.95)',
+  shadow:   'rgba(0,0,0,0.08)',
 }
 
 /* Shared styles */
@@ -83,21 +87,22 @@ const S = {
   card: {
     background: DS.bgCard,
     border: `1px solid ${DS.border}`,
-    borderRadius: 12,
+    borderRadius: 8,
     overflow: 'hidden',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
   },
   input: {
     width: '100%',
     padding: '10px 14px',
     background: DS.bgSub,
     border: `1px solid ${DS.border}`,
-    borderRadius: 8,
+    borderRadius: 6,
     color: DS.text,
     fontSize: 14,
     fontFamily: 'inherit',
     outline: 'none',
     boxSizing: 'border-box',
-    transition: 'border-color .15s',
+    transition: 'border-color .15s, box-shadow .15s',
   },
   btn: {
     display: 'inline-flex',
@@ -105,7 +110,7 @@ const S = {
     justifyContent: 'center',
     gap: 6,
     padding: '9px 18px',
-    borderRadius: 8,
+    borderRadius: 6,
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
@@ -115,10 +120,10 @@ const S = {
   },
   label: {
     fontSize: 11,
-    fontWeight: 700,
+    fontWeight: 600,
     color: DS.textMuted,
     textTransform: 'uppercase',
-    letterSpacing: '0.7px',
+    letterSpacing: '0.5px',
     display: 'block',
     marginBottom: 6,
   },
@@ -314,21 +319,21 @@ function TopNav({ auth, page, setPage, onLogout }) {
   return (
     <header ref={ref} style={{
       position: 'sticky', top: 0, zIndex: 100,
-      background: `${DS.bg}e8`,
-      backdropFilter: 'blur(20px) saturate(180%)',
+      background: DS.bg,
       borderBottom: `1px solid ${DS.border}`,
+      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
     }}>
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 20px', height: 52, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', gap: 8 }}>
         {/* Logo */}
         <button onClick={() => setPage(auth ? 'dashboard' : 'home')} style={{ display:'flex', alignItems:'center', gap:9, background:'none', border:'none', cursor:'pointer', marginRight:8, padding:0 }}>
-          <div style={{ width:30, height:30, borderRadius:8, background:`linear-gradient(135deg,${DS.accent},#8b5cf6)`, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 0 20px ${DS.accentGlow}` }}>
-            <TrendingUp size={15} color="#fff"/>
+          <div style={{ width:32, height:32, borderRadius:6, background:DS.accent, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 2px 8px ${DS.shadow}` }}>
+            <TrendingUp size={16} color="#fff"/>
           </div>
-          <span style={{ fontWeight:800, fontSize:15, color:DS.text, letterSpacing:'-0.4px' }}>TradePro</span>
+          <span style={{ fontWeight:700, fontSize:16, color:DS.text, letterSpacing:'-0.3px' }}>TradePro</span>
         </button>
 
         {/* Divider */}
-        <div style={{ width:1, height:18, background:DS.border, marginRight:4 }}/>
+        <div style={{ width:1, height:20, background:DS.border, marginRight:4 }}/>
 
         {/* Nav links */}
         <nav style={{ display:'flex', alignItems:'center', gap:2, flex:1, overflow:'hidden' }}>
@@ -346,8 +351,8 @@ function TopNav({ auth, page, setPage, onLogout }) {
               <button style={{ ...S.btn, padding:'6px 10px', background:'transparent', color:DS.textSub, border:`1px solid ${DS.border}` }}>
                 <Bell size={15}/>
               </button>
-              <div style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 12px 5px 6px', borderRadius:100, background:DS.bgCard, border:`1px solid ${DS.border}` }}>
-                <div style={{ width:24, height:24, borderRadius:'50%', background:`linear-gradient(135deg,${DS.accent},#8b5cf6)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:800, color:'#fff' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 12px 5px 6px', borderRadius:6, background:DS.bgSub, border:`1px solid ${DS.border}` }}>
+                <div style={{ width:24, height:24, borderRadius:'50%', background:DS.accent, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#fff' }}>
                   {(auth.name||'U').charAt(0)}
                 </div>
                 <span style={{ fontSize:12, fontWeight:600, color:DS.text }}>{auth.name}</span>
@@ -358,8 +363,8 @@ function TopNav({ auth, page, setPage, onLogout }) {
             </>
           ) : (
             <>
-              <button onClick={() => setPage('login')} style={{ ...S.btn, background:'transparent', color:DS.textSub, border:`1px solid ${DS.border}` }}>Sign In</button>
-              <button onClick={() => setPage('register')} style={{ ...S.btn, background:DS.accent, color:'#fff', boxShadow:`0 0 20px ${DS.accentGlow}` }}>Get Started</button>
+              <button onClick={() => setPage('login')} style={{ ...S.btn, background:'transparent', color:DS.text, border:`1px solid ${DS.border}` }}>Sign In</button>
+              <button onClick={() => setPage('register')} style={{ ...S.btn, background:DS.accent, color:'#fff', boxShadow:`0 2px 8px ${DS.shadow}` }}>Get Started</button>
             </>
           )}
         </div>
@@ -402,7 +407,7 @@ function MarketStrip({ indices, setPage }) {
               borderRadius:6, background:'transparent', border:'1px solid transparent',
               cursor:'pointer', transition:'all .15s', whiteSpace:'nowrap',
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = DS.bgCard; e.currentTarget.style.borderColor = DS.border }}
+              onMouseEnter={e => { e.currentTarget.style.background = DS.bgHover; e.currentTarget.style.borderColor = DS.border }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent' }}>
               <span style={{ fontSize:11, fontWeight:600, color:DS.textMuted }}>{SYMBOL_LABELS[sym]||sym}</span>
               <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:12, fontWeight:700, color:DS.text, fontVariantNumeric:'tabular-nums' }}>{q?f2(q.price):'—'}</span>
@@ -487,28 +492,28 @@ function Home({ setPage, indices }) {
         <div>
           <div className="hp-tag" style={{ opacity:0, display:'inline-flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:100, background:DS.accentDim, border:`1px solid ${DS.accent}40`, marginBottom:24 }}>
             <span style={{ width:6, height:6, borderRadius:'50%', background:DS.bull, display:'inline-block', animation:'pulse 2s infinite' }}/>
-            <span style={{ fontSize:12, fontWeight:700, color:DS.accent }}>NSE & BSE · Live Data</span>
+            <span style={{ fontSize:12, fontWeight:600, color:DS.accent }}>NSE & BSE · Live Data</span>
           </div>
-          <h1 className="hp-h1" style={{ opacity:0, fontSize:'clamp(36px,5vw,60px)', fontWeight:900, color:DS.text, lineHeight:1.08, letterSpacing:'-1.5px', marginBottom:20 }}>
+          <h1 className="hp-h1" style={{ opacity:0, fontSize:'clamp(36px,5vw,60px)', fontWeight:700, color:DS.text, lineHeight:1.1, letterSpacing:'-0.5px', marginBottom:20 }}>
             The professional<br/><span style={{ color:DS.accent }}>trading platform</span><br/>for India.
           </h1>
-          <p className="hp-sub" style={{ opacity:0, fontSize:17, color:DS.textSub, lineHeight:1.75, marginBottom:32, maxWidth:460 }}>
+          <p className="hp-sub" style={{ opacity:0, fontSize:17, color:DS.textSub, lineHeight:1.6, marginBottom:32, maxWidth:460 }}>
             Real-time NSE/BSE data, institutional-grade order execution, portfolio analytics, and mutual funds — all in one place.
           </p>
           <div className="hp-btns" style={{ opacity:0, display:'flex', gap:12, flexWrap:'wrap', marginBottom:48 }}>
-            <button onClick={() => setPage('register')} style={{ ...S.btn, background:DS.accent, color:'#fff', padding:'11px 24px', fontSize:14, boxShadow:`0 0 30px ${DS.accentGlow}` }}
-              onMouseEnter={e => gsap.to(e.currentTarget, { scale:1.03, duration:.15 })}
+            <button onClick={() => setPage('register')} style={{ ...S.btn, background:DS.accent, color:'#fff', padding:'11px 24px', fontSize:14, boxShadow:`0 2px 8px ${DS.shadow}` }}
+              onMouseEnter={e => gsap.to(e.currentTarget, { scale:1.02, duration:.15 })}
               onMouseLeave={e => gsap.to(e.currentTarget, { scale:1, duration:.15 })}>
               Start for free <ChevronRight size={15}/>
             </button>
-            <button onClick={() => setPage('markets')} style={{ ...S.btn, background:'transparent', color:DS.text, padding:'11px 24px', fontSize:14, border:`1px solid ${DS.borderMd}` }}>
+            <button onClick={() => setPage('markets')} style={{ ...S.btn, background:'transparent', color:DS.text, padding:'11px 24px', fontSize:14, border:`1px solid ${DS.border}` }}>
               Explore Markets
             </button>
           </div>
           {/* Live index chips */}
           <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
             {[[nifty,'NIFTY 50'],[bank,'BANK NIFTY'],[vix,'INDIA VIX']].map(([q,l]) => (
-              <div key={l} style={{ padding:'8px 14px', borderRadius:8, background:DS.bgCard, border:`1px solid ${DS.border}`, display:'flex', gap:10, alignItems:'center' }}>
+              <div key={l} style={{ padding:'8px 14px', borderRadius:6, background:DS.bgSub, border:`1px solid ${DS.border}`, display:'flex', gap:10, alignItems:'center' }}>
                 <span style={{ fontSize:11, fontWeight:600, color:DS.textMuted }}>{l}</span>
                 <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:13, fontWeight:700, color:DS.text }}>{q?f2(q.price):'—'}</span>
                 {q && <span style={{ fontSize:11, fontWeight:700, color:(q.changePct||0)>=0?DS.bull:DS.bear }}>{(q.changePct||0)>=0?'▲':'▼'}{Math.abs(q.changePct||0).toFixed(2)}%</span>}
@@ -520,27 +525,27 @@ function Home({ setPage, indices }) {
         {/* Hero visual */}
         <div className="hp-img" style={{ opacity:0, position:'relative' }}>
           <div style={{ position:'absolute', inset:'-20px', background:`radial-gradient(circle at 50% 50%, ${DS.accentGlow}, transparent 70%)`, borderRadius:24, pointerEvents:'none' }}/>
-          <div style={{ borderRadius:20, overflow:'hidden', border:`1px solid ${DS.borderMd}`, boxShadow:`0 24px 60px rgba(0,0,0,.5), 0 0 0 1px ${DS.border}` }}>
-            <img src="/bull-bear.webp" alt="Bull vs Bear" style={{ width:'100%', display:'block', filter:'brightness(0.92) contrast(1.05)' }}/>
+          <div style={{ borderRadius:16, overflow:'hidden', border:`1px solid ${DS.border}`, boxShadow:`0 4px 24px ${DS.shadow}` }}>
+            <img src="/bull-bear.webp" alt="Bull vs Bear" style={{ width:'100%', display:'block', filter:'brightness(0.95)' }}/>
           </div>
           {/* Floating cards */}
-          <div style={{ position:'absolute', bottom:24, left:-20, background:DS.bgCard, border:`1px solid ${DS.borderMd}`, borderRadius:10, padding:'10px 14px', boxShadow:'0 8px 24px rgba(0,0,0,.4)' }}>
+          <div style={{ position:'absolute', bottom:24, left:-20, background:DS.bgCard, border:`1px solid ${DS.border}`, borderRadius:8, padding:'10px 14px', boxShadow:`0 4px 16px ${DS.shadow}` }}>
             <div style={{ fontSize:10, color:DS.textMuted, marginBottom:3 }}>PORTFOLIO P&L</div>
-            <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:16, fontWeight:800, color:DS.bull }}>+₹2,34,800</div>
+            <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:16, fontWeight:700, color:DS.bull }}>+₹2,34,800</div>
           </div>
-          <div style={{ position:'absolute', top:24, right:-16, background:DS.bgCard, border:`1px solid ${DS.borderMd}`, borderRadius:10, padding:'10px 14px', boxShadow:'0 8px 24px rgba(0,0,0,.4)' }}>
+          <div style={{ position:'absolute', top:24, right:-16, background:DS.bgCard, border:`1px solid ${DS.border}`, borderRadius:8, padding:'10px 14px', boxShadow:`0 4px 16px ${DS.shadow}` }}>
             <div style={{ fontSize:10, color:DS.textMuted, marginBottom:3 }}>ORDER EXECUTED</div>
-            <div style={{ fontSize:12, fontWeight:700, color:DS.text, display:'flex', alignItems:'center', gap:5 }}><CheckCircle2 size={13} color={DS.bull}/> 100 RELIANCE @ ₹2,612</div>
+            <div style={{ fontSize:12, fontWeight:600, color:DS.text, display:'flex', alignItems:'center', gap:5 }}><CheckCircle2 size={13} color={DS.bull}/> 100 RELIANCE @ ₹2,612</div>
           </div>
         </div>
       </section>
 
       {/* Stats bar */}
-      <div ref={statsRef} style={{ background:DS.bgCard, borderTop:`1px solid ${DS.border}`, borderBottom:`1px solid ${DS.border}` }}>
+      <div ref={statsRef} style={{ background:DS.bgSub, borderTop:`1px solid ${DS.border}`, borderBottom:`1px solid ${DS.border}` }}>
         <div style={{ maxWidth:1200, margin:'0 auto', padding:'0 24px', display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>
           {[['₹2,840 Cr+','Daily Volume'],['4.1L+','Active Clients'],['₹0','Equity Delivery'],['50+','Indices Tracked']].map(([v,l],i) => (
             <div key={l} data-s style={{ padding:'20px', borderRight:i<3?`1px solid ${DS.border}`:'none', textAlign:'center' }}>
-              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:22, fontWeight:900, color:DS.accent }}>{v}</div>
+              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:22, fontWeight:700, color:DS.accent }}>{v}</div>
               <div style={{ fontSize:12, color:DS.textMuted, marginTop:3 }}>{l}</div>
             </div>
           ))}
@@ -550,7 +555,7 @@ function Home({ setPage, indices }) {
       {/* Feature cards */}
       <section style={{ maxWidth:1200, margin:'0 auto', padding:'64px 24px' }}>
         <div style={{ textAlign:'center', marginBottom:48 }}>
-          <h2 style={{ fontSize:36, fontWeight:900, color:DS.text, letterSpacing:'-1px', marginBottom:12 }}>Everything in one terminal</h2>
+          <h2 style={{ fontSize:36, fontWeight:700, color:DS.text, letterSpacing:'-0.5px', marginBottom:12 }}>Everything in one terminal</h2>
           <p style={{ fontSize:16, color:DS.textSub }}>Built for traders who demand precision.</p>
         </div>
         <div ref={cardsRef} style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:12 }}>
@@ -565,11 +570,11 @@ function Home({ setPage, indices }) {
             <div key={f.title} data-s onClick={() => setPage(f.page)} style={{ ...S.card, padding:24, cursor:'pointer', transition:'all .2s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = DS.borderMd; gsap.to(e.currentTarget, { y:-4, duration:.2 }) }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = DS.border;   gsap.to(e.currentTarget, { y:0,  duration:.2 }) }}>
-              <div style={{ width:40, height:40, borderRadius:10, background:`linear-gradient(135deg,${f.grad[0]},${f.grad[1]})`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:16, boxShadow:`0 4px 14px ${f.grad[0]}40` }}>
+              <div style={{ width:40, height:40, borderRadius:8, background:`linear-gradient(135deg,${f.grad[0]},${f.grad[1]})`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:16, boxShadow:`0 2px 8px ${DS.shadow}` }}>
                 <f.icon size={19} color="#fff"/>
               </div>
-              <h3 style={{ fontSize:14, fontWeight:700, color:DS.text, marginBottom:6 }}>{f.title}</h3>
-              <p style={{ fontSize:12, color:DS.textSub, lineHeight:1.65 }}>{f.desc}</p>
+              <h3 style={{ fontSize:14, fontWeight:600, color:DS.text, marginBottom:6 }}>{f.title}</h3>
+              <p style={{ fontSize:12, color:DS.textSub, lineHeight:1.6 }}>{f.desc}</p>
             </div>
           ))}
         </div>
@@ -610,9 +615,10 @@ function AppShell() {
       >
         <Route index                element={<DashboardPage />} />
         <Route path="trade"         element={<TradePage />} />
+        <Route path="invest"        element={<InvestPage />} />
         <Route path="market"        element={<MarketPage />} />
-        <Route path="screener"      element={<MarketPage defaultTab="screener" />} />
-        <Route path="news"          element={<MarketPage defaultTab="news" />} />
+        <Route path="screener"      element={<ScreenerPage />} />
+        <Route path="news"          element={<NewsPage />} />
         <Route path="us-stocks"     element={<MarketPage defaultTab="us" />} />
         <Route path="gold"          element={<MarketPage defaultTab="gold" />} />
         <Route path="mf"            element={<MutualFundsPage />} />

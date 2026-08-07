@@ -6,51 +6,59 @@ import { ArrowRight, ChevronDown, ChevronUp, Plus, Lock } from 'lucide-react'
 const POPULAR_SCREENS = [
   {
     emoji: '✳️', title: 'Wealth Compounders',
-    filters: ['1Y Historical Revenue Growth', '5Y Historical EPS Growth', 'EGA Growth +7 more'],
+    filters: ['1Y Historical Revenue Growth', '5Y Historical EPS Growth', 'ROE > 15%'],
     users: '103k', color: '#7c3aed',
+    query: '?preset=wealth-compounders&roeMin=15&g3Min=12',
   },
   {
     emoji: '📊', title: 'Analyst-Backed Bets',
-    filters: ['Percentage Buy Hold', 'No. of analysts with buy reco', '+5 more'],
+    filters: ['PE Ratio < 30', '3Y Growth > 15%', '+5 more'],
     users: '78k', color: '#2563eb',
+    query: '?preset=analyst-bets&peMax=30&g3Min=15',
   },
   {
     emoji: '⚙️', title: 'Penny Picks',
-    filters: ['Close Price', '1Y Historical Revenue Growth', '+5 more'],
+    filters: ['Price < ₹500', 'Smallcap', 'PE < 20'],
     users: '64k', color: '#ea580c',
+    query: '?preset=penny-picks&pMax=500&cap=Smallcap&peMax=20',
   },
   {
     emoji: '📉', title: 'Near 52W Lows',
-    filters: ['% away from 52w low', '5Y Revenue Growth', '+5 more'],
+    filters: ['% away from 52w low', 'PE < 25', 'RSI < 45'],
     users: '32k', color: '#0d9488',
+    query: '?preset=near-52low&peMax=25&rsiMax=45',
   },
   {
     emoji: '⚡', title: 'Momentum Monsters',
-    filters: ['~40 Exponential RSI', '+3 more'],
+    filters: ['RSI > 60', '3Y Growth > 20%', 'Beta > 1'],
     users: '40k', color: '#d97706',
+    query: '?preset=momentum&rsiMin=60&g3Min=20&betaMin=1',
   },
   {
     emoji: '🔲', title: 'Nearing Breakout',
-    filters: ['RSI ~40–140', 'Close Price / 500 FMA', '+6 more'],
+    filters: ['RSI 40–60', 'Volume > 1M', 'Price near 52W High'],
     users: '28k', color: '#2563eb', pro: true,
+    query: '?preset=breakout&rsiMin=40&rsiMax=60',
   },
 ]
 const FUNDAMENTAL_SCREENS = [
-  { emoji: '💎', title: 'Hidden Gems',        filters: ['PE Ratio', 'Debt to Equity', '+4 more'], users: '55k' },
-  { emoji: '💰', title: 'Dividend Gems',      filters: ['Dividend Yield', 'Payout Ratio', '+3 more'], users: '47k' },
-  { emoji: '🪙', title: 'Cash Rich Smallcaps', filters: ['Free Cash Flow', 'Market Cap', '+4 more'], users: '38k' },
+  { emoji: '💎', title: 'Hidden Gems',         filters: ['PE < 20', 'ROE > 15%', 'D/E < 1'],   users: '55k', query: '?preset=hidden-gems&peMax=20&roeMin=15&deMax=1' },
+  { emoji: '💰', title: 'Dividend Gems',        filters: ['Div Yield > 2.5%', 'D/E < 0.5'],     users: '47k', query: '?preset=dividend&dyMin=2.5&deMax=0.5' },
+  { emoji: '🪙', title: 'Cash Rich Smallcaps',  filters: ['Smallcap', 'Current Ratio > 1.5'],    users: '38k', query: '?preset=cash-rich&cap=Smallcap&crMin=1.5' },
 ]
 const TECHNICAL_SCREENS = [
-  { emoji: '📈', title: 'Day Trading Picks',           filters: ['RSI', 'MACD', 'Volume'], users: '62k' },
-  { emoji: '🏦', title: 'FII Favourites',              filters: ['FII Holdings %', 'Change in FII %', '+2 more'], users: '44k' },
-  { emoji: '📊', title: 'Bollinger Band Reversal Sig...', filters: ['Bollinger Band', 'RSI', '+3 more'], users: '21k', pro: true },
+  { emoji: '📈', title: 'Day Trading Picks',           filters: ['RSI > 55', 'Volume > 2M'],   users: '62k', query: '?preset=day-trading&rsiMin=55' },
+  { emoji: '🏦', title: 'FII Favourites',              filters: ['FII Holding > 20%'],          users: '44k', query: '?preset=fii-fav&fiMin=20' },
+  { emoji: '📊', title: 'Bollinger Band Reversal',     filters: ['RSI 30–50', 'OPM > 15%'],     users: '21k', pro: true, query: '?preset=bb-reversal&rsiMin=30&rsiMax=50&omMin=15' },
 ]
 const FNO_SCREENS = [
-  { emoji: '🔄', title: 'Cash & Carry Candidates', filters: ['Futures Premium', 'OI Change', '+3 more'], users: '18k', pro: true },
-  { emoji: '📈', title: 'Options: Long Build Up',   filters: ['OI Build Up', 'PCR', '+2 more'],          users: '22k', pro: true },
+  { emoji: '🔄', title: 'Cash & Carry Candidates',  filters: ['Largecap', 'Beta < 1.2'],         users: '18k', pro: true, query: '?preset=cash-carry&cap=Largecap&betaMax=1.2' },
+  { emoji: '📈', title: 'Options: Long Build Up',    filters: ['RSI > 60', 'High Volume'],        users: '22k', pro: true, query: '?preset=options-long&rsiMin=60' },
 ]
 
-function ScreenCard({ emoji, title, filters, users, color, pro }) {
+function ScreenCard({ emoji, title, filters, users, color, pro, query }) {
+  const navigate = useNavigate()
+  const handleClick = () => navigate('/dashboard/screener' + (query || ''))
   return (
     <div style={{
       background: '#fff',
@@ -60,6 +68,7 @@ function ScreenCard({ emoji, title, filters, users, color, pro }) {
       cursor: 'pointer',
       transition: 'box-shadow 0.15s, transform 0.15s',
     }}
+      onClick={handleClick}
       onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.10)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)' }}
     >
@@ -105,8 +114,7 @@ function ScreenSection({ title, screens, showAll, onToggle }) {
         gap: 16, marginBottom: 16,
       }}>
         {visible.map((s, i) => <ScreenCard key={i} {...s} />)}
-      </div>
-      {screens.length > 3 && (
+      </div>      {screens.length > 3 && (
         <button
           onClick={onToggle}
           style={{

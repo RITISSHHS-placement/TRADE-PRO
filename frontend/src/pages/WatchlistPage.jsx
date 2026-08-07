@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { Search, Plus, X, Star, Trash2, TrendingUp, ChevronDown } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Search, Plus, X, Star, Trash2, TrendingUp } from 'lucide-react'
 import { useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import styles from './WatchlistPage.module.css'
 
 const C = {
-  green:'#00B386',greenBg:'#E6F9F4',red:'#E84040',redBg:'#FEF0F0',
-  navy:'#111A3A',blue:'#2563EB',blueBg:'#EEF3FF',amber:'#F59E0B',
-  gray50:'#F8F9FB',gray100:'#F1F3F6',gray200:'#E4E7EC',
-  gray400:'#9AA3B2',gray600:'#5A6478',gray800:'#1E2636',white:'#FFFFFF',
+  green:'#0f9d58',greenBg:'#e8f0fe',red:'#ea4335',redBg:'#fce8e6',
+  navy:'#1a1a1a',blue:'#1a73e8',blueBg:'#e8f0fe',amber:'#d97706',
+  gray50:'#f8f9fa',gray100:'#f1f3f4',gray200:'#e0e0e0',
+  gray400:'#9aa0a6',gray600:'#5f6368',gray800:'#1a1a1a',white:'#ffffff',
 }
 const f2 = n => Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})
 const fR = n => '₹'+f2(n)
@@ -65,6 +67,7 @@ function saveLists(lists) {
 }
 
 export default function WatchlistPage({ setPage }) {
+  const navigate = useNavigate()
   const [lists, setLists]       = useState(loadLists)
   const [activeList, setActive] = useState('My Watchlist')
   const [searchQ, setSearchQ]   = useState('')
@@ -140,58 +143,52 @@ export default function WatchlistPage({ setPage }) {
     : items
 
   return (
-    <div style={{maxWidth:1100,margin:'0 auto',padding:'24px 20px',fontFamily:'Inter,sans-serif'}}>
+    <div className={styles.page}>
       {/* Page Header */}
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
+      <div className={styles.header}>
         <div>
-          <h1 style={{fontSize:22,fontWeight:900,color:C.gray800,display:'flex',alignItems:'center',gap:10}}>
+          <h1 className={styles.headerTitle}>
             <Star size={20} fill={C.amber} color={C.amber}/>
             Watchlist
           </h1>
-          <p style={{fontSize:13,color:C.gray400,marginTop:3}}>Track your favourite stocks · {items.length} stocks in {activeList}</p>
+          <p className={styles.headerSubtitle}>Track your favourite stocks · {items.length} stocks in {activeList}</p>
         </div>
-        <button onClick={()=>setPage&&setPage('trade')}
-          style={{padding:'9px 18px',borderRadius:6,background:C.navy,color:'#fff',fontWeight:700,fontSize:12.5,border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6}}>
+        <button onClick={()=>navigate('/dashboard/trade')} className={styles.openTerminalBtn}>
           <TrendingUp size={13}/> Open Terminal
         </button>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'220px 1fr',gap:20}}>
+      <div className={styles.contentGrid}>
 
         {/* ─── Sidebar: List Manager ─── */}
-        <div style={{background:'#fff',border:`1px solid ${C.gray200}`,borderRadius:10,padding:14,height:'fit-content'}}>
-          <div style={{fontSize:11,fontWeight:800,color:C.gray400,textTransform:'uppercase',letterSpacing:'0.8px',marginBottom:10}}>
+        <div className={styles.sidebar}>
+          <div className={styles.sidebarTitle}>
             My Lists
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:2}}>
             {Object.keys(lists).map(name => (
-              <div key={name} style={{position:'relative'}}>
+              <div key={name} className={styles.listItem}>
                 {renaming===name ? (
-                  <div style={{display:'flex',gap:4}}>
+                  <div className={styles.renameInput}>
                     <input autoFocus value={renameTo} onChange={e=>setRenameTo(e.target.value)}
                       onKeyDown={e=>e.key==='Enter'&&renameList()}
-                      style={{flex:1,padding:'6px 8px',borderRadius:4,border:`1px solid ${C.blue}`,fontSize:12,outline:'none'}}/>
-                    <button onClick={renameList} style={{padding:'4px 8px',borderRadius:4,background:C.blue,color:'#fff',border:'none',cursor:'pointer',fontSize:11}}>✓</button>
-                    <button onClick={()=>setRenaming(null)} style={{padding:'4px 8px',borderRadius:4,background:C.gray100,border:'none',cursor:'pointer',fontSize:11}}>✕</button>
+                      className={styles.renameInput}/>
+                    <button onClick={renameList} className={styles.renameBtn}>✓</button>
+                    <button onClick={()=>setRenaming(null)} className={styles.cancelBtn}>✕</button>
                   </div>
                 ) : (
-                  <div onClick={()=>setActive(name)} style={{
-                    display:'flex',justifyContent:'space-between',alignItems:'center',
-                    padding:'8px 10px',borderRadius:6,cursor:'pointer',
-                    background:activeList===name?C.blueBg:'transparent',
-                    borderLeft:`3px solid ${activeList===name?C.blue:'transparent'}`,
-                    transition:'all .12s'}}>
+                  <div onClick={()=>setActive(name)} className={`${styles.listItemContent} ${activeList===name ? styles.active : ''}`}>
                     <div>
-                      <div style={{fontSize:12.5,fontWeight:700,color:activeList===name?C.blue:C.gray800}}>{name}</div>
-                      <div style={{fontSize:10,color:C.gray400}}>{(lists[name]||[]).length} stocks</div>
+                      <div className={`${styles.listName} ${activeList===name ? styles.active : ''}`}>{name}</div>
+                      <div className={styles.listCount}>{(lists[name]||[]).length} stocks</div>
                     </div>
-                    <div style={{display:'flex',gap:4,opacity:0}} className="list-actions"
+                    <div className={styles.listActions}
                       onMouseEnter={e=>e.currentTarget.style.opacity=1}
                       onMouseLeave={e=>e.currentTarget.style.opacity=0}>
                       <button onClick={e=>{e.stopPropagation();setRenaming(name);setRenameTo(name)}}
-                        style={{background:'none',border:'none',cursor:'pointer',fontSize:10,color:C.gray400,padding:'2px'}}>✏️</button>
+                        className={styles.actionIconBtn}>✏️</button>
                       <button onClick={e=>{e.stopPropagation();deleteList(name)}}
-                        style={{background:'none',border:'none',cursor:'pointer',color:C.red,padding:'2px'}}>
+                        className={`${styles.actionIconBtn} ${styles.deleteBtn}`}>
                         <Trash2 size={11}/>
                       </button>
                     </div>
@@ -202,64 +199,55 @@ export default function WatchlistPage({ setPage }) {
           </div>
 
           {showNewList ? (
-            <div style={{marginTop:10}}>
+            <div className={styles.newListSection}>
               <input autoFocus value={newListName} onChange={e=>setNewListName(e.target.value)}
                 onKeyDown={e=>e.key==='Enter'&&createList()}
-                placeholder="List name..." style={{width:'100%',padding:'7px 8px',borderRadius:4,border:`1px solid ${C.blue}`,fontSize:12,outline:'none',boxSizing:'border-box'}}/>
-              <div style={{display:'flex',gap:6,marginTop:6}}>
-                <button onClick={createList} style={{flex:1,padding:'6px 0',borderRadius:4,background:C.blue,color:'#fff',border:'none',cursor:'pointer',fontSize:11,fontWeight:700}}>Create</button>
-                <button onClick={()=>setShowNewList(false)} style={{flex:1,padding:'6px 0',borderRadius:4,background:C.gray100,border:'none',cursor:'pointer',fontSize:11}}>Cancel</button>
+                placeholder="List name..." className={styles.newListInput}/>
+              <div className={styles.newListButtons}>
+                <button onClick={createList} className={styles.newListBtn}>Create</button>
+                <button onClick={()=>setShowNewList(false)} className={styles.newListCancel}>Cancel</button>
               </div>
             </div>
           ) : (
-            <button onClick={()=>setShowNewList(true)} style={{width:'100%',marginTop:10,padding:'8px 0',
-              borderRadius:6,background:'none',border:`1.5px dashed ${C.gray200}`,color:C.gray600,
-              fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>
+            <button onClick={()=>setShowNewList(true)} className={styles.newListTrigger}>
               <Plus size={12}/> New List
             </button>
           )}
         </div>
 
         {/* ─── Main: Stock List ─── */}
-        <div>
+        <div className={styles.mainContent}>
           {/* Controls */}
-          <div style={{display:'flex',gap:10,marginBottom:14,alignItems:'center'}}>
+          <div className={styles.controls}>
             {/* Search within watchlist */}
-            <div style={{position:'relative',flex:1}}>
-              <Search size={13} style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:C.gray400}}/>
+            <div className={styles.searchWrapper}>
+              <Search size={13} className={styles.searchIcon}/>
               <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Filter watchlist..."
-                style={{width:'100%',padding:'8px 10px 8px 30px',borderRadius:8,border:`1.5px solid ${C.gray200}`,fontSize:12.5,outline:'none',boxSizing:'border-box'}}/>
+                className={styles.searchInput}/>
             </div>
             {/* Add stock */}
-            <div style={{position:'relative'}}>
-              <div style={{display:'flex',alignItems:'center',gap:0}}>
-                <div style={{position:'relative'}}>
-                  <Search size={13} style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:C.gray400}}/>
+            <div className={styles.addStockWrapper}>
+              <div className={styles.addStockInputWrapper}>
+                <div className={styles.searchWrapper}>
+                  <Search size={13} className={styles.searchIcon}/>
                   <input value={addSearch} onChange={e=>{setAddSearch(e.target.value);setAddDrop(true)}}
                     onFocus={()=>setAddDrop(true)}
                     onBlur={()=>setTimeout(()=>setAddDrop(false),200)}
                     placeholder="Add stock..."
-                    style={{padding:'8px 10px 8px 30px',borderRadius:'8px 0 0 8px',border:`1.5px solid ${C.gray200}`,
-                      borderRight:'none',fontSize:12.5,outline:'none',width:180}}/>
+                    className={styles.addStockInput}/>
                 </div>
                 <button onClick={()=>addResults[0]&&addSymbol(addResults[0])}
-                  style={{padding:'8px 12px',borderRadius:'0 8px 8px 0',background:C.green,color:'#fff',
-                    border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:4,fontSize:12,fontWeight:700}}>
+                  className={styles.addStockBtn}>
                   <Plus size={13}/> Add
                 </button>
               </div>
               {addDrop && addResults.length>0 && (
-                <div style={{position:'absolute',top:40,left:0,right:0,background:'#fff',
-                  borderRadius:8,boxShadow:'0 8px 24px rgba(0,0,0,0.12)',border:`1px solid ${C.gray200}`,
-                  zIndex:200,maxHeight:240,overflowY:'auto'}}>
+                <div className={styles.addStockDropdown}>
                   {addResults.map(sym=>(
                     <div key={sym} onMouseDown={()=>addSymbol(sym)}
-                      style={{padding:'9px 12px',cursor:'pointer',display:'flex',justifyContent:'space-between',
-                        borderBottom:`1px solid ${C.gray50}`,transition:'background .1s'}}
-                      onMouseEnter={e=>e.currentTarget.style.background=C.gray50}
-                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                      <span style={{fontSize:12.5,fontWeight:700,color:C.gray800}}>{SYMBOL_LABELS[sym]||sym}</span>
-                      <span style={{fontSize:11,color:C.gray400,fontFamily:'monospace'}}>{sym}</span>
+                      className={styles.dropdownItem}>
+                      <span className={styles.dropdownItemName}>{SYMBOL_LABELS[sym]||sym}</span>
+                      <span className={styles.dropdownItemSymbol}>{sym}</span>
                     </div>
                   ))}
                 </div>
@@ -269,22 +257,20 @@ export default function WatchlistPage({ setPage }) {
 
           {/* Stock Rows */}
           {filtered.length===0 ? (
-            <div style={{padding:48,textAlign:'center',background:'#fff',border:`1.5px dashed ${C.gray200}`,borderRadius:12}}>
-              <div style={{fontSize:40,marginBottom:12}}>⭐</div>
-              <h3 style={{fontSize:16,fontWeight:800,color:C.gray800,marginBottom:8}}>No stocks yet</h3>
-              <p style={{fontSize:13,color:C.gray400}}>Search above to add stocks to your watchlist</p>
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIcon}>⭐</div>
+              <h3 className={styles.emptyTitle}>No stocks yet</h3>
+              <p className={styles.emptyDesc}>Search above to add stocks to your watchlist</p>
             </div>
           ) : (
-            <div style={{background:'#fff',border:`1px solid ${C.gray200}`,borderRadius:10,overflow:'hidden'}}>
+            <div className={styles.stockTable}>
               {/* Table header */}
-              <div style={{display:'grid',gridTemplateColumns:'2.5fr 1fr 1fr 1fr 0.8fr 0.5fr',
-                padding:'9px 16px',background:C.gray50,borderBottom:`1px solid ${C.gray200}`,
-                fontSize:10.5,fontWeight:800,color:C.gray400,textTransform:'uppercase'}}>
+              <div className={styles.tableHeader}>
                 <span>Stock</span>
-                <span style={{textAlign:'right'}}>Price</span>
-                <span style={{textAlign:'right'}}>Change</span>
-                <span style={{textAlign:'right'}}>Chart</span>
-                <span style={{textAlign:'right'}}>Volume</span>
+                <span className={styles.cellRight}>Price</span>
+                <span className={styles.cellRight}>Change</span>
+                <span className={styles.cellRight}>Chart</span>
+                <span className={styles.cellRight}>Volume</span>
                 <span></span>
               </div>
 
@@ -292,45 +278,40 @@ export default function WatchlistPage({ setPage }) {
                 const q = stocks[sym]
                 const up = (q?.changePct??0) >= 0
                 return (
-                  <div key={sym} style={{display:'grid',gridTemplateColumns:'2.5fr 1fr 1fr 1fr 0.8fr 0.5fr',
-                    padding:'13px 16px',borderBottom:`1px solid ${C.gray100}`,alignItems:'center',
-                    transition:'background .1s',cursor:'pointer'}}
-                    onMouseEnter={e=>e.currentTarget.style.background=C.gray50}
-                    onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-                    onClick={()=>setPage&&setPage('trade')}>
-                    <div style={{display:'flex',alignItems:'center',gap:10}}>
-                      <div style={{width:32,height:32,borderRadius:8,background:C.blueBg,color:C.blue,
-                        display:'flex',alignItems:'center',justifyContent:'center',fontSize:10.5,fontWeight:900,flexShrink:0}}>
+                  <div key={sym} className={styles.tableRow}
+                    onClick={()=>navigate('/dashboard/trade')}>
+                    <div className={styles.stockCell}>
+                      <div className={styles.stockIcon}>
                         {sym.slice(0,2)}
                       </div>
                       <div>
-                        <div style={{fontSize:13,fontWeight:800,color:C.gray800}}>{SYMBOL_LABELS[sym]||sym}</div>
-                        <div style={{fontSize:10.5,color:C.gray400,fontFamily:'monospace',marginTop:1}}>{sym} · NSE</div>
+                        <div className={styles.stockName}>{SYMBOL_LABELS[sym]||sym}</div>
+                        <div className={styles.stockMeta}>{sym} · NSE</div>
                       </div>
                     </div>
-                    <div style={{textAlign:'right',fontSize:14,fontFamily:'monospace',fontWeight:800,color:C.gray800}}>
-                      {q?fR(q.price):'—'}
+                    <div className={styles.cellRight}>
+                      <div className={styles.priceCell}>
+                        {q?fR(q.price):'—'}
+                      </div>
                     </div>
-                    <div style={{textAlign:'right'}}>
+                    <div className={styles.cellRight}>
                       {q?(
-                        <span style={{fontSize:12,fontWeight:800,color:up?C.green:C.red,
-                          background:up?C.greenBg:C.redBg,padding:'3px 8px',borderRadius:10}}>
+                        <span className={`${styles.changeBadge} ${up ? styles.changeUp : styles.changeDown}`}>
                           {up?'▲':'▼'} {Math.abs(q.changePct).toFixed(2)}%
                         </span>
                       ):'—'}
                     </div>
-                    <div style={{display:'flex',justifyContent:'flex-end'}}>
+                    <div className={styles.cellRight}>
                       <MiniSpark up={up}/>
                     </div>
-                    <div style={{textAlign:'right',fontSize:11,fontFamily:'monospace',color:C.gray400}}>
-                      {q?.volume?`${(q.volume/1e5).toFixed(1)}L`:'—'}
+                    <div className={styles.cellRight}>
+                      <div className={styles.volumeCell}>
+                        {q?.volume?`${(q.volume/1e5).toFixed(1)}L`:'—'}
+                      </div>
                     </div>
-                    <div style={{textAlign:'right'}}>
+                    <div className={styles.cellRight}>
                       <button onClick={e=>{e.stopPropagation();removeSymbol(sym)}}
-                        style={{background:'none',border:'none',cursor:'pointer',color:C.red,
-                          padding:'4px',borderRadius:4,transition:'background .1s',display:'flex',alignItems:'center'}}
-                        onMouseEnter={e=>e.currentTarget.style.background=C.redBg}
-                        onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+                        className={styles.removeBtn}
                         title="Remove from watchlist">
                         <X size={14}/>
                       </button>
@@ -342,7 +323,7 @@ export default function WatchlistPage({ setPage }) {
           )}
 
           {items.length>0&&(
-            <div style={{marginTop:12,fontSize:11.5,color:C.gray400,textAlign:'center'}}>
+            <div className={styles.footerInfo}>
               {items.length} stocks · Auto-refreshed every 5s · Click any row to open Trading Terminal
             </div>
           )}

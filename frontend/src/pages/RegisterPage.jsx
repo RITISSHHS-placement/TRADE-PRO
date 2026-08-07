@@ -17,69 +17,25 @@ const benefits = [
 export default function RegisterPage() {
   const { register: registerUser, loading } = useAuth()
   const [showPw, setShowPw] = useState(false)
-  const [step, setStep] = useState(1) // 1: form, 2: otp
-  const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState('')
-  const [otpSent, setOtpSent] = useState(false)
-  const [sendingOtp, setSendingOtp] = useState(false)
-  const [verifyingOtp, setVerifyingOtp] = useState(false)
-  const [countdown, setCountdown] = useState(0)
+  const [registrationSuccess, setRegistrationSuccess] = useState(false)
   const { register, handleSubmit, formState: { errors } } = useForm()
 
-  const sendOtp = async (emailAddress) => {
-    setSendingOtp(true)
+  const onSubmit = async (data) => {
     try {
-      await authAPI.sendOtp(emailAddress)
-      setEmail(emailAddress)
-      setOtpSent(true)
-      setStep(2)
-      startCountdown()
-    } catch (error) {
-      console.error('Failed to send OTP:', error)
-    } finally {
-      setSendingOtp(false)
-    }
-  }
-
-  const startCountdown = () => {
-    setCountdown(60)
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-  }
-
-  const verifyOtpAndRegister = async () => {
-    setVerifyingOtp(true)
-    try {
-      await authAPI.verifyOtp(email, otp)
-      // Proceed with registration after OTP verification
       await registerUser({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        password: formData.password,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
         deviceId: navigator.userAgent.slice(0, 64),
         deviceName: `${navigator.platform} Browser`,
         userAgent: navigator.userAgent,
       })
+      setRegistrationSuccess(true)
     } catch (error) {
-      console.error('OTP verification failed:', error)
-    } finally {
-      setVerifyingOtp(false)
+      console.error('Registration failed:', error)
+      alert('Registration failed: ' + (error.response?.data?.message || error.message))
     }
-  }
-
-  const [formData, setFormData] = useState({})
-
-  const onSubmit = async (data) => {
-    setFormData(data)
-    await sendOtp(data.email)
   }
 
   return (
@@ -93,9 +49,15 @@ export default function RegisterPage() {
       <div className={styles.overlay} />
       <div className={styles.container}>
         <section className={styles.heroCard}>
-          <div className={styles.brand}>Trade<span>Pro</span></div>
+          <div className={styles.brand}>
+            <span className={styles.brandIcon}>T</span>
+            Trade<span>Pro</span>
+          </div>
           <h1 className={styles.heroTitle}>Create your premium trading workspace.</h1>
-          <p className={styles.heroText}>Start with a clean, studio-quality dashboard optimized for market momentum, portfolio clarity, and risk transparency.</p>
+          <p className={styles.heroText}>
+            Join 4.1 lakh+ investors. Live NSE/BSE data, stock screener,
+            mutual funds, and portfolio analytics — all in one platform.
+          </p>
           <div className={styles.quickList}>
             {benefits.map((item) => (
               <div key={item.title} className={styles.quickItem}>
@@ -104,19 +66,35 @@ export default function RegisterPage() {
               </div>
             ))}
           </div>
+          <div className={styles.heroStats}>
+            <div className={styles.heroStat}>
+              <span className={styles.heroStatVal}>₹0</span>
+              <span className={styles.heroStatLabel}>Delivery</span>
+            </div>
+            <div className={styles.heroStat}>
+              <span className={styles.heroStatVal}>4.1L+</span>
+              <span className={styles.heroStatLabel}>Users</span>
+            </div>
+            <div className={styles.heroStat}>
+              <span className={styles.heroStatVal}>16K+</span>
+              <span className={styles.heroStatLabel}>MF Schemes</span>
+            </div>
+          </div>
         </section>
 
         <section className={styles.authCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>
-              {step === 1 ? 'Create your account' : 'Verify your email'}
+              {registrationSuccess ? 'Account Created!' : 'Create your account'}
             </div>
             <p className={styles.cardSubtitle}>
-              {step === 1 ? 'Become part of modern stock trading with secure access.' : 'Enter the OTP sent to your email'}
+              {registrationSuccess 
+                ? 'Your account has been successfully created. You can now sign in.' 
+                : 'Become part of modern stock trading with secure access.'}
             </p>
           </div>
 
-          {step === 1 ? (
+          {!registrationSuccess ? (
             <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
               <Input
                 label="Full Name"
@@ -163,86 +141,28 @@ export default function RegisterPage() {
                 })}
               />
 
-              <Button type="submit" fullWidth loading={sendingOtp} size="lg">
-                {sendingOtp ? 'Sending OTP...' : 'Continue with OTP →'}
+              <Button type="submit" fullWidth loading={loading} size="lg">
+                {loading ? 'Creating Account...' : 'Create Account'}
               </Button>
             </form>
           ) : (
-            <div className={styles.form}>
-              <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                <Mail size={48} style={{ color: '#6366f1', marginBottom: 16 }} />
-                <p style={{ color: '#8b8b9e', fontSize: 14 }}>
-                  We've sent a 6-digit OTP to <strong>{email}</strong>
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                {[0, 1, 2, 3, 4, 5].map((index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    maxLength={1}
-                    style={{
-                      width: '100%',
-                      height: 56,
-                      textAlign: 'center',
-                      fontSize: 24,
-                      fontWeight: 700,
-                      background: '#0f0f12',
-                      border: '1px solid #1f1f27',
-                      borderRadius: 8,
-                      color: '#f4f4f6',
-                      outline: 'none',
-                    }}
-                    value={otp[index] || ''}
-                    onChange={(e) => {
-                      const newOtp = otp.split('')
-                      newOtp[index] = e.target.value
-                      setOtp(newOtp.join(''))
-                      if (e.target.value && index < 5) {
-                        e.target.nextElementSibling?.focus()
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-
-              <Button 
-                fullWidth 
-                loading={verifyingOtp} 
-                size="lg"
-                onClick={verifyOtpAndRegister}
-                disabled={otp.length !== 6}
-              >
-                {verifyingOtp ? 'Verifying...' : 'Verify & Create Account'}
-              </Button>
-
-              <div style={{ textAlign: 'center', marginTop: 16 }}>
-                {countdown > 0 ? (
-                  <p style={{ color: '#8b8b9e', fontSize: 13 }}>
-                    Resend OTP in <span style={{ color: '#6366f1', fontWeight: 600 }}>{countdown}s</span>
-                  </p>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => sendOtp(email)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#6366f1',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Resend OTP
-                  </button>
-                )}
-              </div>
+            <div className={styles.form} style={{ textAlign: 'center', padding: '40px 0' }}>
+              <CheckCircle2 size={56} style={{ color: '#0f9d58', marginBottom: 16 }} />
+              <h3 style={{ color: '#1a1a1a', fontSize: 20, fontWeight: 800, marginBottom: 8 }}>
+                Account Created!
+              </h3>
+              <p style={{ color: '#5f6368', fontSize: 14, marginBottom: 28, lineHeight: 1.6 }}>
+                Your TradePro account is ready. Sign in to access live markets, screener, and portfolio.
+              </p>
+              <Link to="/login">
+                <Button fullWidth size="lg">
+                  Sign In to Your Account
+                </Button>
+              </Link>
             </div>
           )}
 
-          {step === 1 && (
+          {!registrationSuccess && (
             <>
               <div className={styles.terms}>
                 By creating an account, you agree to our <span className={styles.link}>Terms of Service</span> and <span className={styles.link}>Privacy Policy</span>.

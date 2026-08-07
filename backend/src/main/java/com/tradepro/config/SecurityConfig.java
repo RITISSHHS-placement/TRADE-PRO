@@ -51,8 +51,11 @@ public class SecurityConfig {
     // Only these endpoints are public — H2 console removed from PUBLIC_URLS (security fix)
     private static final String[] PUBLIC_URLS = {
         "/api/auth/**",
+        "/auth/**",
         "/api/health",
+        "/health",
         "/api/market/**",
+        "/market/**",
         "/actuator/health",
         "/actuator/info"
     };

@@ -1,118 +1,175 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { Eye, EyeOff, Mail, ShieldCheck, Lock } from 'lucide-react'
-import { useAuth } from '../hooks'
+import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import { useDispatch } from 'react-redux'
+import { loginUser } from '../store/slices/authSlice'
 import { authAPI } from '../services/api'
 import { Button, Input } from '../components/ui'
 import { FadeIn } from '../components/animations'
 import styles from './AuthPage.module.css'
 
 const quickFeatures = [
-  { title: 'Instant access', detail: 'Log in and see your market dashboard in under 2 seconds.' },
-  { title: 'Secure sessions', detail: 'OTP verification, JWT rotation and device-aware authentication.' },
-  { title: 'Smart alerts', detail: 'Receive premium order flow and entry signal notifications.' },
+  { title: 'Instant access',   detail: 'Log in and see your market dashboard in under 2 seconds.' },
+  { title: 'Secure sessions',  detail: 'OTP verification, JWT rotation and device-aware authentication.' },
+  { title: 'Smart alerts',     detail: 'Receive premium order flow and entry signal notifications.' },
 ]
 
 export default function LoginPage() {
-  const { login, loading } = useAuth()
-  const [showPw, setShowPw] = useState(false)
-  const [step, setStep] = useState(1) // 1: form, 2: otp
-  const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState('')
-  const [otpSent, setOtpSent] = useState(false)
-  const [sendingOtp, setSendingOtp] = useState(false)
-  const [verifyingOtp, setVerifyingOtp] = useState(false)
-  const [countdown, setCountdown] = useState(0)
-  const [loginData, setLoginData] = useState({})
+  const dispatch   = useDispatch()
+  const navigate   = useNavigate()
+  const [showPw, setShowPw]               = useState(false)
+  const [step, setStep]                   = useState(1) // 1 = credentials, 2 = OTP
+  const [email, setEmail]                 = useState('')
+  const [otp, setOtp]                     = useState('')
+  const [sendingOtp, setSendingOtp]       = useState(false)
+  const [verifyingOtp, setVerifyingOtp]   = useState(false)
+  const [countdown, setCountdown]         = useState(0)
+  const [loginData, setLoginData]         = useState({})
+  const [credError, setCredError]         = useState('')
+  const [otpError, setOtpError]           = useState('')
+
   const { register, handleSubmit, formState: { errors } } = useForm()
 
-  const sendOtp = async (emailAddress) => {
+  // ── Start countdown for OTP resend ──
+  const startCountdown = () => {
+    setCountdown(60)
+    const t = setInterval(() => {
+      setCountdown(p => { if (p <= 1) { clearInterval(t); return 0 } return p - 1 })
+    }, 1000)
+  }
+
+  // ── Step 1: verify credentials, then send OTP ──
+  const onSubmit = async (data) => {
+    setCredError('')
     setSendingOtp(true)
     try {
-      await authAPI.sendOtp(emailAddress)
-      setEmail(emailAddress)
-      setOtpSent(true)
+      // Verify credentials first
+      const verify = await authAPI.verifyCredentials(data.email, data.password)
+      if (!verify.data?.success) {
+        setCredError('Invalid email or password')
+        return
+      }
+      // Send OTP
+      await authAPI.sendOtp(data.email)
+      setLoginData(data)
+      setEmail(data.email)
       setStep(2)
       startCountdown()
-    } catch (error) {
-      console.error('Failed to send OTP:', error)
+    } catch {
+      setCredError('Invalid email or password')
     } finally {
       setSendingOtp(false)
     }
   }
 
-  const startCountdown = () => {
-    setCountdown(60)
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-  }
-
+  // ── Step 2: verify OTP, then complete login ──
   const verifyOtpAndLogin = async () => {
+    setOtpError('')
+    if (otp.length !== 6) { setOtpError('Enter the 6-digit code'); return }
     setVerifyingOtp(true)
     try {
-      await authAPI.verifyOtp(email, otp)
-      // Proceed with login after OTP verification
-      await login({
-        ...loginData,
-        deviceId: navigator.userAgent.slice(0, 64),
-        deviceName: `${navigator.platform} Browser`,
-        userAgent: navigator.userAgent,
-      })
-    } catch (error) {
-      console.error('OTP verification failed:', error)
+      const res = await authAPI.loginWithOtp(loginData.email, loginData.password, otp)
+      if (res.data?.success && res.data?.data) {
+        const { token, refreshToken: rt, user } = res.data.data
+        // Dispatch loginUser with the pre-built payload — the thunk detects this and returns as-is
+        await dispatch(loginUser({ token, refreshToken: rt, user }))
+        navigate('/dashboard', { replace: true })
+      } else {
+        setOtpError('Invalid or expired OTP. Please try again.')
+      }
+    } catch {
+      setOtpError('Invalid or expired OTP. Please try again.')
     } finally {
       setVerifyingOtp(false)
     }
   }
 
-  const onSubmit = async (data) => {
-    setLoginData(data)
-    await sendOtp(data.email)
+  const resendOtp = async () => {
+    setSendingOtp(true)
+    try {
+      await authAPI.sendOtp(email)
+      startCountdown()
+    } catch {
+      setOtpError('Failed to resend OTP')
+    } finally {
+      setSendingOtp(false)
+    }
+  }
+
+  // ── Handle individual OTP digit inputs ──
+  const handleOtpChange = (e, index) => {
+    const val = e.target.value.replace(/\D/g, '').slice(-1)
+    const chars = otp.split('')
+    chars[index] = val
+    setOtp(chars.join(''))
+    if (val && index < 5) {
+      document.getElementById(`otp-${index + 1}`)?.focus()
+    }
+  }
+
+  const handleOtpKeyDown = (e, index) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      document.getElementById(`otp-${index - 1}`)?.focus()
+    }
   }
 
   return (
-    <FadeIn
-      className={styles.page}
-      y={24}
-      duration={0.35}
-      ease="power2.out"
-    >
+    <FadeIn className={styles.page} y={24} duration={0.35} ease="power2.out">
       <div className={styles.bg} />
       <div className={styles.overlay} />
       <div className={styles.container}>
+
+        {/* ── Left hero panel ── */}
         <section className={styles.heroCard}>
-          <div className={styles.brand}>Trade<span>Pro</span></div>
+          <div className={styles.brand}>
+            <span className={styles.brandIcon}>T</span>
+            Trade<span>Pro</span>
+          </div>
           <h1 className={styles.heroTitle}>Secure access to your premium trading desk.</h1>
-          <p className={styles.heroText}>Sign in to your account and power up your stock market insights with refined execution, risk controls, and clean visual flow.</p>
+          <p className={styles.heroText}>
+            Sign in and access live NSE/BSE data, stock screener, portfolio analytics,
+            and mutual funds — all in one place.
+          </p>
           <div className={styles.quickList}>
-            {quickFeatures.map((item) => (
+            {quickFeatures.map(item => (
               <div key={item.title} className={styles.quickItem}>
                 <strong>{item.title}</strong>
                 <span>{item.detail}</span>
               </div>
             ))}
           </div>
+          <div className={styles.heroStats}>
+            <div className={styles.heroStat}>
+              <span className={styles.heroStatVal}>₹0</span>
+              <span className={styles.heroStatLabel}>Delivery</span>
+            </div>
+            <div className={styles.heroStat}>
+              <span className={styles.heroStatVal}>4.1L+</span>
+              <span className={styles.heroStatLabel}>Users</span>
+            </div>
+            <div className={styles.heroStat}>
+              <span className={styles.heroStatVal}>50+</span>
+              <span className={styles.heroStatLabel}>Indices</span>
+            </div>
+          </div>
         </section>
 
+        {/* ── Right auth panel ── */}
         <section className={styles.authCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>
               {step === 1 ? 'Welcome back' : 'Verify your identity'}
             </div>
             <p className={styles.cardSubtitle}>
-              {step === 1 ? 'Enter your credentials to continue trading.' : 'Enter the OTP sent to your email'}
+              {step === 1
+                ? 'Enter your credentials to continue trading.'
+                : `Enter the OTP sent to ${email}`}
             </p>
           </div>
 
-          {step === 1 ? (
+          {/* ── Step 1: credentials ── */}
+          {step === 1 && (
             <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
               <Input
                 label="Email"
@@ -124,96 +181,94 @@ export default function LoginPage() {
                   pattern: { value: /^\S+@\S+\.\S+$/, message: 'Invalid email' },
                 })}
               />
-
               <Input
                 label="Password"
                 type={showPw ? 'text' : 'password'}
                 placeholder="••••••••"
                 error={errors.password?.message}
                 suffix={
-                  <button type="button" className={styles.eyeButton} onClick={() => setShowPw((prev) => !prev)}>
-                    {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                  <button type="button" className={styles.eyeButton}
+                    onClick={() => setShowPw(p => !p)}>
+                    {showPw ? <EyeOff size={16}/> : <Eye size={16}/>}
                   </button>
                 }
                 {...register('password', { required: 'Password is required' })}
               />
-
+              {credError && (
+                <div style={{ fontSize: 12, color: '#ea4335', padding: '4px 0' }}>{credError}</div>
+              )}
               <Button type="submit" fullWidth loading={sendingOtp} size="lg">
-                {sendingOtp ? 'Sending OTP...' : 'Continue with OTP →'}
+                {sendingOtp ? 'Sending OTP…' : 'Continue with OTP →'}
               </Button>
             </form>
-          ) : (
+          )}
+
+          {/* ── Step 2: OTP ── */}
+          {step === 2 && (
             <div className={styles.form}>
-              <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                <ShieldCheck size={48} style={{ color: '#6366f1', marginBottom: 16 }} />
-                <p style={{ color: '#8b8b9e', fontSize: 14 }}>
-                  We've sent a 6-digit OTP to <strong>{email}</strong>
+              <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                <div style={{
+                  width: 52, height: 52, borderRadius: '50%',
+                  background: '#e8f0fe', display: 'grid',
+                  placeItems: 'center', margin: '0 auto 12px',
+                }}>
+                  <ShieldCheck size={24} color="#1a73e8" />
+                </div>
+                <p style={{ color: '#5f6368', fontSize: 13, margin: 0 }}>
+                  We sent a 6-digit code to <strong style={{ color: '#1a1a1a' }}>{email}</strong>
                 </p>
               </div>
 
-              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                {[0, 1, 2, 3, 4, 5].map((index) => (
+              {/* OTP boxes */}
+              <div className={styles.otpRow}>
+                {[0,1,2,3,4,5].map(i => (
                   <input
-                    key={index}
+                    key={i}
+                    id={`otp-${i}`}
                     type="text"
+                    inputMode="numeric"
                     maxLength={1}
-                    style={{
-                      width: '100%',
-                      height: 56,
-                      textAlign: 'center',
-                      fontSize: 24,
-                      fontWeight: 700,
-                      background: '#0f0f12',
-                      border: '1px solid #1f1f27',
-                      borderRadius: 8,
-                      color: '#f4f4f6',
-                      outline: 'none',
-                    }}
-                    value={otp[index] || ''}
-                    onChange={(e) => {
-                      const newOtp = otp.split('')
-                      newOtp[index] = e.target.value
-                      setOtp(newOtp.join(''))
-                      if (e.target.value && index < 5) {
-                        e.target.nextElementSibling?.focus()
-                      }
-                    }}
+                    value={otp[i] || ''}
+                    onChange={e => handleOtpChange(e, i)}
+                    onKeyDown={e => handleOtpKeyDown(e, i)}
+                    className={styles.otpBox}
                   />
                 ))}
               </div>
 
-              <Button 
-                fullWidth 
-                loading={verifyingOtp} 
-                size="lg"
+              {otpError && (
+                <div className={styles.errorMsg}>{otpError}</div>
+              )}
+
+              <Button
+                fullWidth loading={verifyingOtp} size="lg"
                 onClick={verifyOtpAndLogin}
                 disabled={otp.length !== 6}
               >
-                {verifyingOtp ? 'Verifying...' : 'Verify & Sign In'}
+                {verifyingOtp ? 'Verifying…' : 'Verify & Sign In'}
               </Button>
 
-              <div style={{ textAlign: 'center', marginTop: 16 }}>
+              <div style={{ textAlign: 'center', marginTop: 14 }}>
                 {countdown > 0 ? (
-                  <p style={{ color: '#8b8b9e', fontSize: 13 }}>
-                    Resend OTP in <span style={{ color: '#6366f1', fontWeight: 600 }}>{countdown}s</span>
+                  <p style={{ color: '#5f6368', fontSize: 13 }}>
+                    Resend in <span style={{ color: '#1a73e8', fontWeight: 600 }}>{countdown}s</span>
                   </p>
                 ) : (
                   <button
-                    type="button"
-                    onClick={() => sendOtp(email)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#6366f1',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Resend OTP
+                    onClick={resendOtp} disabled={sendingOtp}
+                    style={{ background: 'none', border: 'none', color: '#1a73e8',
+                      fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    {sendingOtp ? 'Resending…' : 'Resend OTP'}
                   </button>
                 )}
               </div>
+
+              <button
+                onClick={() => { setStep(1); setOtp(''); setOtpError('') }}
+                style={{ display: 'block', margin: '12px auto 0', background: 'none',
+                  border: 'none', color: '#9aa0a6', fontSize: 12, cursor: 'pointer' }}>
+                ← Back to credentials
+              </button>
             </div>
           )}
 

@@ -16,7 +16,7 @@ export default defineConfig({
       '/backend': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/backend/, '/api'),
+        rewrite: (path) => path.replace(/^\/backend/, ''),
       },
     },
   },
@@ -24,21 +24,17 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    chunkSizeWarningLimit: 700,
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
-            return 'react'
-          }
-          if (id.includes('node_modules/react-router-dom/')) {
-            return 'router'
-          }
-          if (id.includes('node_modules/@reduxjs/toolkit/') || id.includes('node_modules/react-redux/')) {
-            return 'redux'
-          }
-          if (id.includes('node_modules/recharts/')) {
-            return 'charts'
-          }
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) return 'react'
+          if (id.includes('node_modules/react-router-dom/')) return 'router'
+          if (id.includes('node_modules/@reduxjs/toolkit/') || id.includes('node_modules/react-redux/')) return 'redux'
+          if (id.includes('node_modules/recharts/')) return 'charts'
+          if (id.includes('node_modules/gsap/')) return 'gsap'
+          if (id.includes('node_modules/lucide-react/')) return 'icons'
+          if (id.includes('node_modules/axios/') || id.includes('node_modules/react-hot-toast/')) return 'utils'
         },
       },
     },

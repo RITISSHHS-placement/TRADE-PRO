@@ -93,6 +93,8 @@ export const authAPI = {
   verifyTotp: (token) => api.post('/auth/verify-totp', { token }),
   sendOtp: (email) => api.post('/auth/send-otp', { email }),
   verifyOtp: (email, otp) => api.post('/auth/verify-otp', { email, otp }),
+  verifyCredentials: (email, password) => api.post('/auth/verify-credentials', { email, password }, { validateStatus: (status) => status < 500 }),
+  loginWithOtp: (email, password, otp) => api.post('/auth/login-with-otp', { email, password, otp }),
 }
 
 // ---- Trade API ----

@@ -99,8 +99,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
         // Log with full stack trace server-side only
-        log.error("Unhandled exception", ex);
+        log.error("Unhandled exception: {}", ex.getMessage(), ex);
+        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(new ApiResponse<>(false, "Internal server error", null));
+            .body(new ApiResponse<>(false, "Internal server error: " + ex.getMessage(), null));
     }
 }

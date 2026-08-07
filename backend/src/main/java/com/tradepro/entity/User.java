@@ -35,6 +35,7 @@ public class User implements UserDetails {
     private KycStatus kycStatus = KycStatus.PENDING;
     
     private Boolean faceVerified = false;
+    private Boolean emailVerified = false;
     
     // Security Features
     private String totpSecret;
@@ -95,6 +96,9 @@ public class User implements UserDetails {
     
     public Boolean getFaceVerified() { return faceVerified; }
     public void setFaceVerified(Boolean faceVerified) { this.faceVerified = faceVerified; }
+    
+    public Boolean getEmailVerified() { return emailVerified; }
+    public void setEmailVerified(Boolean emailVerified) { this.emailVerified = emailVerified; }
     
     public String getTotpSecret() { return totpSecret; }
     public void setTotpSecret(String totpSecret) { this.totpSecret = totpSecret; }

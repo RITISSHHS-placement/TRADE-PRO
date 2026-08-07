@@ -36,3 +36,6 @@ desktop.ini
 secrets/
 .vercel
 .env*
+backend/setenv.sh
+backend/.env.local
+backend/data/

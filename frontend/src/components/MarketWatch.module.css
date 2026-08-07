@@ -1,0 +1,52 @@
+/* MarketWatch component */
+.card { overflow: hidden; }
+
+.header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+}
+.title { font-size: 14px; font-weight: 700; color: var(--text-1); margin-bottom: 4px; }
+.meta  { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 11px; color: var(--gray-3); }
+.liveDot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green); flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(15,157,88,.2);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+.liveText { font-weight: 600; color: var(--green); }
+.time { color: var(--gray-4); }
+
+/* Rows */
+.list { display: flex; flex-direction: column; }
+.row {
+  display: grid; grid-template-columns: 1.2fr 0.9fr 40px;
+  align-items: center; gap: 8px;
+  padding: 11px 20px; border-bottom: 1px solid var(--border);
+  transition: background .12s; cursor: pointer;
+}
+.row:hover { background: var(--bg-2); }
+.row:last-child { border-bottom: none; }
+
+.info { overflow: hidden; }
+.name { font-size: 12px; font-weight: 700; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sub  { font-size: 10px; color: var(--gray-4); margin-top: 1px; }
+
+.right { text-align: right; }
+.price  { font-size: 13px; font-weight: 700; color: var(--text-1); font-variant-numeric: tabular-nums; }
+.change { font-size: 11px; font-weight: 700; margin-top: 2px; }
+.up   { color: var(--green); }
+.down { color: var(--red); }
+
+/* Mini bar */
+.barWrap {
+  display: flex; align-items: flex-end; justify-content: center;
+  height: 36px;
+}
+.bar {
+  display: block; width: 6px;
+  border-radius: 99px 99px 4px 4px;
+  min-height: 10px; transition: height .3s;
+}
+.barUp   { background: linear-gradient(180deg, rgba(15,157,88,.9), rgba(15,157,88,.2)); }
+.barDown { background: linear-gradient(180deg, rgba(234,67,53,.9), rgba(234,67,53,.2)); }

@@ -23,7 +23,7 @@ import java.time.Duration;
  * 5. No sensitive data logged
  */
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 public class AuthController {
 
     private final AuthService authService;
@@ -44,6 +44,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> register(
             @Valid @RequestBody RegisterRequest request) {
         try {
+            System.out.println("Registration attempt for email: " + request.getEmail());
             AuthResponse response = authService.register(request);
             ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
                 .httpOnly(true).path("/")
@@ -61,6 +62,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CREATED).headers(headers)
                 .body(new ApiResponse<>(true, "User registered successfully", response));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>(false, e.getMessage(), null));
         }
@@ -71,6 +73,66 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request) {
         try {
             AuthResponse response = authService.login(request);
+            ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
+                .httpOnly(true).path("/")
+                .maxAge(Duration.ofMillis(jwtExpirationMs).getSeconds())
+                .sameSite("Lax").build();
+            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
+                .httpOnly(true).path("/")
+                .maxAge(Duration.ofMillis(jwtRefreshExpirationMs).getSeconds())
+                .sameSite("Lax").build();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
+            headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
+            return ResponseEntity.ok().headers(headers)
+                .body(new ApiResponse<>(true, "Login successful", response));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
+
+    @PostMapping("/verify-credentials")
+    public ResponseEntity<ApiResponse<String>> verifyCredentials(
+            @Valid @RequestBody LoginRequest request) {
+        try {
+            boolean isValid = authService.verifyCredentials(request.getEmail(), request.getPassword());
+            if (isValid) {
+                return ResponseEntity.ok(new ApiResponse<>(true, "Credentials verified", "CREDENTIALS_VALID"));
+            }
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>(false, "Invalid email or password", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
+
+    @PostMapping("/login-with-otp")
+    public ResponseEntity<ApiResponse<AuthResponse>> loginWithOtp(
+            @Valid @RequestBody LoginWithOtpRequest request,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+        try {
+            // First verify OTP
+            boolean otpValid = otpService.verifyOtp(request.getEmail(), request.getOtp());
+            if (!otpValid) {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, "Invalid or expired OTP", null));
+            }
+
+            // Then login with credentials
+            LoginRequest loginRequest = new LoginRequest();
+            loginRequest.setEmail(request.getEmail());
+            loginRequest.setPassword(request.getPassword());
+            loginRequest.setDeviceId(httpRequest.getHeader("User-Agent") != null ? httpRequest.getHeader("User-Agent").substring(0, Math.min(64, httpRequest.getHeader("User-Agent").length())) : null);
+            loginRequest.setDeviceName("Web Browser");
+            loginRequest.setUserAgent(httpRequest.getHeader("User-Agent"));
+            loginRequest.setIpAddress(httpRequest.getRemoteAddr());
+            
+            AuthResponse response = authService.login(loginRequest);
+            
             ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
                 .httpOnly(true).path("/")
                 .maxAge(Duration.ofMillis(jwtExpirationMs).getSeconds())
@@ -203,28 +265,28 @@ public class AuthController {
     @PostMapping("/send-otp")
     public ResponseEntity<ApiResponse<String>> sendOtp(@Valid @RequestBody OtpRequest request) {
         try {
+            // Check rate limiting
+            if (!otpService.canSendOtp(request.getEmail())) {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, "Please wait before requesting another OTP", null));
+            }
+            
             String otp = otpService.generateOtp();
             otpService.sendOtpEmail(request.getEmail(), otp);
             otpService.storeOtp(request.getEmail(), otp);
-            return ResponseEntity.ok(new ApiResponse<>(true, "OTP sent to email", "OTP_SENT"));
+            return ResponseEntity.ok(new ApiResponse<>(true, "OTP sent successfully", "OTP_SENT"));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(new ApiResponse<>(false, "Failed to send OTP: " + e.getMessage(), null));
+                .body(new ApiResponse<>(false, "Failed to send OTP", null));
         }
     }
 
     @PostMapping("/verify-otp")
     public ResponseEntity<ApiResponse<String>> verifyOtp(@Valid @RequestBody OtpVerifyRequest request) {
-        try {
-            boolean isValid = otpService.verifyOtp(request.getEmail(), request.getOtp());
-            if (isValid) {
-                return ResponseEntity.ok(new ApiResponse<>(true, "OTP verified successfully", "OTP_VERIFIED"));
-            }
-            return ResponseEntity.badRequest()
-                .body(new ApiResponse<>(false, "Invalid or expired OTP", null));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(new ApiResponse<>(false, "OTP verification failed", null));
+        boolean isValid = otpService.verifyOtp(request.getEmail(), request.getOtp());
+        if (isValid) {
+            return ResponseEntity.ok(new ApiResponse<>(true, "OTP verified successfully", "OTP_VERIFIED"));
         }
+        return ResponseEntity.badRequest().body(new ApiResponse<>(false, "Invalid or expired OTP", null));
     }
 }
