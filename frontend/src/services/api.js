@@ -18,9 +18,9 @@ const BASE_URL = import.meta.env.VITE_API_URL || '/backend'
 // ---- Axios Instance ----
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 60000,  // 60s — Render free tier cold start can take 30-45s
+  timeout: 90000,  // 90s — Render free tier cold start can take 30-60s
   headers: { 'Content-Type': 'application/json' },
-  withCredentials: true, // include HttpOnly auth cookies
+  withCredentials: true,
 })
 
 // Request interceptor — attach Authorization header if token exists in localStorage

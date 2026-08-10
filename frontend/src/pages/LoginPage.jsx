@@ -1,13 +1,43 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import { Eye, EyeOff, ShieldCheck, Wifi, WifiOff, Clock } from 'lucide-react'
 import { useDispatch } from 'react-redux'
 import { loginUser } from '../store/slices/authSlice'
 import { authAPI } from '../services/api'
 import { Button, Input } from '../components/ui'
 import { FadeIn } from '../components/animations'
+import { useServerStatus } from '../hooks/useServerStatus'
 import styles from './AuthPage.module.css'
+
+/* ── Server status banner shown during cold start ── */
+function ServerBanner({ status, wakeElapsed }) {
+  if (status === 'up' || status === 'unknown') return null
+  const isWaking = status === 'waking'
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 10,
+      padding: '10px 14px', borderRadius: 8, marginBottom: 16,
+      background: isWaking ? '#fef3c7' : '#fce8e6',
+      border: `1px solid ${isWaking ? '#fde68a' : '#f5c6c2'}`,
+      fontSize: 12.5, color: isWaking ? '#92400e' : '#ea4335',
+    }}>
+      {isWaking
+        ? <Clock size={14} />
+        : <WifiOff size={14} />}
+      <div>
+        {isWaking
+          ? `Server is starting up… (${wakeElapsed}s) — please wait, this takes up to 60s`
+          : 'Cannot reach server. Check your connection or try again.'}
+      </div>
+      {isWaking && (
+        <div style={{ marginLeft: 'auto', width: 60, height: 4, borderRadius: 2, background: '#e5e7eb', overflow: 'hidden' }}>
+          <div style={{ height: '100%', background: '#d97706', borderRadius: 2, width: `${Math.min(100, (wakeElapsed / 60) * 100)}%`, transition: 'width 1s linear' }} />
+        </div>
+      )}
+    </div>
+  )
+}
 
 const quickFeatures = [
   { title: 'Instant access',   detail: 'Log in and see your market dashboard in under 2 seconds.' },
@@ -18,6 +48,7 @@ const quickFeatures = [
 export default function LoginPage() {
   const dispatch   = useDispatch()
   const navigate   = useNavigate()
+  const { status, isWaking, wakeElapsed } = useServerStatus()
   const [showPw, setShowPw]               = useState(false)
   const [step, setStep]                   = useState(1) // 1 = credentials, 2 = OTP
   const [email, setEmail]                 = useState('')
@@ -167,6 +198,9 @@ export default function LoginPage() {
                 : `Enter the OTP sent to ${email}`}
             </p>
           </div>
+
+          {/* Server warm-up banner */}
+          <ServerBanner status={status} wakeElapsed={wakeElapsed} />
 
           {/* ── Step 1: credentials ── */}
           {step === 1 && (
