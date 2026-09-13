@@ -35,7 +35,14 @@ desktop.ini
 *.env
 secrets/
 .vercel
-.env*
+# Block real env files but KEEP .env.example (it's a template, not a secret)
+.env
+.env.local
+.env.production
+.env.development
+.env.development.local
+.env.production.local
+.env.test.local
 backend/setenv.sh
 backend/.env.local
 backend/data/

@@ -115,6 +115,12 @@ export const tradeAPI = {
   getTotalPnl: () => api.get('/trades/pnl'),
 }
 
+// ---- Payment API ----
+export const paymentAPI = {
+  verify: (tradeId, paymentReference) =>
+    api.post('/payments/verify', { tradeId, paymentReference }),
+}
+
 // ---- User API ----
 export const userAPI = {
   getProfile: () => api.get('/users/profile'),
