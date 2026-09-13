@@ -7,37 +7,37 @@ const POPULAR_SCREENS = [
   {
     emoji: '✳️', title: 'Wealth Compounders',
     filters: ['1Y Historical Revenue Growth', '5Y Historical EPS Growth', 'ROE > 15%'],
-    users: '103k', color: '#7c3aed',
+    users: '103k', color: '#8b5cf6',
     query: '?preset=wealth-compounders&roeMin=15&g3Min=12',
   },
   {
     emoji: '📊', title: 'Analyst-Backed Bets',
     filters: ['PE Ratio < 30', '3Y Growth > 15%', '+5 more'],
-    users: '78k', color: '#2563eb',
+    users: '78k', color: '#6366f1',
     query: '?preset=analyst-bets&peMax=30&g3Min=15',
   },
   {
     emoji: '⚙️', title: 'Penny Picks',
     filters: ['Price < ₹500', 'Smallcap', 'PE < 20'],
-    users: '64k', color: '#ea580c',
+    users: '64k', color: '#e87722',
     query: '?preset=penny-picks&pMax=500&cap=Smallcap&peMax=20',
   },
   {
     emoji: '📉', title: 'Near 52W Lows',
     filters: ['% away from 52w low', 'PE < 25', 'RSI < 45'],
-    users: '32k', color: '#0d9488',
+    users: '32k', color: '#14b8a6',
     query: '?preset=near-52low&peMax=25&rsiMax=45',
   },
   {
     emoji: '⚡', title: 'Momentum Monsters',
     filters: ['RSI > 60', '3Y Growth > 20%', 'Beta > 1'],
-    users: '40k', color: '#d97706',
+    users: '40k', color: '#f59e0b',
     query: '?preset=momentum&rsiMin=60&g3Min=20&betaMin=1',
   },
   {
     emoji: '🔲', title: 'Nearing Breakout',
     filters: ['RSI 40–60', 'Volume > 1M', 'Price near 52W High'],
-    users: '28k', color: '#2563eb', pro: true,
+    users: '28k', color: '#6366f1', pro: true,
     query: '?preset=breakout&rsiMin=40&rsiMax=60',
   },
 ]
@@ -56,29 +56,37 @@ const FNO_SCREENS = [
   { emoji: '📈', title: 'Options: Long Build Up',    filters: ['RSI > 60', 'High Volume'],        users: '22k', pro: true, query: '?preset=options-long&rsiMin=60' },
 ]
 
+/* ── Theme tokens ── */
+const T = {
+  navy: '#1a1a2e', navyCard: '#ffffff',
+  orange: '#1a73e8', text: '#1a1a2e', textSub: '#5f6368', textMute: '#9aa0a6',
+  border: '#e8eaed', borderMd: '#dadce0',
+  green: '#22c55e', blue: '#1a73e8', blueDim: 'rgba(26,115,232,0.08)',
+}
+
 function ScreenCard({ emoji, title, filters, users, color, pro, query }) {
   const navigate = useNavigate()
   const handleClick = () => navigate('/dashboard/screener' + (query || ''))
   return (
     <div style={{
-      background: '#fff',
-      border: '1px solid #e5e7eb',
+      background: T.navyCard,
+      border: `1px solid ${T.border}`,
       borderRadius: 12,
       padding: '18px 20px',
       cursor: 'pointer',
-      transition: 'box-shadow 0.15s, transform 0.15s',
+      transition: 'all 0.15s',
     }}
       onClick={handleClick}
-      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.10)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-      onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)' }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderMd; e.currentTarget.style.transform = 'translateY(-2px)' }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = 'translateY(0)' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <span style={{ fontSize: 22 }}>{emoji}</span>
-        <span style={{ fontWeight: 700, fontSize: 14, color: '#111827', flex: 1 }}>{title}</span>
+        <span style={{ fontWeight: 700, fontSize: 14, color: T.text, flex: 1 }}>{title}</span>
         {pro && (
           <span style={{
             fontSize: 10, fontWeight: 700, padding: '2px 7px',
-            background: '#fef3c7', color: '#d97706',
+            background: 'rgba(245,158,11,0.12)', color: '#f59e0b',
             borderRadius: 4, display: 'flex', alignItems: 'center', gap: 3,
           }}>
             <Lock size={9} /> Pro
@@ -89,12 +97,12 @@ function ScreenCard({ emoji, title, filters, users, color, pro, query }) {
         {filters.map((f, i) => (
           <span key={i} style={{
             fontSize: 11, padding: '3px 8px',
-            background: '#f3f4f6', color: '#6b7280',
+            background: 'rgba(255,255,255,0.06)', color: T.textSub,
             borderRadius: 20, fontWeight: 500,
           }}>{f}</span>
         ))}
       </div>
-      <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 500 }}>
+      <div style={{ fontSize: 11, color: T.textMute, fontWeight: 500 }}>
         👥 ~{users} users
       </div>
     </div>
@@ -106,7 +114,7 @@ function ScreenSection({ title, screens, showAll, onToggle }) {
   return (
     <div style={{ marginBottom: 40 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h3 style={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>{title}</h3>
+        <h3 style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{title}</h3>
       </div>
       <div style={{
         display: 'grid',
@@ -114,14 +122,15 @@ function ScreenSection({ title, screens, showAll, onToggle }) {
         gap: 16, marginBottom: 16,
       }}>
         {visible.map((s, i) => <ScreenCard key={i} {...s} />)}
-      </div>      {screens.length > 3 && (
+      </div>
+      {screens.length > 3 && (
         <button
           onClick={onToggle}
           style={{
             display: 'flex', alignItems: 'center', gap: 5,
             padding: '8px 18px', borderRadius: 8,
-            background: '#f3f4f6', border: '1px solid #e5e7eb',
-            color: '#374151', fontSize: 13, fontWeight: 600,
+            background: 'rgba(255,255,255,0.05)', border: `1px solid ${T.border}`,
+            color: T.textSub, fontSize: 13, fontWeight: 600,
             cursor: 'pointer',
           }}
         >
@@ -142,11 +151,11 @@ export default function ScreenerLandingPage() {
   const pills = ['IN Stocks', 'Mutual Funds', 'US Stocks']
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', fontFamily: 'inherit' }}>
+    <div style={{ minHeight: '100vh', background: T.navy, fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
 
       {/* ── Hero ── */}
       <section style={{
-        background: '#0f1624',
+        background: T.navy,
         padding: '56px 24px 48px',
         textAlign: 'center',
       }}>
@@ -161,9 +170,9 @@ export default function ScreenerLandingPage() {
                   padding: '6px 18px',
                   borderRadius: 20,
                   border: '1px solid',
-                  borderColor: activePill === p ? '#f59e0b' : 'rgba(255,255,255,0.2)',
-                  background: activePill === p ? 'rgba(245,158,11,0.15)' : 'transparent',
-                  color: activePill === p ? '#f59e0b' : 'rgba(255,255,255,0.6)',
+                  borderColor: activePill === p ? T.orange : 'rgba(255,255,255,0.15)',
+                  background: activePill === p ? 'rgba(232,119,34,0.12)' : 'transparent',
+                  color: activePill === p ? T.orange : 'rgba(255,255,255,0.5)',
                   fontSize: 13, fontWeight: 600,
                   cursor: 'pointer',
                   transition: 'all 0.15s',
@@ -185,10 +194,10 @@ export default function ScreenerLandingPage() {
             letterSpacing: '-0.5px',
           }}>
             Find the right pick with{' '}
-            <span style={{ color: '#f59e0b' }}>IN Stock Screener</span>
+            <span style={{ color: T.orange }}>IN Stock Screener</span>
           </h1>
-          <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.55)', marginBottom: 32, lineHeight: 1.7 }}>
-            All the tools you need to make wise &amp; effective investment decisions
+          <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', marginBottom: 32, lineHeight: 1.7 }}>
+            All the tools you need to make wise & effective investment decisions
           </p>
 
           {/* CTA */}
@@ -197,17 +206,17 @@ export default function ScreenerLandingPage() {
             style={{
               padding: '12px 32px',
               borderRadius: 25,
-              background: '#fff',
+              background: T.orange,
               border: 'none',
-              color: '#111827',
+              color: '#fff',
               fontSize: 14, fontWeight: 700,
               cursor: 'pointer',
               marginBottom: 24,
               fontFamily: 'inherit',
-              transition: 'opacity 0.15s',
+              transition: 'all 0.15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.opacity = '0.9' }}
-            onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#f28c28' }}
+            onMouseLeave={e => { e.currentTarget.style.background = T.orange }}
           >
             Start Screening
           </button>
@@ -215,10 +224,10 @@ export default function ScreenerLandingPage() {
           {/* Social proof */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 40 }}>
             <div style={{ display: 'flex' }}>
-              {['#e84040','#2563eb','#16a34a','#d97706'].map((c, i) => (
+              {['#ef4444','#6366f1','#22c55e','#f59e0b'].map((c, i) => (
                 <div key={i} style={{
                   width: 28, height: 28, borderRadius: '50%',
-                  background: c, border: '2px solid #0f1624',
+                  background: c, border: `2px solid ${T.navy}`,
                   marginLeft: i > 0 ? -8 : 0,
                   display: 'grid', placeItems: 'center',
                   fontSize: 11, fontWeight: 700, color: '#fff',
@@ -227,19 +236,20 @@ export default function ScreenerLandingPage() {
                 </div>
               ))}
             </div>
-            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>
+            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}>
               Used by <strong style={{ color: '#fff' }}>700K+</strong> smart investors
             </span>
           </div>
 
           {/* Feature card */}
           <div style={{
-            background: '#fff',
+            background: T.navyCard,
             borderRadius: 14,
             padding: '20px 24px',
             display: 'grid',
             gridTemplateColumns: 'repeat(3,1fr)',
             gap: 0,
+            border: `1px solid ${T.border}`,
           }}>
             {[
               { label: 'Pre built Screens', icon: '📋' },
@@ -249,12 +259,12 @@ export default function ScreenerLandingPage() {
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '12px 16px',
-                borderRight: i < 2 ? '1px solid #e5e7eb' : 'none',
+                borderRight: i < 2 ? `1px solid ${T.border}` : 'none',
                 cursor: 'pointer',
               }}>
                 <span style={{ fontSize: 20 }}>{f.icon}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{f.label}</span>
-                <ArrowRight size={13} style={{ marginLeft: 'auto', color: '#9ca3af' }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{f.label}</span>
+                <ArrowRight size={13} style={{ marginLeft: 'auto', color: T.textMute }} />
               </div>
             ))}
           </div>
@@ -267,14 +277,14 @@ export default function ScreenerLandingPage() {
         {/* Create banner */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          background: '#eff6ff', border: '1px solid #bfdbfe',
+          background: 'rgba(99,102,241,0.08)', border: `1px solid rgba(99,102,241,0.2)`,
           borderRadius: 12, padding: '16px 24px', marginBottom: 40,
         }}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: '#1e40af', marginBottom: 4 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: T.text, marginBottom: 4 }}>
               Create your own screens with different filters
             </div>
-            <div style={{ fontSize: 13, color: '#3b82f6' }}>
+            <div style={{ fontSize: 13, color: T.blue }}>
               Combine 200+ filters to build your perfect screen
             </div>
           </div>
@@ -283,13 +293,13 @@ export default function ScreenerLandingPage() {
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
               padding: '10px 20px', borderRadius: 8,
-              background: '#2563eb', border: 'none',
+              background: T.blue, border: 'none',
               color: '#fff', fontSize: 13, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
-              transition: 'background 0.15s',
+              transition: 'all 0.15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#1d4ed8' }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#2563eb' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#818cf8' }}
+            onMouseLeave={e => { e.currentTarget.style.background = T.blue }}
           >
             <Plus size={14} /> Create New Screen
           </button>
@@ -297,7 +307,7 @@ export default function ScreenerLandingPage() {
 
         {/* Popular Screens */}
         <div style={{ marginBottom: 40 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: '#111827', marginBottom: 16 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 16 }}>
             🔥 Popular Screens
           </h3>
           <div style={{
@@ -327,8 +337,8 @@ export default function ScreenerLandingPage() {
 
         {/* F&O Screens */}
         <div style={{ marginBottom: 40 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: '#111827', marginBottom: 16 }}>
-            📈 Futures &amp; Options Screens
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 16 }}>
+            📈 Futures & Options Screens
           </h3>
           <div style={{
             display: 'grid',

@@ -32,9 +32,12 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ALLOWED_ORIGINS
-        value: https://trade-pro-t7l6.vercel.app,https://*.vercel.app,http://localhost:3000
+        value: https://trade-pro-t7l6.vercel.app,https://*.vercel.app,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173
       - key: TOTP_ISSUER
         value: TradePro
+      # Resend transactional email (free: 100 emails/day)
+      - key: RESEND_FROM_EMAIL
+        value: noreply@tradepro.in
     healthCheckPath: /api/health
 
 databases:

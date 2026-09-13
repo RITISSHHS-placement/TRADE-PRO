@@ -1,6 +1,8 @@
 package com.tradepro.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -27,7 +29,7 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String name;
     
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     private String phone;
     
     // KYC and Verification
@@ -65,10 +67,12 @@ public class User implements UserDetails {
     
     // Device Binding
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<BoundDevice> boundDevices = new HashSet<>();
     
     // Active Sessions
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<UserSession> activeSessions = new HashSet<>();
     
     // Default constructor
@@ -81,6 +85,7 @@ public class User implements UserDetails {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     
+    @JsonIgnore
     @Override
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
@@ -100,6 +105,7 @@ public class User implements UserDetails {
     public Boolean getEmailVerified() { return emailVerified; }
     public void setEmailVerified(Boolean emailVerified) { this.emailVerified = emailVerified; }
     
+    @JsonIgnore
     public String getTotpSecret() { return totpSecret; }
     public void setTotpSecret(String totpSecret) { this.totpSecret = totpSecret; }
     
@@ -151,31 +157,37 @@ public class User implements UserDetails {
     }
     
     // UserDetails implementation
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
     }
     
+    @JsonIgnore
     @Override
     public String getUsername() {
         return email;
     }
     
+    @JsonIgnore
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
     
+    @JsonIgnore
     @Override
     public boolean isAccountNonLocked() {
         return !killSwitchActive;
     }
     
+    @JsonIgnore
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
     
+    @JsonIgnore
     @Override
     public boolean isEnabled() {
         return kycStatus == KycStatus.VERIFIED || kycStatus == KycStatus.PENDING;

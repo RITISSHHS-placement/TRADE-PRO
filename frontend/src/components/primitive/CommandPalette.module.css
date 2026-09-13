@@ -1,0 +1,87 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 18, 22, .55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4rem 1rem 2rem;
+  z-index: 3000;
+}
+.modal {
+  width: 100%;
+  max-width: 600px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl, 12px);
+  box-shadow: 0 20px 50px rgba(0,0,0,.18);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.searchWrap {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .7rem 1rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+.input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.input::placeholder { color: #9ca3af; }
+.kbd {
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  background: var(--surface-3);
+  border-radius: 4px;
+  padding: .1rem .35rem;
+}
+.results { max-height: 340px; overflow-y: auto; }
+.group { padding: .5rem 0; }
+.groupTitle {
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-tertiary);
+  padding: .35rem 1rem .3rem 1rem;
+}
+.result {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  width: 100%;
+  text-align: left;
+  padding: .55rem 1rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: .86rem;
+  cursor: pointer;
+}
+.result:hover { background: var(--surface-2); }
+.resultIcon { width: 20px; display: grid; place-items: center; }
+.resultMain { display: flex; flex-direction: column; }
+.resultLabel { font-weight: 600; color: var(--text-primary); }
+.resultSub  { font-size: .74rem; color: var(--text-secondary); }
+.empty { padding: 1.5rem; text-align: center; color: var(--text-secondary); font-size: .86rem; }
+.footer {
+  font-size: .72rem;
+  color: var(--text-tertiary);
+  padding: .55rem 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .3rem;
+}

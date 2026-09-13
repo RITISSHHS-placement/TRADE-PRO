@@ -6,7 +6,7 @@
   min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
   padding: 40px 24px;
-  background: #f8f9fa;
+  background: #ffffff;
   position: relative; overflow: hidden;
 }
 .page::before {

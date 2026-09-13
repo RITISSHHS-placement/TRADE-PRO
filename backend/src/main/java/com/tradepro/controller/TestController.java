@@ -12,9 +12,5 @@ public class TestController {
     public String test() {
         return "🚀 TradePro Backend is running successfully!";
     }
-    
-    @GetMapping("/health")
-    public String health() {
-        return "✅ Backend v3 — NSE MarketDataController active!";
-    }
+    // /health moved to HealthController for proper warmup support
 }

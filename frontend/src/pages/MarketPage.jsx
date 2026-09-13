@@ -6,17 +6,18 @@ import {
   Filter, ChevronDown, ChevronUp, ArrowUpRight, ArrowDownRight,
   Bookmark, BookmarkCheck, Clock, Layers, X, BarChart2,
 } from 'lucide-react'
+import CompanyLogo from '../components/CompanyLogo'
 import styles from './MarketPage.module.css'
 
-/* ── COLOR TOKENS ─────────────────────────────────────────── */
+/* ── COLOR TOKENS — CRYPTO EXCHANGE LIGHT THEME ──────────── */
 const T = {
-  white:'#ffffff', bg:'#ffffff', bgHover:'#f8f9fa', surface:'#ffffff',
-  border:'#e0e0e0', border2:'#f0f0f0',
-  text:'#1a1a1a', textSub:'#5f6368', textMute:'#9aa0a6',
-  green:'#0f9d58', greenBg:'#e8f0fe', greenDark:'#0f9d58',
-  red:'#ea4335', redBg:'#fce8e6', redDark:'#ea4335',
-  blue:'#1a73e8', blueBg:'#e8f0fe', navy:'#1a1a1a',
-  gold:'#d97706', goldBg:'#fef3c7',
+  white:'#ffffff', bg:'var(--surface-page)', bgHover:'var(--surface-hover)', surface:'var(--surface-1)',
+  border:'var(--border)', border2:'var(--border-strong)',
+  text:'var(--text-primary)', textSub:'var(--text-secondary)', textMute:'var(--text-tertiary)',
+  green:'var(--green)', greenBg:'var(--green-dim)', greenDark:'var(--green-dark)',
+  red:'var(--red)', redBg:'var(--red-dim)', redDark:'var(--red-dark)',
+  blue:'var(--blue)', blueBg:'var(--blue-dim)', navy:'var(--surface-page)',
+  gold:'var(--amber)', goldBg:'var(--amber-dim)', orange:'var(--blue)', input:'var(--surface-page)',
 }
 
 /* ── HELPERS ──────────────────────────────────────────────── */
@@ -118,7 +119,7 @@ const NEWS = [
   {id:15,cat:'Commodities',title:"Crude oil slides 2% on surprise US inventory build and OPEC+ supply hike",source:'Reuters',time:'3h ago',sentiment:'negative'},
 ]
 const NEWS_CATS = ['All','Markets','Economy','Results','Banking','US Markets','Commodities','Regulatory']
-const SENTIMENT_DOT = { positive:'#1db954', negative:'#e53935', neutral:'#f59e0b' }
+const SENTIMENT_DOT = { positive:'var(--green, #087f5b)', negative:'var(--red, #c93636)', neutral:'var(--amber, #b7791f)' }
 
 /* ── SMALL UTILITY COMPONENTS ────────────────────────────── */
 const Badge = ({ children, color=T.blue, bg=T.blueBg, style={} }) => (
@@ -320,6 +321,7 @@ function MarketsTab({ indices, stocks, gainers, losers }) {
                   background:isSel?T.blueBg:T.white,borderBottom:`1px solid ${T.border2}`,
                   transition:'background .1s',
                 }}>
+                  <CompanyLogo symbol={item.symbol} name={label} size={32} borderRadius={8} style={{marginRight:10}} />
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:13,fontWeight:700,color:T.text,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{label}</div>
                     <div style={{fontSize:11,color:T.textMute}}>{item.isIndex?'Index':'NSE'}</div>
@@ -341,9 +343,12 @@ function MarketsTab({ indices, stocks, gainers, losers }) {
           {selData ? (
             <div style={{background:T.white,borderRadius:12,border:`1px solid ${T.border}`,padding:20}}>
               <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
-                <div>
-                  <div style={{fontSize:11,color:T.textMute,fontWeight:600,letterSpacing:.5,textTransform:'uppercase'}}>{selData.isIndex?'Index':'NSE Equity'}</div>
-                  <div style={{fontSize:22,fontWeight:800,color:T.text,marginTop:2}}>{SYMBOL_LABELS[selData.symbol]||selData.symbol}</div>
+                <div style={{display:'flex',alignItems:'center',gap:12}}>
+                  <CompanyLogo symbol={selData.symbol} name={SYMBOL_LABELS[selData.symbol]||selData.symbol} size={44} borderRadius={10} />
+                  <div>
+                    <div style={{fontSize:11,color:T.textMute,fontWeight:600,letterSpacing:.5,textTransform:'uppercase'}}>{selData.isIndex?'Index':'NSE Equity'}</div>
+                    <div style={{fontSize:22,fontWeight:800,color:T.text,marginTop:2}}>{SYMBOL_LABELS[selData.symbol]||selData.symbol}</div>
+                  </div>
                 </div>
                 <button onClick={()=>setSelected(null)} style={{border:'none',background:T.bg,borderRadius:6,padding:'4px 8px',cursor:'pointer'}}><X size={14} color={T.textMute}/></button>
               </div>
@@ -376,6 +381,7 @@ function MarketsTab({ indices, stocks, gainers, losers }) {
                   const pct=s.changePct??0
                   return (
                     <div key={s.symbol||i} onClick={()=>setSelected(s.symbol)} style={{display:'flex',alignItems:'center',padding:'9px 16px',borderBottom:`1px solid ${T.border2}`,cursor:'pointer'}}>
+                      <CompanyLogo symbol={s.symbol} name={SYMBOL_LABELS[s.symbol]||s.symbol} size={28} borderRadius={6} style={{marginRight:8}} />
                       <div style={{flex:1}}>
                         <div style={{fontSize:13,fontWeight:700,color:T.text}}>{SYMBOL_LABELS[s.symbol]||s.symbol}</div>
                         <div style={{fontSize:11,color:T.textMute}}>{s.price?`₹${fmt(s.price)}`:'—'}</div>
@@ -396,6 +402,7 @@ function MarketsTab({ indices, stocks, gainers, losers }) {
                   const pct=s.changePct??0
                   return (
                     <div key={s.symbol||i} onClick={()=>setSelected(s.symbol)} style={{display:'flex',alignItems:'center',padding:'9px 16px',borderBottom:`1px solid ${T.border2}`,cursor:'pointer'}}>
+                      <CompanyLogo symbol={s.symbol} name={SYMBOL_LABELS[s.symbol]||s.symbol} size={28} borderRadius={6} style={{marginRight:8}} />
                       <div style={{flex:1}}>
                         <div style={{fontSize:13,fontWeight:700,color:T.text}}>{SYMBOL_LABELS[s.symbol]||s.symbol}</div>
                         <div style={{fontSize:11,color:T.textMute}}>{s.price?`₹${fmt(s.price)}`:'—'}</div>
@@ -1175,7 +1182,8 @@ export default function MarketPage({ defaultTab }) {
       <div style={{background:T.white,borderBottom:`1px solid ${T.border}`,padding:'0 24px'}}>
         <div style={{paddingTop:16,paddingBottom:0,display:'flex',alignItems:'flex-start',justifyContent:'space-between',flexWrap:'wrap',gap:8}}>
           <div>
-            <h1 style={{fontSize:22,fontWeight:900,color:T.text,margin:0,letterSpacing:-.3}}>Markets</h1>
+            <div style={{fontSize:10.5,fontWeight:600,color:'var(--text-tertiary)',textTransform:'uppercase',letterSpacing:.08,marginBottom:6}}>Markets / Today</div>
+            <h1 style={{fontSize:'clamp(32px,4vw,44px)',fontWeight:700,color:'var(--text-primary)',margin:0,letterSpacing:-.03,lineHeight:.92}}>Markets</h1>
             <div style={{fontSize:12.5,color:T.textSub,marginTop:2,display:'flex',alignItems:'center',gap:8}}>
               NSE India · Live data
               <span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'2px 8px',borderRadius:20,background:loading?T.goldBg:T.greenBg}}>
@@ -1191,10 +1199,10 @@ export default function MarketPage({ defaultTab }) {
             <button key={t.id} onClick={()=>setActiveTab(t.id)} style={{
               display:'flex',alignItems:'center',gap:6,padding:'10px 18px',
               border:'none',background:'none',cursor:'pointer',
-              fontSize:13,fontWeight:activeTab===t.id?700:500,
-              color:activeTab===t.id?T.blue:T.textSub,
-              borderBottom:activeTab===t.id?`2.5px solid ${T.blue}`:'2.5px solid transparent',
-              whiteSpace:'nowrap',transition:'color .15s',
+              fontSize:13,fontWeight:activeTab===t.id?600:500,
+              color:activeTab===t.id?'var(--text-primary)':T.textSub,
+              borderBottom:activeTab===t.id?`1px solid var(--text-primary)`:'1px solid transparent',
+              whiteSpace:'nowrap',transition:'color 220ms ease,border-color 220ms ease',
             }}>
               {t.icon}{t.label}
             </button>

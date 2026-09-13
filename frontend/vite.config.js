@@ -16,7 +16,11 @@ export default defineConfig({
       '/backend': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/backend/, ''),
+        // Strip /backend and add /api so the path matches backend controller mappings.
+        // e.g. /backend/trades/place  → http://localhost:8080/api/trades/place
+        //      /backend/auth/login    → http://localhost:8080/api/auth/login
+        //      /backend/market/indices → http://localhost:8080/api/market/indices
+        rewrite: (path) => path.replace(/^\/backend/, '/api'),
       },
     },
   },

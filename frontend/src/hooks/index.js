@@ -29,7 +29,7 @@ export function useAuth() {
     navigate('/login')
   }
 
-  return { user, token, loading, error, login, register, logout, isAuthenticated: !!token }
+  return { user, token, loading, error, login, register, logout, isAuthenticated: !!user }
 }
 
 // ---- useTrades ----

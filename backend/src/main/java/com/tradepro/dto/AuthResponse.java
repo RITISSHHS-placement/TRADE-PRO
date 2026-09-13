@@ -1,5 +1,8 @@
 package com.tradepro.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthResponse {
     private String token;
     private String refreshToken;

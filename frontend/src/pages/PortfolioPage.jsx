@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
 import {
@@ -11,16 +11,21 @@ import {
 import { useTrades } from '../hooks'
 import { useMarketData } from '../hooks'
 import { SYMBOL_LABELS } from '../services/marketData'
+import CompanyLogo from '../components/CompanyLogo'
+import { TitleBar, Section } from '../components/primitive'
+import styles from './PortfolioPage.module.css'
 
 const T = {
   bg: '#f8f9fa', white: '#ffffff',
-  border: '#e0e0e0', border2: '#f0f0f0',
-  text: '#1a1a1a', textSub: '#5f6368', textMute: '#9aa0a6',
-  green: '#0f9d58', greenBg: '#e8f5e9', greenDark: '#0a8043',
-  red: '#ea4335', redBg: '#fce8e6',
-  blue: '#1a73e8', blueBg: '#e8f0fe',
-  purple: '#7c3aed', purpleBg: '#ede9fe',
-  amber: '#d97706', amberBg: '#fef3c7',
+  border: '#e8eaed', border2: '#f0f0f0',
+  text: '#1a1a2e', textSub: '#5f6368', textMute: '#9aa0a6',
+  green: '#22c55e', greenBg: 'rgba(34,197,94,0.08)', greenDark: '#16a34a',
+  red: '#ef4444', redBg: 'rgba(239,68,68,0.08)',
+  blue: '#1a73e8', blueBg: 'rgba(26,115,232,0.08)',
+  purple: '#8b5cf6', purpleBg: 'rgba(139,92,246,0.08)',
+  amber: '#f59e0b', amberBg: 'rgba(245,158,11,0.08)',
+  teal: '#0d9488', tealBg: 'rgba(13,148,136,0.08)',
+  orange: '#ea580c', orangeBg: 'rgba(234,88,12,0.08)',
 }
 
 const fmt = n => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -30,23 +35,66 @@ const fmtCr = n => {
   if (n >= 1e5) return `₹${(n / 1e5).toFixed(2)}L`
   return `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
 }
+const fmtUSD = n => `$${(n ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const fmtBTC = n => `${(n ?? 0).toFixed(6)}`
 
-const HOLDINGS = [
-  { sym: 'RELIANCE',   qty: 50,  avg: 2380,  sector: 'Oil & Gas',  ltp: 2450 },
-  { sym: 'TCS',        qty: 20,  avg: 3200,  sector: 'IT',         ltp: 3420 },
-  { sym: 'HDFCBANK',   qty: 100, avg: 1580,  sector: 'Banking',    ltp: 1610 },
-  { sym: 'INFY',       qty: 80,  avg: 1420,  sector: 'IT',         ltp: 1480 },
-  { sym: 'BAJFINANCE', qty: 15,  avg: 6800,  sector: 'Finance',    ltp: 7084 },
-  { sym: 'MARUTI',     qty: 10,  avg: 10200, sector: 'Auto',       ltp: 11248 },
-  { sym: 'WIPRO',      qty: 200, avg: 460,   sector: 'IT',         ltp: 452 },
-  { sym: 'NTPC',       qty: 300, avg: 310,   sector: 'Power',      ltp: 325 },
+const CATEGORIES = [
+  { id: 'stocks', label: '📈 Stocks', color: T.blue, colorBg: T.blueBg },
+  { id: 'mf', label: '📊 Mutual Funds', color: T.purple, colorBg: T.purpleBg },
+  { id: 'crypto', label: '₿ Crypto', color: T.amber, colorBg: T.amberBg },
+  { id: 'gold', label: '🪙 Digital Gold', color: T.orange, colorBg: T.orangeBg },
+  { id: 'us', label: '🇺🇸 US Stocks', color: T.teal, colorBg: T.tealBg },
 ]
-
+const STOCK_HOLDINGS = [
+  { sym: 'RELIANCE', qty: 50, avg: 2380, sector: 'Oil & Gas', ltp: 2450 },
+  { sym: 'TCS', qty: 20, avg: 3200, sector: 'IT', ltp: 3420 },
+  { sym: 'HDFCBANK', qty: 100, avg: 1580, sector: 'Banking', ltp: 1610 },
+  { sym: 'INFY', qty: 80, avg: 1420, sector: 'IT', ltp: 1480 },
+  { sym: 'BAJFINANCE', qty: 15, avg: 6800, sector: 'Finance', ltp: 7084 },
+  { sym: 'MARUTI', qty: 10, avg: 10200, sector: 'Auto', ltp: 11248 },
+  { sym: 'WIPRO', qty: 200, avg: 460, sector: 'IT', ltp: 452 },
+  { sym: 'NTPC', qty: 300, avg: 310, sector: 'Power', ltp: 325 },
+  { sym: 'HCLTECH', qty: 40, avg: 1280, sector: 'IT', ltp: 1398 },
+  { sym: 'TATAMOTORS', qty: 60, avg: 680, sector: 'Auto', ltp: 762 },
+  { sym: 'SBIN', qty: 150, avg: 620, sector: 'Banking', ltp: 698 },
+  { sym: 'ICICIBANK', qty: 80, avg: 1100, sector: 'Banking', ltp: 1264 },
+]
+const MF_HOLDINGS = [
+  { name: 'Parag Parikh Flexi Cap Fund', code: 'PPFCF', units: 245.67, nav: 78.42, invested: 15000, category: 'Flexi Cap', amc: 'PPFAS' },
+  { name: 'HDFC Mid-Cap Opportunities Fund', code: 'HMOF', units: 312.45, nav: 132.80, invested: 35000, category: 'Mid Cap', amc: 'HDFC' },
+  { name: 'SBI Nifty Index Fund', code: 'SNIF', units: 180.20, nav: 245.60, invested: 40000, category: 'Index', amc: 'SBI' },
+  { name: 'Axis Bluechip Fund', code: 'ABF', units: 95.30, nav: 56.80, invested: 5000, category: 'Large Cap', amc: 'Axis' },
+  { name: 'Mirae Asset Emerging Bluechip', code: 'MAEB', units: 156.80, nav: 92.40, invested: 12000, category: 'Mid Cap', amc: 'Mirae' },
+  { name: 'Motilal Oswal Nasdaq 100 ETF', code: 'MON100', units: 42.10, nav: 278.90, invested: 10000, category: 'International', amc: 'Motilal' },
+]
+const CRYPTO_HOLDINGS = [
+  { sym: 'BTC', name: 'Bitcoin', qty: 0.0524, avgPrice: 5820000, ltp: 6240000 },
+  { sym: 'ETH', name: 'Ethereum', qty: 1.85, avgPrice: 268000, ltp: 285000 },
+  { sym: 'SOL', name: 'Solana', qty: 12.5, avgPrice: 12800, ltp: 14200 },
+  { sym: 'XRP', name: 'Ripple', qty: 2500, avgPrice: 52, ltp: 58.4 },
+  { sym: 'ADA', name: 'Cardano', qty: 5000, avgPrice: 38, ltp: 42.6 },
+  { sym: 'DOGE', name: 'Dogecoin', qty: 10000, avgPrice: 12.4, ltp: 14.8 },
+  { sym: 'DOT', name: 'Polkadot', qty: 200, avgPrice: 580, ltp: 640 },
+  { sym: 'LINK', name: 'Chainlink', qty: 80, avgPrice: 1180, ltp: 1320 },
+]
+const GOLD_HOLDINGS = [
+  { name: '24K Digital Gold', qty: 5.2, unitPrice: 9845, unit: 'grams', ltp: 9845 },
+  { name: 'Gold ETF (GoldBees)', sym: 'GOLDBEES', qty: 200, avg: 48.20, ltp: 52.80 },
+  { name: 'Silver ETF (SilverBees)', sym: 'SILVERBEES', qty: 100, avg: 72.40, ltp: 78.60 },
+]
+const US_HOLDINGS = [
+  { sym: 'AAPL', name: 'Apple Inc.', qty: 10, avg: 185.20, ltp: 227.52, exchange: 'NASDAQ' },
+  { sym: 'MSFT', name: 'Microsoft Corp.', qty: 5, avg: 380.40, ltp: 441.80, exchange: 'NASDAQ' },
+  { sym: 'NVDA', name: 'NVIDIA Corp.', qty: 15, avg: 95.60, ltp: 148.85, exchange: 'NASDAQ' },
+  { sym: 'GOOGL', name: 'Alphabet Inc.', qty: 8, avg: 152.80, ltp: 196.47, exchange: 'NASDAQ' },
+  { sym: 'AMZN', name: 'Amazon.com Inc.', qty: 12, avg: 178.40, ltp: 228.56, exchange: 'NASDAQ' },
+  { sym: 'TSLA', name: 'Tesla Inc.', qty: 6, avg: 265.80, ltp: 342.54, exchange: 'NASDAQ' },
+  { sym: 'META', name: 'Meta Platforms', qty: 4, avg: 520.00, ltp: 698.10, exchange: 'NASDAQ' },
+]
 const SECTOR_COLORS = {
   'IT': '#2563eb', 'Banking': '#7c3aed', 'Oil & Gas': '#ea580c',
   'Finance': '#d97706', 'Auto': '#0d9488', 'Power': '#16a34a',
 }
-
 const PNL_DATA = [
   { m: 'Jan', v: 420000 }, { m: 'Feb', v: 380000 }, { m: 'Mar', v: 520000 },
   { m: 'Apr', v: 490000 }, { m: 'May', v: 610000 }, { m: 'Jun', v: 580000 },
@@ -54,72 +102,69 @@ const PNL_DATA = [
   { m: 'Oct', v: 760000 }, { m: 'Nov', v: 920000 }, { m: 'Dec', v: 1040000 },
 ]
 
+/* ── Summary Card ── */
 function SummaryCard({ label, value, sub, subColor, icon: Icon, iconBg, iconColor, hidden }) {
   return (
-    <div style={{
-      background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
-      padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 14,
-    }}>
-      <div style={{ width: 44, height: 44, borderRadius: 10, background: iconBg, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-        <Icon size={20} color={iconColor} />
+    <div className={styles.summaryCard}>
+      <div className={styles.summaryIcon} style={{ background: iconBg, color: iconColor }}>
+        {Icon ? <Icon size={20} /> : null}
       </div>
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: T.textMute, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>{label}</div>
-        <div style={{ fontSize: 22, fontWeight: 800, color: T.text, letterSpacing: '-0.5px' }}>
-          {hidden ? '₹ ••••••' : value}
-        </div>
-        {sub && <div style={{ fontSize: 12, color: subColor || T.textSub, fontWeight: 600, marginTop: 2 }}>{hidden ? '••••' : sub}</div>}
+      <div className={styles.summaryBody}>
+        <div className={styles.summaryLabel}>{label}</div>
+        <div className={styles.summaryValue}>{hidden ? '₹ •••••' : value}</div>
+        {sub && <div className={styles.summarySub} style={{ color: subColor || T.textSub }}>{hidden ? '••••' : sub}</div>}
       </div>
     </div>
   )
 }
 
-function HoldingRow({ h, rank }) {
+/* ── Category Summary Card ── */
+function CategoryCard({ cat, total, invested, pnl, pnlPct, count, isActive, onClick, hidden }) {
+  const up = pnl >= 0
+  return (
+    <button onClick={onClick} className={`${styles.categoryBtn} ${isActive ? styles.categoryActive : ''}`} style={{ ['--c']: cat.color }}>
+      <div className={styles.categoryLabel} style={{ color: cat.color }}>{cat.label}</div>
+      <div className={styles.categoryTotal}>{hidden ? '₹ ••••' : fmtCr(total)}</div>
+      <div className={styles.categoryPnl} style={{ color: up ? T.greenDark : T.red }}>
+        {up ? '+' : ''}{hidden ? '••••' : fmtCr(Math.abs(pnl))} ({up ? '+' : ''}{pnlPct.toFixed(2)}%)
+      </div>
+      <div className={styles.categoryCount} style={{ color: cat.color }}>· {count} holdings</div>
+    </button>
+  )
+}
+
+/* ── Holding Row ── */
+function HoldingRow({ h, type = 'stock' }) {
   const up = h.pnlAbs >= 0
   return (
-    <tr style={{ borderBottom: `1px solid ${T.border2}` }}
-      onMouseEnter={e => e.currentTarget.style.background = T.bg}
-      onMouseLeave={e => e.currentTarget.style.background = T.white}>
-      <td style={{ padding: '12px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 8,
-            background: SECTOR_COLORS[h.sector] || T.blue,
-            display: 'grid', placeItems: 'center',
-            fontSize: 11, fontWeight: 800, color: '#fff', flexShrink: 0,
-          }}>
-            {h.sym.slice(0, 2)}
-          </div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{SYMBOL_LABELS[h.sym] || h.sym}</div>
-            <div style={{ fontSize: 11, color: T.textMute }}>{h.sym} · {h.sector}</div>
+    <tr className={styles.holdingRow}>
+      <td className={styles.cellAsset}>
+        <CompanyLogo symbol={h.sym || h.code} name={h.name || h.sym} size={36} />
+        <div>
+          <div className={styles.holdingName}>{h.displayName || SYMBOL_LABELS[h.sym] || h.name || h.sym}</div>
+          <div className={styles.holdingMeta}>
+            {h.sym || h.code}{h.sector ? ` · ${h.sector}` : ''}{h.category ? ` · ${h.category}` : ''}{h.exchange ? ` · ${h.exchange}` : ''}
           </div>
         </div>
       </td>
-      <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 13, color: T.textSub }}>{h.qty}</td>
-      <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 13, color: T.textSub }}>₹{fmt(h.avg)}</td>
-      <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 13, fontWeight: 700, color: T.text }}>₹{fmt(h.ltp)}</td>
-      <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 13, fontWeight: 700, color: T.text }}>{fmtCr(h.current)}</td>
-      <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
-          {up ? <ArrowUpRight size={14} color={T.green} /> : <ArrowDownRight size={14} color={T.red} />}
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: up ? T.green : T.red }}>
-              {up ? '+' : ''}₹{Math.abs(h.pnlAbs).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-            </div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: up ? T.green : T.red }}>
-              {up ? '+' : ''}{h.pnlPct.toFixed(2)}%
-            </div>
-          </div>
-        </div>
+      <td className={styles.cellNum}>{type === 'crypto' ? fmtBTC(h.qty) : type === 'gold' && h.unit ? `${h.qty} ${h.unit}` : h.qty}</td>
+      <td className={styles.cellNum}>{type === 'gold' && !h.avg ? `₹${fmt(h.unitPrice)}` : type === 'us' ? fmtUSD(h.avg) : `₹${fmt(h.avg)}`}</td>
+      <td className={styles.cellNumStrong}>{type === 'us' ? fmtUSD(h.ltp) : `₹${fmt(h.ltp)}`}</td>
+      <td className={styles.cellNumStrong}>{fmtCr(h.current)}</td>
+      <td className={styles.cellPnl}>
+        <span className={`${styles.pnlDot} ${up ? styles.pnlUp : styles.pnlDown}`} />
+        <span style={{ color: up ? T.greenDark : T.red }}>
+          {up ? '+' : ''}₹{Math.abs(h.pnlAbs).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+        </span>
+        <span className={styles.pnlPct} style={{ color: up ? T.greenDark : T.red }}>{up ? '+' : ''}{h.pnlPct.toFixed(2)}%</span>
       </td>
-      <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-        <div style={{ fontSize: 11, color: T.textMute }}>
-          {((h.current / 1) * 100 / 1).toFixed(1)}%
-        </div>
-        <div style={{ height: 4, borderRadius: 2, background: T.border, marginTop: 3, width: 60, overflow: 'hidden' }}>
-          <div style={{ height: '100%', borderRadius: 2, background: SECTOR_COLORS[h.sector] || T.blue, width: `${Math.min(100, h.pct || 20)}%` }} />
-        </div>
+      <td className={styles.cellWeight}>
+        {h.weight ? `${h.weight.toFixed(1)}%` : '—'}
+        {h.weight > 0 && (
+          <div className={styles.weightBar} style={{ background: 'var(--track)' }}>
+            <div className={styles.weightFill} style={{ width: `${Math.min(100, h.weight)}%`, background: T.blue }} />
+          </div>
+        )}
       </td>
     </tr>
   )
@@ -128,7 +173,7 @@ function HoldingRow({ h, rank }) {
 export default function PortfolioPage() {
   const { trades, loading, loadTrades } = useTrades()
   const { stocks } = useMarketData()
-  const [tab, setTab] = useState('holdings')
+  const [activeCategory, setActiveCategory] = useState('stocks')
   const [sortField, setSortField] = useState('pnlAbs')
   const [sortDir, setSortDir] = useState('desc')
   const [search, setSearch] = useState('')
@@ -136,8 +181,8 @@ export default function PortfolioPage() {
 
   useEffect(() => { loadTrades() }, [])
 
-  const holdings = useMemo(() => {
-    return HOLDINGS.map(h => {
+  const stockData = useMemo(() => {
+    return STOCK_HOLDINGS.map(h => {
       const ltp = stocks[h.sym]?.price || h.ltp
       const invested = h.qty * h.avg
       const current = h.qty * ltp
@@ -146,125 +191,168 @@ export default function PortfolioPage() {
       return { ...h, ltp, invested, current, pnlAbs, pnlPct }
     })
   }, [stocks])
+  const mfData = useMemo(() => MF_HOLDINGS.map(h => {
+    const current = h.units * h.nav
+    const pnlAbs = current - h.invested
+    const pnlPct = (pnlAbs / h.invested) * 100
+    return { ...h, current, pnlAbs, pnlPct }
+  }), [])
+  const cryptoData = useMemo(() => CRYPTO_HOLDINGS.map(h => {
+    const invested = h.qty * h.avgPrice
+    const current = h.qty * h.ltp
+    const pnlAbs = current - invested
+    const pnlPct = (pnlAbs / invested) * 100
+    return { ...h, current, invested, pnlAbs, pnlPct }
+  }), [])
+  const goldData = useMemo(() => GOLD_HOLDINGS.map(h => {
+    const avg = h.avg || h.unitPrice
+    const invested = h.qty * avg
+    const current = h.qty * h.ltp
+    const pnlAbs = current - invested
+    const pnlPct = (pnlAbs / invested) * 100
+    return { ...h, current, invested, pnlAbs, pnlPct }
+  }), [])
+  const usData = useMemo(() => US_HOLDINGS.map(h => {
+    const invested = h.qty * h.avg * 83.8
+    const current = h.qty * h.ltp * 83.8
+    const pnlAbs = current - invested
+    const pnlPct = (pnlAbs / invested) * 100
+    return { ...h, current, invested, pnlAbs, pnlPct }
+  }), [])
 
-  const totalInvested = useMemo(() => holdings.reduce((s, h) => s + h.invested, 0), [holdings])
-  const totalCurrent = useMemo(() => holdings.reduce((s, h) => s + h.current, 0), [holdings])
-  const totalPnlAbs = totalCurrent - totalInvested
-  const totalPnlPct = (totalPnlAbs / totalInvested) * 100
+  const catTotals = useMemo(() => {
+    const calc = (arr) => {
+      const total = arr.reduce((s, h) => s + h.current, 0)
+      const invested = arr.reduce((s, h) => s + (h.invested || h.qty * (h.avg || h.avgPrice || 0)), 0)
+      const pnl = total - invested
+      const pct = invested > 0 ? (pnl / invested) * 100 : 0
+      return { total, invested, pnl, pct, count: arr.length }
+    }
+    return { stocks: calc(stockData), mf: calc(mfData), crypto: calc(cryptoData), gold: calc(goldData), us: calc(usData) }
+  }, [stockData, mfData, cryptoData, goldData, usData])
+
+  const grandTotal = catTotals.stocks.total + catTotals.mf.total + catTotals.crypto.total + catTotals.gold.total + catTotals.us.total
+  const grandInvested = catTotals.stocks.invested + catTotals.mf.invested + catTotals.crypto.invested + catTotals.gold.invested + catTotals.us.invested
+  const grandPnl = grandTotal - grandInvested
+  const grandPnlPct = grandInvested > 0 ? (grandPnl / grandInvested) * 100 : 0
   const dayPnl = trades.reduce((s, t) => s + (t.pnl || 0), 0)
+
+  const activeData = { stocks: stockData, mf: mfData, crypto: cryptoData, gold: goldData, us: usData }[activeCategory] || []
 
   const sectorData = useMemo(() => {
     const map = {}
-    holdings.forEach(h => { map[h.sector] = (map[h.sector] || 0) + h.current })
+    stockData.forEach(h => { map[h.sector] = (map[h.sector] || 0) + h.current })
     return Object.entries(map).map(([name, value]) => ({ name, value }))
-  }, [holdings])
+  }, [stockData])
+  const totalStocksCurrent = useMemo(() => stockData.reduce((s, h) => s + h.current, 0), [stockData])
 
-  const sortedHoldings = useMemo(() => {
-    let arr = [...holdings]
+  const allocationData = useMemo(() => CATEGORIES.map(c => ({
+    name: c.label.replace(/^[^\w]+\s/, ''),
+    value: catTotals[c.id]?.total || 0,
+    color: c.color,
+  })).filter(d => d.value > 0), [catTotals])
+
+  const sortedData = useMemo(() => {
+    let arr = [...activeData]
     if (search.trim()) {
       const q = search.toLowerCase()
-      arr = arr.filter(h => h.sym.toLowerCase().includes(q) || (SYMBOL_LABELS[h.sym] || '').toLowerCase().includes(q))
+      arr = arr.filter(h => (h.sym || h.code || h.name || '').toLowerCase().includes(q) || (h.name || '').toLowerCase().includes(q))
     }
     arr.sort((a, b) => {
       const av = a[sortField] ?? 0, bv = b[sortField] ?? 0
       return sortDir === 'desc' ? bv - av : av - bv
     })
-    return arr.map(h => ({ ...h, pct: (h.current / totalCurrent) * 100 }))
-  }, [holdings, sortField, sortDir, search, totalCurrent])
+    const total = arr.reduce((s, h) => s + h.current, 0)
+    return arr.map(h => ({ ...h, weight: total > 0 ? (h.current / total) * 100 : 0 }))
+  }, [activeData, sortField, sortDir, search])
 
   const toggleSort = f => {
     if (sortField === f) setSortDir(d => d === 'desc' ? 'asc' : 'desc')
     else { setSortField(f); setSortDir('desc') }
   }
-
   const SortIcon = ({ f }) => sortField === f
     ? (sortDir === 'asc' ? <ChevronUp size={11} color={T.blue} /> : <ChevronDown size={11} color={T.blue} />)
     : <ChevronDown size={11} color={T.textMute} />
-
-  const thStyle = (f, align = 'right') => ({
-    padding: '10px 16px', textAlign: align,
-    fontSize: 11, color: sortField === f ? T.blue : T.textMute,
-    fontWeight: 700, cursor: 'pointer', userSelect: 'none',
-    whiteSpace: 'nowrap',
-  })
+  const activeCat = CATEGORIES.find(c => c.id === activeCategory)
 
   return (
-    <div style={{ background: T.bg, minHeight: '100vh', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif' }}>
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px' }}>
+    <div className={styles.page}>
+      <div className={styles.wrap}>
+        <TitleBar
+          title="Portfolio"
+          subtitle="NSE · BSE · Crypto · Gold · US — Live P&amp;L tracking"
+          action={
+            <div className={styles.headerActions}>
+              <button className={styles.iconBtn} onClick={() => setHidden(h => !h)} title={hidden ? 'Show values' : 'Hide values'}>
+                {hidden ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+              <button className={styles.iconBtn} title="Export">
+                <Download size={15} />
+              </button>
+              <button className={styles.iconBtn} onClick={() => loadTrades()} title="Refresh">
+                <RefreshCw size={15} />
+              </button>
+            </div>
+          }
+        />
 
-        {/* ── Header ── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <h1 style={{ fontSize: 24, fontWeight: 800, color: T.text, margin: 0 }}>Portfolio</h1>
-            <p style={{ fontSize: 13, color: T.textMute, margin: '4px 0 0' }}>NSE · BSE · Live P&amp;L tracking</p>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setHidden(h => !h)} style={{
-              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
-              borderRadius: 7, background: T.white, border: `1px solid ${T.border}`,
-              color: T.textSub, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-            }}>
-              {hidden ? <Eye size={14} /> : <EyeOff size={14} />} {hidden ? 'Show' : 'Hide'}
-            </button>
-            <button style={{
-              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
-              borderRadius: 7, background: T.white, border: `1px solid ${T.border}`,
-              color: T.textSub, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-            }}>
-              <Download size={14} /> Export
-            </button>
-            <button style={{
-              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
-              borderRadius: 7, background: T.blueBg, border: `1px solid ${T.blue}30`,
-              color: T.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-            }}>
-              <RefreshCw size={13} /> Refresh
-            </button>
-          </div>
-        </div>
-
-        {/* ── Summary cards ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14, marginBottom: 24 }}>
-          <SummaryCard label="Current Value" value={fmtCr(totalCurrent)}
-            sub={`Invested: ${fmtCr(totalInvested)}`}
+        {/* Grand Summary Cards */}
+        <div className={styles.summaryRow}>
+          <SummaryCard label="Total Portfolio Value" value={fmtCr(grandTotal)}
+            sub={`Invested: ${fmtCr(grandInvested)}`}
             icon={Briefcase} iconBg={T.blueBg} iconColor={T.blue} hidden={hidden} />
           <SummaryCard
-            label="Total P&L"
-            value={`${totalPnlAbs >= 0 ? '+' : ''}${fmtCr(Math.abs(totalPnlAbs))}`}
-            sub={`${totalPnlPct >= 0 ? '+' : ''}${totalPnlPct.toFixed(2)}% overall`}
-            subColor={totalPnlAbs >= 0 ? T.greenDark : T.red}
-            icon={totalPnlAbs >= 0 ? TrendingUp : TrendingDown}
-            iconBg={totalPnlAbs >= 0 ? T.greenBg : T.redBg}
-            iconColor={totalPnlAbs >= 0 ? T.greenDark : T.red}
+            label="Total P&amp;L"
+            value={`${grandPnl >= 0 ? '+' : ''}${fmtCr(Math.abs(grandPnl))}`}
+            sub={`${grandPnlPct >= 0 ? '+' : ''}${grandPnlPct.toFixed(2)}% overall`}
+            subColor={grandPnl >= 0 ? T.greenDark : T.red}
+            icon={grandPnl >= 0 ? TrendingUp : TrendingDown}
+            iconBg={grandPnl >= 0 ? T.greenBg : T.redBg}
+            iconColor={grandPnl >= 0 ? T.greenDark : T.red}
             hidden={hidden} />
           <SummaryCard
-            label="Today's P&L"
+            label="Today's P&amp;L"
             value={`${dayPnl >= 0 ? '+' : ''}₹${Math.abs(dayPnl).toLocaleString('en-IN')}`}
             sub={dayPnl >= 0 ? '▲ Profit day' : '▼ Loss day'}
             subColor={dayPnl >= 0 ? T.greenDark : T.red}
             icon={BarChart2} iconBg={T.purpleBg} iconColor={T.purple} hidden={hidden} />
           <SummaryCard
-            label="Holdings"
-            value={`${holdings.length} Stocks`}
-            sub={`${trades.length} total orders`}
+            label="Total Holdings"
+            value={`${CATEGORIES.reduce((s, c) => s + catTotals[c.id].count, 0)} Assets`}
+            sub={`${CATEGORIES.length} categories`}
             icon={TrendingUp} iconBg={T.amberBg} iconColor={T.amber} hidden={hidden} />
         </div>
 
-        {/* ── Charts row ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, marginBottom: 24 }}>
+        {/* Category Cards */}
+        <div className={styles.categoryRow}>
+          {CATEGORIES.map(cat => (
+            <CategoryCard
+              key={cat.id}
+              cat={cat}
+              total={catTotals[cat.id].total}
+              invested={catTotals[cat.id].invested}
+              pnl={catTotals[cat.id].pnl}
+              pnlPct={catTotals[cat.id].pct}
+              count={catTotals[cat.id].count}
+              isActive={activeCategory === cat.id}
+              onClick={() => { setActiveCategory(cat.id); setSortField('pnlAbs'); setSortDir('desc') }}
+              hidden={hidden}
+            />
+          ))}
+        </div>
 
+        {/* Charts row */}
+        <div className={styles.chartsRow}>
           {/* P&L chart */}
-          <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div className={styles.chartCard}>
+            <div className={styles.chartHeader}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Portfolio Performance</div>
-                <div style={{ fontSize: 12, color: T.textMute }}>FY 2024–25 monthly</div>
+                <div className={styles.chartTitle}>Portfolio Performance</div>
+                <div className={styles.chartSubtitle}>FY 2024–25 monthly</div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: T.green }}>
-                  {hidden ? '₹ ••••' : `+${fmtCr(totalPnlAbs)}`}
-                </div>
-                <div style={{ fontSize: 12, color: T.green, fontWeight: 600 }}>+{totalPnlPct.toFixed(1)}% overall</div>
+              <div className={styles.chartMeta}>
+                <div className={styles.chartMetaVal} style={{ color: T.green }}>{hidden ? '₹ ••••' : `+${fmtCr(grandPnl)}`}</div>
+                <div className={styles.chartMetaSub} style={{ color: T.green }}>+{grandPnlPct.toFixed(1)}% overall</div>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={180}>
@@ -277,9 +365,9 @@ export default function PortfolioPage() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f2f5" />
                 <XAxis dataKey="m" tick={{ fontSize: 10, fill: T.textMute }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={v => `₹${(v/1e5).toFixed(0)}L`} tick={{ fontSize: 10, fill: T.textMute }} axisLine={false} tickLine={false} width={48} />
+                <YAxis tickFormatter={v => `₹${(v / 1e5).toFixed(0)}L`} tick={{ fontSize: 10, fill: T.textMute }} axisLine={false} tickLine={false} width={48} />
                 <Tooltip
-                  formatter={v => [`₹${(v/1e5).toFixed(2)}L`, 'Value']}
+                  formatter={v => [`₹${(v / 1e5).toFixed(2)}L`, 'Value']}
                   contentStyle={{ background: '#1a1a1a', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12 }}
                 />
                 <Area type="monotone" dataKey="v" stroke="#0f9d58" strokeWidth={2.5} fill="url(#pvGrad)" />
@@ -287,119 +375,117 @@ export default function PortfolioPage() {
             </ResponsiveContainer>
           </div>
 
-          {/* Sector pie */}
-          <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px' }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 4 }}>Sector Allocation</div>
-            <div style={{ fontSize: 12, color: T.textMute, marginBottom: 14 }}>by current value</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <ResponsiveContainer width={120} height={120}>
+          {/* Allocation pie */}
+          <div className={styles.chartCard}>
+            <div className={styles.chartTitle}>Asset Allocation</div>
+            <div className={styles.chartSubtitle}>by category</div>
+            <div className={styles.allocationRow}>
+              <ResponsiveContainer width={130} height={130}>
                 <PieChart>
-                  <Pie data={sectorData} cx="50%" cy="50%" innerRadius={34} outerRadius={54} dataKey="value" paddingAngle={2}>
-                    {sectorData.map((entry, i) => (
-                      <Cell key={i} fill={SECTOR_COLORS[entry.name] || '#9aa0a6'} />
+                  <Pie data={allocationData} cx="50%" cy="50%" innerRadius={36} outerRadius={56} dataKey="value" paddingAngle={3}>
+                    {allocationData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip formatter={v => [fmtCr(v), 'Value']} contentStyle={{ background: '#1a1a1a', border: 'none', borderRadius: 8, color: '#fff', fontSize: 11 }} />
                 </PieChart>
               </ResponsiveContainer>
-              <div style={{ flex: 1 }}>
-                {sectorData.map(s => (
-                  <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: 2, background: SECTOR_COLORS[s.name] || '#9aa0a6', flexShrink: 0 }} />
-                    <span style={{ fontSize: 11.5, color: T.text, flex: 1 }}>{s.name}</span>
-                    <span style={{ fontSize: 11.5, fontWeight: 700, color: T.textSub }}>
-                      {((s.value / totalCurrent) * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                ))}
+              <div className={styles.allocationList}>
+                {allocationData.map(s => {
+                  const pct = grandTotal > 0 ? (s.value / grandTotal) * 100 : 0
+                  return (
+                    <div key={s.name} className={styles.allocationItem}>
+                      <div className={styles.allocationDot} style={{ background: s.color }} />
+                      <span className={styles.allocationName}>{s.name}</span>
+                      <span className={styles.allocationPct}>{pct.toFixed(1)}%</span>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── Holdings / Orders tab card ── */}
-        <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'hidden' }}>
-
-          {/* Tab header */}
-          <div style={{ display: 'flex', alignItems: 'center', borderBottom: `1px solid ${T.border}`, padding: '0 16px' }}>
-            {[
-              { id: 'holdings', label: `Holdings (${holdings.length})` },
-              { id: 'orders',   label: `Orders (${trades.length})` },
-            ].map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)} style={{
-                padding: '13px 16px', border: 'none', background: 'none', cursor: 'pointer',
-                fontSize: 13, fontWeight: tab === t.id ? 700 : 500,
-                color: tab === t.id ? T.blue : T.textSub,
-                borderBottom: tab === t.id ? `2px solid ${T.blue}` : '2px solid transparent',
-                marginBottom: '-1px', fontFamily: 'inherit',
-              }}>{t.label}</button>
+        {/* Holdings / Orders Table */}
+        <div className={styles.tableCard}>
+          <div className={styles.tableTabs}>
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => { setActiveCategory(cat.id); setSortField('pnlAbs'); setSortDir('desc') }}
+                className={`${styles.tableTab} ${activeCategory === cat.id ? styles.tableTabActive : ''}`}
+                style={{ ['--c']: cat.color }}
+              >
+                {cat.label} ({catTotals[cat.id].count})
+              </button>
             ))}
-            {/* right actions */}
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, paddingRight: 4 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 7, padding: '5px 10px' }}>
-                <Search size={12} color={T.textMute} />
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search stock…"
-                  style={{ border: 'none', background: 'none', outline: 'none', fontSize: 12, color: T.text, width: 130 }} />
-              </div>
+            <button
+              onClick={() => setActiveCategory('orders')}
+              className={`${styles.tableTab} ${activeCategory === 'orders' ? styles.tableTabActive : ''}`}
+              style={{ ['--c']: T.blue }}
+            >
+              📋 Orders ({trades.length})
+            </button>
+            <div className={styles.searchBox}>
+              <Search size={12} color={T.textMute} />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search…"
+                className={styles.searchInput}
+              />
             </div>
           </div>
 
-          {/* HOLDINGS TABLE */}
-          {tab === 'holdings' && (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          {activeCategory !== 'orders' && (
+            <div className={styles.tableWrap}>
+              <table className={styles.dataTable}>
                 <thead>
-                  <tr style={{ background: T.bg, borderBottom: `1px solid ${T.border}` }}>
-                    <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, color: T.textMute, fontWeight: 700 }}>Stock</th>
-                    <th onClick={() => toggleSort('qty')} style={thStyle('qty')}>Qty <SortIcon f="qty" /></th>
-                    <th onClick={() => toggleSort('avg')} style={thStyle('avg')}>Avg Price <SortIcon f="avg" /></th>
-                    <th onClick={() => toggleSort('ltp')} style={thStyle('ltp')}>LTP <SortIcon f="ltp" /></th>
-                    <th onClick={() => toggleSort('current')} style={thStyle('current')}>Curr Value <SortIcon f="current" /></th>
-                    <th onClick={() => toggleSort('pnlAbs')} style={thStyle('pnlAbs')}>P&amp;L <SortIcon f="pnlAbs" /></th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, color: T.textMute, fontWeight: 700 }}>Weight</th>
+                  <tr>
+                    <th className={styles.thLeft}>Asset</th>
+                    <th className={styles.thSort} onClick={() => toggleSort('qty')}>Qty <SortIcon f="qty" /></th>
+                    <th className={styles.thSort} onClick={() => toggleSort('avg')}>Avg <SortIcon f="avg" /></th>
+                    <th className={styles.thSort} onClick={() => toggleSort('ltp')}>LTP <SortIcon f="ltp" /></th>
+                    <th className={styles.thSort} onClick={() => toggleSort('current')}>Curr <SortIcon f="current" /></th>
+                    <th className={styles.thSort} onClick={() => toggleSort('pnlAbs')}>P&amp;L <SortIcon f="pnlAbs" /></th>
+                    <th className={styles.thRight}>Weight</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedHoldings.length === 0 && (
-                    <tr><td colSpan={7} style={{ padding: 40, textAlign: 'center', color: T.textMute }}>No holdings found</td></tr>
+                  {sortedData.length === 0 && (
+                    <tr><td colSpan={7} className={styles.thEmpty}>No holdings in this category</td></tr>
                   )}
-                  {sortedHoldings.map((h, i) => <HoldingRow key={h.sym} h={h} rank={i + 1} />)}
+                  {sortedData.map((h, i) => (
+                    <HoldingRow key={h.sym || h.code || i} h={h} type={activeCategory} />
+                  ))}
                 </tbody>
               </table>
-              {/* Summary footer */}
-              <div style={{ padding: '12px 16px', borderTop: `1px solid ${T.border}`, display: 'flex', gap: 24, background: T.bg }}>
-                <div style={{ fontSize: 12, color: T.textMute }}>
-                  Total invested: <span style={{ fontWeight: 700, color: T.text }}>{hidden ? '••••' : fmtCr(totalInvested)}</span>
-                </div>
-                <div style={{ fontSize: 12, color: T.textMute }}>
-                  Current value: <span style={{ fontWeight: 700, color: T.text }}>{hidden ? '••••' : fmtCr(totalCurrent)}</span>
-                </div>
-                <div style={{ fontSize: 12, color: T.textMute }}>
-                  Total P&L: <span style={{ fontWeight: 700, color: totalPnlAbs >= 0 ? T.green : T.red }}>
-                    {hidden ? '••••' : `${totalPnlAbs >= 0 ? '+' : ''}${fmtCr(Math.abs(totalPnlAbs))} (${totalPnlPct >= 0 ? '+' : ''}${totalPnlPct.toFixed(2)}%)`}
-                  </span>
-                </div>
+              <div className={styles.tableFooter}>
+                <span>Total invested: <b style={{ color: 'var(--text)' }}>{hidden ? '••••' : fmtCr(catTotals[activeCategory].invested)}</b></span>
+                <span>Current value: <b style={{ color: 'var(--text)' }}>{hidden ? '••••' : fmtCr(catTotals[activeCategory].total)}</b></span>
+                <span style={{ color: catTotals[activeCategory].pnl >= 0 ? T.greenDark : T.red }}>
+                  Total P&amp;L: {hidden ? '••••' : `${catTotals[activeCategory].pnl >= 0 ? '+' : ''}${fmtCr(Math.abs(catTotals[activeCategory].pnl))} (${catTotals[activeCategory].pct >= 0 ? '+' : ''}${catTotals[activeCategory].pct.toFixed(2)}%)`}
+                </span>
               </div>
             </div>
           )}
 
-          {/* ORDERS TABLE */}
-          {tab === 'orders' && (
-            <div style={{ overflowX: 'auto' }}>
+          {activeCategory === 'orders' && (
+            <div className={styles.tableWrap}>
               {loading ? (
-                <div style={{ padding: 40, textAlign: 'center', color: T.textMute }}>Loading orders…</div>
+                <div className={styles.ordersEmpty}>Loading orders…</div>
               ) : trades.length === 0 ? (
-                <div style={{ padding: 60, textAlign: 'center' }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 6 }}>No orders yet</div>
-                  <div style={{ fontSize: 13, color: T.textMute }}>Place your first order to see trade history here.</div>
+                <div className={styles.ordersEmpty}>
+                  <div className={styles.ordersEmptyIcon}>📋</div>
+                  <div className={styles.ordersEmptyTitle}>No orders yet</div>
+                  <div className={styles.ordersEmptySub}>Place your first order to see trade history here.</div>
                 </div>
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <table className={styles.dataTable}>
                   <thead>
-                    <tr style={{ background: T.bg, borderBottom: `1px solid ${T.border}` }}>
-                      {['Symbol', 'Side', 'Type', 'Qty', 'Price', 'Status', 'P&L'].map((h, i) => (
-                        <th key={h} style={{ padding: '10px 16px', textAlign: i === 0 ? 'left' : 'right', fontSize: 11, color: T.textMute, fontWeight: 700 }}>{h}</th>
+                    <tr>
+                      {['Symbol', 'Side', 'Type', 'Qty', 'Price', 'Status', 'P&amp;L'].map((h, i) => (
+                        <th key={h} className={i === 0 ? styles.thLeft : styles.thRight}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -409,33 +495,24 @@ export default function PortfolioPage() {
                       const statusColor = { COMPLETE: T.green, PENDING: T.amber, CANCELLED: T.textMute, REJECTED: T.red }
                       const statusBg = { COMPLETE: T.greenBg, PENDING: T.amberBg, CANCELLED: T.bg, REJECTED: T.redBg }
                       return (
-                        <tr key={t.id} style={{ borderBottom: `1px solid ${T.border2}` }}
-                          onMouseEnter={e => e.currentTarget.style.background = T.bg}
-                          onMouseLeave={e => e.currentTarget.style.background = T.white}>
-                          <td style={{ padding: '12px 16px' }}>
-                            <div style={{ fontWeight: 700, color: T.text }}>{t.symbol}</div>
-                            <div style={{ fontSize: 11, color: T.textMute }}>{t.exchange} · {t.segment}</div>
+                        <tr key={t.id} className={styles.holdingRow}>
+                          <td className={styles.cellAsset}>
+                            <CompanyLogo symbol={t.symbol} name={t.symbol} size={32} />
+                            <div>
+                              <div className={styles.holdingName}>{SYMBOL_LABELS[t.symbol] || t.symbol}</div>
+                              <div className={styles.holdingMeta}>{t.exchange} · {t.segment}</div>
+                            </div>
                           </td>
-                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                            <span style={{
-                              fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 5,
-                              background: t.side === 'BUY' ? T.blueBg : T.redBg,
-                              color: t.side === 'BUY' ? T.blue : T.red,
-                            }}>{t.side}</span>
+                          <td className={styles.cellNum}>
+                            <span className={styles.sidePill} style={{ background: t.side === 'BUY' ? T.blueBg : T.redBg, color: t.side === 'BUY' ? T.blue : T.red }}>{t.side}</span>
                           </td>
-                          <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 12, color: T.textSub }}>{t.orderType}</td>
-                          <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>{t.quantity}</td>
-                          <td style={{ padding: '12px 16px', textAlign: 'right', color: T.textSub }}>
-                            ₹{(t.executedPrice || t.price || 0).toLocaleString('en-IN')}
+                          <td className={styles.cellNum}>{t.orderType}</td>
+                          <td className={styles.cellNumStrong}>{t.quantity}</td>
+                          <td className={styles.cellNum}>₹{(t.executedPrice || t.price || 0).toLocaleString('en-IN')}</td>
+                          <td className={styles.cellNum}>
+                            <span className={styles.statusPill} style={{ background: statusBg[t.status] || T.bg, color: statusColor[t.status] || T.textMute }}>{t.status}</span>
                           </td>
-                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                            <span style={{
-                              fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 5,
-                              background: statusBg[t.status] || T.bg,
-                              color: statusColor[t.status] || T.textMute,
-                            }}>{t.status}</span>
-                          </td>
-                          <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: up ? T.green : T.red }}>
+                          <td className={styles.cellPnlStrong} style={{ color: up ? T.greenDark : T.red }}>
                             {up ? '+' : ''}₹{(t.pnl || 0).toLocaleString('en-IN')}
                           </td>
                         </tr>

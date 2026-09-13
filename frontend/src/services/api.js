@@ -48,11 +48,16 @@ const processQueue = (error, token = null) => {
 }
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // For responses with validateStatus that accept non-2xx (e.g. 400 for verify-credentials),
+    // the response is passed through the success handler.
+    return response
+  },
   async (error) => {
     const originalRequest = error.config
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+    // Only handle 401 — do NOT intercept 400s (verify-credentials uses validateStatus)
+    if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
@@ -93,8 +98,12 @@ export const authAPI = {
   verifyTotp: (token) => api.post('/auth/verify-totp', { token }),
   sendOtp: (email) => api.post('/auth/send-otp', { email }),
   verifyOtp: (email, otp) => api.post('/auth/verify-otp', { email, otp }),
-  verifyCredentials: (email, password) => api.post('/auth/verify-credentials', { email, password }, { validateStatus: (status) => status < 500 }),
+  verifyCredentials: (email, password) => api.post('/auth/verify-credentials', { email, password }, {
+    validateStatus: (status) => status < 500,
+  }),
   loginWithOtp: (email, password, otp) => api.post('/auth/login-with-otp', { email, password, otp }),
+  otpLogin: (email, otp) => api.post('/auth/otp-login', { email, otp }),
+  resendOtp: (email) => api.post('/auth/resend-otp', { email }),
 }
 
 // ---- Trade API ----

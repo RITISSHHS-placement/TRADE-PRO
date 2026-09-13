@@ -19,6 +19,14 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class TradeProApplication {
     public static void main(String[] args) {
-        SpringApplication.run(TradeProApplication.class, args);
+        long start = System.currentTimeMillis();
+        SpringApplication app = new SpringApplication(TradeProApplication.class);
+        // Disable banner to shave a few ms
+        app.setBannerMode(org.springframework.boot.Banner.Mode.OFF);
+        app.run(args);
+        System.out.println(
+            "✅ TradePro backend started in "
+            + (System.currentTimeMillis() - start) + " ms"
+        );
     }
 }

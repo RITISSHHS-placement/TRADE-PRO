@@ -38,7 +38,11 @@ public class MailConfig {
     @Bean
     JavaMailSender javaMailSender() {
         if (password == null || password.isBlank()) {
-            log.warn("MAIL_PASSWORD not set — JavaMailSender will be a no-op stub. OTPs are logged to console.");
+            log.warn("═══════════════════════════════════════════════════════════════");
+            log.warn("MAIL_PASSWORD not set — email delivery is DISABLED.");
+            log.warn("OTPs are printed to console AND returned in the API response.");
+            log.warn("To enable email: set MAIL_PASSWORD (Gmail App Password) in Render.");
+            log.warn("═══════════════════════════════════════════════════════════════");
             // Return a stub that never actually connects
             return new JavaMailSenderImpl() {
                 @Override

@@ -25,6 +25,7 @@ import { SYMBOL_LABELS } from './services/marketData'
 import LandingPage          from './pages/LandingPage'
 import LoginPage            from './pages/LoginPage'
 import RegisterPage         from './pages/RegisterPage'
+import VerifyOtpPage       from './pages/VerifyOtpPage'
 import DashboardPage        from './pages/DashboardPage'
 import TradePage            from './pages/TradePage'
 import MarketPage           from './pages/MarketPage'
@@ -41,11 +42,23 @@ import ScreenerPage         from './pages/ScreenerPage'
 import DigitalGoldPage      from './pages/DigitalGoldPage'
 import InvestPage           from './pages/InvestPage'
 import NewsPage             from './pages/NewsPage'
+import RevenueRecoveryPage  from './pages/RevenueRecoveryPage'
+import SmallcasesPage       from './pages/SmallcasesPage'
+import IPOWatchPage         from './pages/IPOWatchPage'
+import MutualScreenerPage   from './pages/MutualScreenerPage'
+import PaymentPage          from './pages/PaymentPage'
+import CryptoTradePage     from './pages/CryptoTradePage'
+import PriceAlertsPage     from './pages/PriceAlertsPage'
+import CryptoPortfolioPage from './pages/CryptoPortfolioPage'
+import { startKeepAlive }   from './services/keepAlive'
 
 gsap.registerPlugin(ScrollTrigger)
 
+// ── Keep the backend alive (prevents Render free-tier cold starts) ──
+if (typeof window !== 'undefined') startKeepAlive()
+
 /* ─────────────────────────────────────────────────────
-   DESIGN TOKENS - LIGHT THEME
+   DESIGN TOKENS — CRYPTO EXCHANGE LIGHT THEME
 ───────────────────────────────────────────────────── */
 const DS = {
   // Backgrounds
@@ -55,31 +68,31 @@ const DS = {
   bgHover:  '#f1f3f4',
   bgActive: '#e8eaed',
   // Borders
-  border:   '#e0e0e0',
-  borderMd: '#d0d0d0',
+  border:   '#e8eaed',
+  borderMd: '#dadce0',
   borderLg: '#c0c0c0',
   // Text
-  text:     '#1a1a1a',
+  text:     '#1a1a2e',
   textSub:  '#5f6368',
   textMuted:'#9aa0a6',
   // Brand
   accent:   '#1a73e8',
-  accentDim:'#e8f0fe',
+  accentDim:'rgba(26,115,232,0.08)',
   accentGlow:'rgba(26,115,232,0.1)',
   // Bull/Bear
-  bull:     '#0f9d58',
-  bullDim:  'rgba(15,157,88,0.08)',
+  bull:     '#22c55e',
+  bullDim:  'rgba(34,197,94,0.08)',
   bullDark: '#0d8a4c',
-  bear:     '#ea4335',
-  bearDim:  'rgba(234,67,53,0.08)',
+  bear:     '#ef4444',
+  bearDim:  'rgba(239,68,68,0.08)',
   bearDark: '#d93025',
   // Amber
-  amber:    '#f9ab00',
-  amberDim: 'rgba(249,171,0,0.08)',
+  amber:    '#f59e0b',
+  amberDim: 'rgba(245,158,11,0.08)',
   // Misc
   white:    '#ffffff',
   overlay:  'rgba(255,255,255,0.95)',
-  shadow:   'rgba(0,0,0,0.08)',
+  shadow:   'rgba(0,0,0,0.06)',
 }
 
 /* Shared styles */
@@ -587,8 +600,8 @@ function Home({ setPage, indices }) {
    PRIVATE ROUTE GUARD
 ───────────────────────────────────────────────────── */
 function PrivateRoute({ children }) {
-  const token = useSelector((s) => s.auth.token)
-  return token ? children : <Navigate to="/login" replace />
+  const user = useSelector((s) => s.auth.user)
+  return user ? children : <Navigate to="/login" replace />
 }
 
 /* ─────────────────────────────────────────────────────
@@ -601,8 +614,9 @@ function AppShell() {
     <Routes>
       {/* ── Public ── */}
       <Route path="/"         element={<LandingPage indices={indices} />} />
-      <Route path="/login"    element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/login"      element={<LoginPage />} />
+      <Route path="/register"   element={<RegisterPage />} />
+      <Route path="/verify-otp" element={<VerifyOtpPage />} />
 
       {/* ── Protected: dashboard shell with sidebar ── */}
       <Route
@@ -629,6 +643,14 @@ function AppShell() {
         <Route path="watchlist"        element={<WatchlistPage />} />
         <Route path="screener-landing" element={<ScreenerLandingPage />} />
         <Route path="digital-gold"     element={<DigitalGoldPage />} />
+        <Route path="revenue-recovery" element={<RevenueRecoveryPage />} />
+        <Route path="smallcases"       element={<SmallcasesPage />} />
+        <Route path="ipo-watch"        element={<IPOWatchPage />} />
+        <Route path="mf-screener"      element={<MutualScreenerPage />} />
+        <Route path="payment"           element={<PaymentPage />} />
+        <Route path="crypto"            element={<CryptoTradePage />} />
+        <Route path="price-alerts"       element={<PriceAlertsPage />} />
+        <Route path="crypto-portfolio"   element={<CryptoPortfolioPage />} />
       </Route>
 
       {/* ── Fallback ── */}

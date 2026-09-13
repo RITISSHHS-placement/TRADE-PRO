@@ -72,7 +72,9 @@ public class MarketDataController {
     /** Single stock quote (NSE) — cached 6 s */
     @GetMapping("/stock/{symbol}")
     public ResponseEntity<String> stock(@PathVariable String symbol) {
-        String sym = symbol.toUpperCase().replace("-", "%2526");
+        // NSE uses the symbol exactly as-is (e.g. BAJAJ-AUTO, not BAJAJ%2DAUTO).
+        // RestTemplate encodes the URL itself, so just pass the raw symbol.
+        String sym = symbol.toUpperCase();
         return proxy("stock:" + sym,
             NSE_BASE + "/quote-equity?symbol=" + sym, 6_000);
     }

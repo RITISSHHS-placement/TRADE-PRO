@@ -8,6 +8,7 @@ import { injectStore, injectActions } from './services/api'
 import { logoutUser, refreshToken } from './store/slices/authSlice'
 import { ToastProvider } from './components/Toast'
 import './assets/styles/global.css'
+import './assets/styles/primitives.css'
 
 injectStore(store)
 injectActions(logoutUser, refreshToken)

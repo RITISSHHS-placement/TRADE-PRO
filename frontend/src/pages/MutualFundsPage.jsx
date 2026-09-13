@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, startTransition } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search, Star, Shield, Zap, TrendingUp, ChevronRight, X, Info } from 'lucide-react'
 import { Spinner } from '../components/ui'
+import CompanyLogo from '../components/CompanyLogo'
 import styles from './MutualFundsPage.module.css'
 
 const MF_BASE = 'https://api.mfapi.in/mf'
@@ -66,7 +68,10 @@ function FundCard({ meta, onInvest }) {
     <div className={styles.card}>
       {meta.tag && <span className={styles.tag}>{meta.tag}</span>}
       <div className={styles.cardTop}>
-        <span className={styles.amcBadge}>{meta.amc}</span>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <CompanyLogo symbol={meta.amc} name={meta.amc} size={28} borderRadius={6} />
+          <span className={styles.amcBadge}>{meta.amc}</span>
+        </div>
         <Stars n={5} />
       </div>
       <h3 className={styles.cardName}>
@@ -142,6 +147,7 @@ function InvestModal({ item, onClose }) {
 }
 
 export default function MutualFundsPage() {
+  const navigate = useNavigate()
   const [mfList,    setMfList]    = useState([])
   const [listReady, setListReady] = useState(false)
   const [search,    setSearch]    = useState('')
@@ -272,7 +278,7 @@ export default function MutualFundsPage() {
             </div>
             <div className={styles.fdBtns}>
               <button className={styles.btnInvest}
-                onClick={() => setInvestItem({ meta: { cat: selected.category, risk: 'Moderately High', amc: selected.house }, nav: { name: selected.name, nav: selected.nav.toString(), date: selected.date } })}>
+                onClick={() => startTransition(() => navigate(`/dashboard/payment?name=${encodeURIComponent(selected.name)}&type=Mutual%20Fund&min=500&nav=${selected.nav}&category=${encodeURIComponent(selected.category || '')}`))}>
                 Invest Now
               </button>
               <button className={styles.btnSip}>Start SIP</button>
@@ -315,7 +321,7 @@ export default function MutualFundsPage() {
         NAV data from AMFI via mfapi.in — end-of-day. Mutual fund investments are subject to market risks. Read all scheme documents carefully.
       </div>
 
-      <InvestModal item={investItem} onClose={() => setInvestItem(null)} />
+      {/* InvestModal removed - now uses PaymentPage */}
     </div>
   )
 }

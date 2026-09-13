@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Search, Plus, X, Star, Trash2, TrendingUp } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
+import CompanyLogo from '../components/CompanyLogo'
 import styles from './WatchlistPage.module.css'
 
 const C = {
@@ -246,8 +247,11 @@ export default function WatchlistPage({ setPage }) {
                   {addResults.map(sym=>(
                     <div key={sym} onMouseDown={()=>addSymbol(sym)}
                       className={styles.dropdownItem}>
-                      <span className={styles.dropdownItemName}>{SYMBOL_LABELS[sym]||sym}</span>
-                      <span className={styles.dropdownItemSymbol}>{sym}</span>
+                      <CompanyLogo symbol={sym} name={SYMBOL_LABELS[sym]||sym} size={22} borderRadius={4} style={{marginRight:8,flexShrink:0}} />
+                      <div style={{flex:1,minWidth:0}}>
+                        <div className={styles.dropdownItemName}>{SYMBOL_LABELS[sym]||sym}</div>
+                        <div className={styles.dropdownItemSymbol}>{sym}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -281,9 +285,7 @@ export default function WatchlistPage({ setPage }) {
                   <div key={sym} className={styles.tableRow}
                     onClick={()=>navigate('/dashboard/trade')}>
                     <div className={styles.stockCell}>
-                      <div className={styles.stockIcon}>
-                        {sym.slice(0,2)}
-                      </div>
+                      <CompanyLogo symbol={sym} name={SYMBOL_LABELS[sym]||sym} size={32} borderRadius={6} style={{marginRight:10,flexShrink:0}} />
                       <div>
                         <div className={styles.stockName}>{SYMBOL_LABELS[sym]||sym}</div>
                         <div className={styles.stockMeta}>{sym} · NSE</div>

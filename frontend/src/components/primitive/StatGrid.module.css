@@ -1,0 +1,12 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .grid[style*="--cols: 4"] { grid-template-columns: repeat(4, 1fr); }
+  .grid[style*="--cols: 3"] { grid-template-columns: repeat(3, 1fr); }
+  .grid[style*="--cols: 2"] { grid-template-columns: repeat(2, 1fr); }
+}
+.md { gap: 1rem; }
+.sm { gap: .6rem; }

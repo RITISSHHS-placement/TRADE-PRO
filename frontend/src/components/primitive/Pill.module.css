@@ -1,0 +1,22 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  font-size: .74rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: .2rem .55rem;
+  border-radius: var(--radius-full, 999px);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.up      { background: var(--green-dim);  color: var(--green-dark); border-color: var(--border-green); }
+.down    { background: var(--red-dim);    color: var(--red-dark);   border-color: var(--border-red); }
+.success { background: var(--green-dim);  color: var(--green-dark); border-color: var(--border-green); }
+.amber   { background: var(--amber-dim);  color: #92400e; }
+.blue    { background: var(--blue-dim);   color: var(--blue-hover); border-color: var(--blue-dim); }
+.brand   { background: var(--blue-dim);   color: var(--blue-hover); border-color: var(--blue-dim); }
+.muted   { background: var(--surface-3); color: var(--text-muted); border-color: transparent; }
+
+.sm { font-size: .62rem; padding: .12rem .42rem; }
+.md { font-size: .74rem; padding: .2rem .55rem; }

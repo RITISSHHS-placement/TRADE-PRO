@@ -39,3 +39,8 @@ secrets/
 backend/setenv.sh
 backend/.env.local
 backend/data/
+
+# ── Sandbox / editor junk (not part of project) ──
+.poolside/
+.freebuff/
+*.bak

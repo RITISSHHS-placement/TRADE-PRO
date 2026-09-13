@@ -23,7 +23,7 @@ import java.time.Duration;
  * 5. No sensitive data logged
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping({"/auth", "/api/auth"})   // /api/auth alias aligns dev proxy (/backend → /api)
 public class AuthController {
 
     private final AuthService authService;
@@ -34,6 +34,9 @@ public class AuthController {
 
     @Value("${jwt.refresh-expiration:604800000}")
     private long jwtRefreshExpirationMs;
+
+    @Value("${app.cookies.secure:false}")
+    private boolean cookieSecure;
 
     public AuthController(AuthService authService, OtpService otpService) {
         this.authService = authService;
@@ -46,14 +49,17 @@ public class AuthController {
         try {
             System.out.println("Registration attempt for email: " + request.getEmail());
             AuthResponse response = authService.register(request);
+            String refreshRawToken = response.getRefreshToken();
             ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
                 .httpOnly(true).path("/")
                 .maxAge(Duration.ofMillis(jwtExpirationMs).getSeconds())
                 .sameSite("Lax").build();
-            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
+            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshRawToken)
                 .httpOnly(true).path("/")
                 .maxAge(Duration.ofMillis(jwtRefreshExpirationMs).getSeconds())
                 .sameSite("Lax").build();
+            response.setToken(null);
+            response.setRefreshToken(null);
 
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -73,14 +79,17 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request) {
         try {
             AuthResponse response = authService.login(request);
+            String refreshRawToken = response.getRefreshToken();
             ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
                 .httpOnly(true).path("/")
                 .maxAge(Duration.ofMillis(jwtExpirationMs).getSeconds())
                 .sameSite("Lax").build();
-            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
+            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshRawToken)
                 .httpOnly(true).path("/")
                 .maxAge(Duration.ofMillis(jwtRefreshExpirationMs).getSeconds())
                 .sameSite("Lax").build();
+            response.setToken(null);
+            response.setRefreshToken(null);
 
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -133,14 +142,17 @@ public class AuthController {
             
             AuthResponse response = authService.login(loginRequest);
             
+            String refreshRawToken = response.getRefreshToken();
             ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
                 .httpOnly(true).path("/")
                 .maxAge(Duration.ofMillis(jwtExpirationMs).getSeconds())
                 .sameSite("Lax").build();
-            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
+            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshRawToken)
                 .httpOnly(true).path("/")
                 .maxAge(Duration.ofMillis(jwtRefreshExpirationMs).getSeconds())
                 .sameSite("Lax").build();
+            response.setToken(null);
+            response.setRefreshToken(null);
 
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -177,14 +189,11 @@ public class AuthController {
             }
 
             AuthResponse response = authService.refreshToken(refreshToken);
-            ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
-                    .httpOnly(true).path("/")
-                    .maxAge(Duration.ofMillis(jwtExpirationMs).getSeconds())
-                    .sameSite("Lax").build();
-            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
-                    .httpOnly(true).path("/")
-                    .maxAge(Duration.ofMillis(jwtRefreshExpirationMs).getSeconds())
-                    .sameSite("Lax").build();
+            String refreshRawToken = response.getRefreshToken();
+            ResponseCookie accessCookie = buildAuthCookie("access_token", response.getToken(), jwtExpirationMs);
+            ResponseCookie refreshCookie = buildAuthCookie("refresh_token", refreshRawToken, jwtRefreshExpirationMs);
+            response.setToken(null);
+            response.setRefreshToken(null);
 
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -234,36 +243,24 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logout(
             @RequestHeader(value = "Authorization", required = false) String token) {
+        // Use buildClearCookie so Secure/SameSite attributes match the login cookies.
+        // Previously this method hard-coded Secure=true + SameSite=None while login used
+        // cookieSecure=false in dev (Lax), which caused browsers to not clear the cookie.
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, buildClearCookie("access_token").toString());
+        headers.add(HttpHeaders.SET_COOKIE, buildClearCookie("refresh_token").toString());
         try {
             if (token != null) {
                 authService.logout(token);
             }
-            ResponseCookie accessCookie = ResponseCookie.from("access_token", "")
-                .httpOnly(true).secure(true).path("/")
-                .maxAge(0).sameSite("None").build();
-            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", "")
-                .httpOnly(true).secure(true).path("/")
-                .maxAge(0).sameSite("None").build();
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
-            headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
             return ResponseEntity.ok().headers(headers).body(new ApiResponse<>(true, "Logged out successfully", "LOGGED_OUT"));
         } catch (Exception e) {
-            ResponseCookie accessCookie = ResponseCookie.from("access_token", "")
-                .httpOnly(true).secure(true).path("/")
-                .maxAge(0).sameSite("None").build();
-            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", "")
-                .httpOnly(true).secure(true).path("/")
-                .maxAge(0).sameSite("None").build();
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
-            headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
             return ResponseEntity.ok().headers(headers).body(new ApiResponse<>(true, "Logged out", "LOGGED_OUT"));
         }
     }
 
     @PostMapping("/send-otp")
-    public ResponseEntity<ApiResponse<String>> sendOtp(@Valid @RequestBody OtpRequest request) {
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> sendOtp(@Valid @RequestBody OtpRequest request) {
         try {
             // Check rate limiting
             if (!otpService.canSendOtp(request.getEmail())) {
@@ -272,12 +269,73 @@ public class AuthController {
             }
             
             String otp = otpService.generateOtp();
-            otpService.sendOtpEmail(request.getEmail(), otp);
             otpService.storeOtp(request.getEmail(), otp);
-            return ResponseEntity.ok(new ApiResponse<>(true, "OTP sent successfully", "OTP_SENT"));
+            // Send email async (non-blocking) — failures logged but don't block the response
+            try {
+                otpService.sendOtpEmail(request.getEmail(), otp);
+            } catch (Exception mailEx) {
+                System.out.println("[OTP] Email delivery failed for " + request.getEmail() + ": " + mailEx.getMessage());
+            }
+
+            java.util.Map<String, Object> data = new java.util.HashMap<>();
+            data.put("status", "OTP_SENT");
+            data.put("email", request.getEmail());
+            return ResponseEntity.ok(new ApiResponse<>(true, "OTP sent successfully", data));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(new ApiResponse<>(false, "Failed to send OTP", null));
+                    .body(new ApiResponse<>(false, "Failed to send OTP", null));
+        }
+    }
+
+    /**
+     * Passwordless OTP login: verify OTP → find or create user → return JWT.
+     * Flow: email → send-otp → otp-login (this endpoint)
+     */
+    @PostMapping("/otp-login")
+    public ResponseEntity<ApiResponse<AuthResponse>> otpLogin(
+            @Valid @RequestBody OtpLoginRequest request,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+        try {
+            // First verify the OTP
+            boolean otpValid = otpService.verifyOtp(request.getEmail(), request.getOtp());
+            if (!otpValid) {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, "Invalid or expired OTP", null));
+            }
+
+            // Set IP and user agent from request
+            request.setIpAddress(httpRequest.getRemoteAddr());
+            request.setUserAgent(httpRequest.getHeader("User-Agent"));
+            if (request.getDeviceId() == null) {
+                String ua = httpRequest.getHeader("User-Agent");
+                request.setDeviceId(ua != null ? ua.substring(0, Math.min(64, ua.length())) : null);
+                request.setDeviceName("Web Browser");
+            }
+
+            // Find or create user + generate JWT
+            AuthResponse response = authService.otpLogin(request);
+
+            String refreshRawToken = response.getRefreshToken();
+            ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getToken())
+                .httpOnly(true).path("/")
+                .maxAge(Duration.ofMillis(jwtExpirationMs).getSeconds())
+                .sameSite("Lax").build();
+            ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshRawToken)
+                .httpOnly(true).path("/")
+                .maxAge(Duration.ofMillis(jwtRefreshExpirationMs).getSeconds())
+                .sameSite("Lax").build();
+            response.setToken(null);
+            response.setRefreshToken(null);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
+            headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
+            return ResponseEntity.ok().headers(headers)
+                .body(new ApiResponse<>(true, "Login successful", response));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
 
@@ -288,5 +346,51 @@ public class AuthController {
             return ResponseEntity.ok(new ApiResponse<>(true, "OTP verified successfully", "OTP_VERIFIED"));
         }
         return ResponseEntity.badRequest().body(new ApiResponse<>(false, "Invalid or expired OTP", null));
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> resendOtp(@Valid @RequestBody OtpRequest request) {
+        try {
+            if (!otpService.canSendOtp(request.getEmail())) {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, "Please wait before requesting another OTP", null));
+            }
+
+            String otp = otpService.generateOtp();
+            otpService.storeOtp(request.getEmail(), otp);
+            try {
+                otpService.sendOtpEmail(request.getEmail(), otp);
+            } catch (Exception mailEx) {
+                System.out.println("[OTP] Resend email delivery failed for " + request.getEmail() + ": " + mailEx.getMessage());
+            }
+
+            java.util.Map<String, Object> data = new java.util.HashMap<>();
+            data.put("status", "OTP_SENT");
+            data.put("email", request.getEmail());
+            return ResponseEntity.ok(new ApiResponse<>(true, "OTP resent successfully", data));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, "Failed to resend OTP", null));
+        }
+    }
+
+    private ResponseCookie buildAuthCookie(String name, String value, long maxAgeMs) {
+        return ResponseCookie.from(name, value)
+            .httpOnly(true)
+            .secure(cookieSecure)
+            .path("/")
+            .maxAge(Duration.ofMillis(maxAgeMs).getSeconds())
+            .sameSite(cookieSecure ? "None" : "Lax")
+            .build();
+    }
+
+    private ResponseCookie buildClearCookie(String name) {
+        return ResponseCookie.from(name, "")
+            .httpOnly(true)
+            .secure(cookieSecure)
+            .path("/")
+            .maxAge(0)
+            .sameSite(cookieSecure ? "None" : "Lax")
+            .build();
     }
 }

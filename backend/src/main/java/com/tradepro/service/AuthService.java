@@ -4,9 +4,11 @@ import com.tradepro.dto.*;
 import com.tradepro.entity.User;
 import com.tradepro.entity.BoundDevice;
 import com.tradepro.entity.UserSession;
+import com.tradepro.entity.RefreshToken;
 import com.tradepro.repository.UserRepository;
 import com.tradepro.repository.BoundDeviceRepository;
 import com.tradepro.repository.UserSessionRepository;
+import com.tradepro.repository.RefreshTokenRepository;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import com.warrenstrange.googleauth.GoogleAuthenticatorQRGenerator;
@@ -37,6 +39,12 @@ public class AuthService {
     
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
     
     @Value("${totp.issuer:TradePro}")
     private String totpIssuer;
@@ -73,7 +81,9 @@ public class AuthService {
         
         // Generate JWT tokens
         String accessToken = jwtService.generateToken(user.getEmail());
-        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
+        var refreshPayload = refreshTokenService.createRefreshToken(user,
+            request.getDeviceId(), request.getDeviceName(), request.getIpAddress(), request.getUserAgent());
+        String refreshToken = refreshPayload.getRawToken();
         
         // Register and auto-trust the device used at registration
         if (request.getDeviceId() != null) {
@@ -95,9 +105,9 @@ public class AuthService {
         session.setIpAddress(request.getIpAddress());
         session.setUserAgent(request.getUserAgent());
         session.setAccessToken(accessToken);
-        session.setRefreshToken(refreshToken);
+        session.setRefreshToken(refreshPayload.getRefreshToken().getTokenId());
         session.setCreatedAt(LocalDateTime.now());
-        session.setExpiresAt(LocalDateTime.now().plusDays(7));
+        session.setExpiresAt(refreshPayload.getRefreshToken().getExpiresAt());
         session.setActive(true);
         
         userSessionRepository.save(session);
@@ -169,7 +179,9 @@ public class AuthService {
         
         // Generate JWT tokens
         String accessToken = jwtService.generateToken(user.getEmail());
-        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
+        var refreshPayload = refreshTokenService.createRefreshToken(user,
+            request.getDeviceId(), request.getDeviceName(), request.getIpAddress(), request.getUserAgent());
+        String refreshToken = refreshPayload.getRawToken();
         
         // Create/update user session
         UserSession session = new UserSession();
@@ -179,9 +191,9 @@ public class AuthService {
         session.setIpAddress(request.getIpAddress());
         session.setUserAgent(request.getUserAgent());
         session.setAccessToken(accessToken);
-        session.setRefreshToken(refreshToken);
+        session.setRefreshToken(refreshPayload.getRefreshToken().getTokenId());
         session.setCreatedAt(LocalDateTime.now());
-        session.setExpiresAt(LocalDateTime.now().plusDays(7));
+        session.setExpiresAt(refreshPayload.getRefreshToken().getExpiresAt());
         session.setActive(true);
         
         userSessionRepository.save(session);
@@ -193,25 +205,25 @@ public class AuthService {
     }
     
     public AuthResponse refreshToken(String refreshToken) {
-        String email = jwtService.extractUsername(refreshToken);
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        if (!jwtService.isTokenValid(refreshToken, email)) {
-            throw new RuntimeException("Invalid refresh token");
-        }
-        
-        String newAccessToken = jwtService.generateToken(email);
-        String newRefreshToken = jwtService.generateRefreshToken(email);
-        
+        RefreshToken stored = refreshTokenService.findValidByRawToken(refreshToken)
+            .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
+
+        User user = stored.getUser();
+        stored.revoke();
+        refreshTokenService.revoke(stored);
+
+        String newAccessToken = jwtService.generateToken(user.getEmail());
+        var refreshPayload = refreshTokenService.createRefreshToken(user,
+            stored.getDeviceId(), stored.getDeviceName(), stored.getIpAddress(), stored.getUserAgent());
+        String newRefreshToken = refreshPayload.getRawToken();
+
         // Update session
-        UserSession session = userSessionRepository.findByRefreshToken(refreshToken)
+        UserSession session = userSessionRepository.findByRefreshToken(stored.getTokenId())
             .orElseThrow(() -> new RuntimeException("Session not found"));
-        
+
         session.setAccessToken(newAccessToken);
-        session.setRefreshToken(newRefreshToken);
-        session.setExpiresAt(LocalDateTime.now().plusDays(7));
-        
+        session.setRefreshToken(refreshPayload.getRefreshToken().getTokenId());
+        session.setExpiresAt(refreshPayload.getRefreshToken().getExpiresAt());
         userSessionRepository.save(session);
         
         // Create UserDto for response
@@ -273,17 +285,100 @@ public class AuthService {
         return isValid;
     }
     
+    /**
+     * OTP-only login: verifies OTP, then finds or creates the user and returns JWT.
+     * New users are auto-created with a random password (they can't login with password).
+     */
+    public AuthResponse otpLogin(OtpLoginRequest request) {
+        // Find existing user or create new one
+        Optional<User> existing = userRepository.findByEmail(request.getEmail());
+        User user;
+        boolean isNewUser = false;
+
+        if (existing.isPresent()) {
+            user = existing.get();
+        } else {
+            // Auto-create a new user (OTP-verified, no password needed)
+            isNewUser = true;
+            user = new User();
+            user.setEmail(request.getEmail());
+            // Generate a random password — this user can only login via OTP
+            String randomPw = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 24);
+            user.setPassword(passwordEncoder.encode(randomPw));
+            user.setName(request.getEmail().split("@")[0]);
+            user.setPhone("otp_" + System.currentTimeMillis());
+            user.setKycStatus(User.KycStatus.PENDING);
+            user.setRiskProfile(User.RiskProfile.MODERATE);
+            user.setTradingEnabled(true);
+            user.setSmsOtpEnabled(true);
+            user.setTotpEnabled(false);
+            user.setNudgesEnabled(true);
+            user.setPerTradeLimit(100000.0);
+            user.setEmailVerified(true); // OTP-verified
+            user.setCreatedAt(LocalDateTime.now());
+            user.setUpdatedAt(LocalDateTime.now());
+            user = userRepository.save(user);
+        }
+
+        // Generate JWT tokens
+        String accessToken = jwtService.generateToken(user.getEmail());
+        var refreshPayload = refreshTokenService.createRefreshToken(user,
+            request.getDeviceId(), request.getDeviceName(), request.getIpAddress(), request.getUserAgent());
+        String refreshToken = refreshPayload.getRawToken();
+
+        // Register device if provided
+        if (request.getDeviceId() != null) {
+            BoundDevice device = new BoundDevice();
+            device.setUser(user);
+            device.setDeviceId(request.getDeviceId());
+            device.setDeviceName(request.getDeviceName() != null ? request.getDeviceName() : "Browser");
+            device.setDeviceType("WEB");
+            device.setTrusted(true);
+            device.setCreatedAt(LocalDateTime.now());
+            boundDeviceRepository.save(device);
+        }
+
+        // Create user session
+        UserSession session = new UserSession();
+        session.setUser(user);
+        session.setDeviceId(request.getDeviceId());
+        session.setDeviceName(request.getDeviceName());
+        session.setIpAddress(request.getIpAddress());
+        session.setUserAgent(request.getUserAgent());
+        session.setAccessToken(accessToken);
+        session.setRefreshToken(refreshPayload.getRefreshToken().getTokenId());
+        session.setCreatedAt(LocalDateTime.now());
+        session.setExpiresAt(refreshPayload.getRefreshToken().getExpiresAt());
+        session.setActive(true);
+        userSessionRepository.save(session);
+
+        UserDto userDto = new UserDto(user);
+        return new AuthResponse(accessToken, refreshToken, userDto);
+    }
+
     public void logout(String token) {
+        if (token == null) return;
         // Extract token from Bearer format
         if (token.startsWith("Bearer ")) {
             token = token.substring(7);
         }
-        
-        // Find and deactivate session
+
         Optional<UserSession> session = userSessionRepository.findByAccessToken(token);
         if (session.isPresent()) {
-            session.get().setActive(false);
-            userSessionRepository.save(session.get());
+            UserSession userSession = session.get();
+            userSession.setActive(false);
+            if (userSession.getRefreshToken() != null) {
+                refreshTokenRepository.findByTokenId(userSession.getRefreshToken())
+                    .ifPresent(refreshTokenService::revoke);
+            }
+            userSessionRepository.save(userSession);
         }
+    }
+
+    public void logoutAllByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        userSessionRepository.deactivateAllUserSessions(user);
+        refreshTokenRepository.deleteByUser(user);
     }
 }

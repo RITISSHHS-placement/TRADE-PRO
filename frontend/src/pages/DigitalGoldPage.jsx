@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, startTransition } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Check, ChevronDown, ChevronUp, X, Shield } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, ResponsiveContainer,
@@ -236,6 +236,10 @@ export default function DigitalGoldPage() {
   const [openFaq, setOpenFaq] = useState(null)
   const [showInvestModal, setShowInvestModal] = useState(false)
 
+  const goToPayment = () => {
+    startTransition(() => navigate(`/dashboard/payment?name=Digital%20Gold&type=Digital%20Gold&min=100&category=24K%20Gold%2099.9%25%20Purity`))
+  }
+
   const timeTabs = ['1D','1M','3M','1Y','3Y','5Y','MAX']
   const freqTabs = ['Both','Specific','One time']
 
@@ -252,7 +256,7 @@ export default function DigitalGoldPage() {
 
       {/* ── Section 1: Hero ── */}
       <section style={{
-        background: '#0f1624',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #0f1624 100%)',
         padding: '64px 24px 56px',
       }}>
         <div style={{
@@ -296,7 +300,7 @@ export default function DigitalGoldPage() {
             </div>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <button
-                onClick={() => setShowInvestModal(true)}
+                onClick={goToPayment}
                 style={{
                   padding: '12px 28px', borderRadius: 8,
                   background: '#d4a017', border: 'none',
@@ -309,7 +313,7 @@ export default function DigitalGoldPage() {
               >
                 Invest Now
               </button>
-              <button style={{
+              <button onClick={() => navigate('/login')} style={{
                 padding: '12px 20px', borderRadius: 8,
                 background: 'transparent',
                 border: '1px solid rgba(255,255,255,0.2)',
@@ -467,7 +471,7 @@ export default function DigitalGoldPage() {
               </div>
             </div>
             <button
-              onClick={() => setShowInvestModal(true)}
+              onClick={goToPayment}
               style={{
                 width: '100%', padding: '13px', borderRadius: 9,
                 background: '#0f1624', border: 'none',
@@ -526,7 +530,7 @@ export default function DigitalGoldPage() {
           </div>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 24 }}>
             <button
-              onClick={() => setShowInvestModal(true)}
+              onClick={goToPayment}
               style={{
                 padding: '12px 28px', borderRadius: 8,
                 background: '#d4a017', border: 'none',

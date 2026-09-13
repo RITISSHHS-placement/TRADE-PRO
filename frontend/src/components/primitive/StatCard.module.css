@@ -1,0 +1,57 @@
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl, 12px);
+  padding: 1rem 1.1rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.06); transform: translateY(-1px); }
+.clickable { cursor: pointer; }
+.clickable:active { transform: scale(.985); }
+.loading { opacity: .55; }
+.row { display: flex; align-items: center; gap: .6rem; }
+.icon { font-size: 1.2rem; opacity: .85; flex-shrink: 0; }
+.iconSpacer { width: 1.2rem; }
+.body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+
+.label {
+  font-size: .66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-tertiary);
+  margin-bottom: .15rem;
+}
+.valueWrap { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+.value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.valueUp { color: var(--green-dark); }
+.valueDown { color: var(--red-dark); }
+.sm .value { font-size: 1.15rem; }
+.md .value { font-size: 1.5rem; }
+.lg .value { font-size: 1.9rem; }
+
+.subtitle {
+  font-size: .7rem;
+  color: var(--text-secondary);
+  margin-top: .1rem;
+}
+
+.pill {
+  font-size: .68rem;
+  font-weight: 700;
+  padding: .15rem .5rem;
+  border-radius: var(--radius-full, 999px);
+  white-space: nowrap;
+}
+.pillUp   { background: var(--green-dim); color: var(--green-dark); }
+.pillDown { background: var(--red-dim);   color: var(--red-dark); }

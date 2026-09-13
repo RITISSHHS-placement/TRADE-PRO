@@ -1,0 +1,219 @@
+/* ═══════════════════════════════════════════════════════════════
+   TradePro — Microsoft AI-Inspired Design Tokens
+   Single source of truth: white-first, charcoal text, mute status
+   Every color resolves to a semantic token (no hard-coded values
+   in components).
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Light (default) — Microsoft AI cream page ── */
+:root {
+  /* Surfaces */
+  --tp-white:     #ffffff;
+  --tp-page:      #ffffff;
+  --tp-surface-1: #ffffff;
+  --tp-surface-2: #fafafa;
+  --tp-surface-3: #f5f5f5;
+  --tp-hover:     #f0f0f0;
+  --tp-active:    #e8e8e8;
+
+  /* Grays */
+  --tp-gray-50:  #fafafa;
+  --tp-gray-100: #f5f5f5;
+  --tp-gray-200: #e8e8e8;
+  --tp-gray-300: #d6d6d6;
+  --tp-gray-500: #737373;
+  --tp-gray-700: #404040;
+
+  /* Text — warm charcoal matching the cream page */
+  --tp-black:       #1a1a1a;
+  --tp-text:        #1a1a1a;
+  --tp-text-sub:    #666666;
+  --tp-text-muted:  #737373;
+  --tp-text-disabled:#d1d5db;
+
+  /* Borders */
+  --tp-border:      #e8e8e8;
+  --tp-border-md:   #d6d6d6;
+  --tp-border-lg:   #c0c0c0;
+
+  /* Financial status — muted */
+  --tp-green:       #087f5b;
+  --tp-green-soft:  #e8f5ef;
+  --tp-red:         #c93636;
+  --tp-red-soft:    #faeeee;
+  --tp-blue:        #1769aa;
+  --tp-blue-soft:   #edf5fb;
+  --tp-yellow:      #b7791f;
+  --tp-yellow-soft: #faf4e5;
+
+  /* Status tints & neutral (restrained) — used by StatusBadge / pill / bg */
+  --tp-amber:       #b7791f;
+  --tp-amber-soft:  #faf4e5;
+  --tp-amber-dim:   rgba(183,121,31,.08);
+  --tp-green-dim:   rgba(8,127,91,.08);
+  --tp-red-dim:     rgba(201,54,54,.08);
+  --tp-muted:       #737373;
+  --tp-muted-bg:    #f5f5f5;
+  --tp-muted-dim:   rgba(115,115,115,.08);
+
+  /* Chart colors */
+  --tp-chart-up:   #087f5b;
+  --tp-chart-down: #c93636;
+  --tp-chart-line: #1769aa;
+
+  /* Aliases (point to new restrained palette) */
+  --tp-orange:      #b7791f;
+  --tp-orange-hover:#7a4f0a;
+  --tp-orange-dim:  rgba(183,121,31,.08);
+  --tp-orange-glow: rgba(183,121,31,.20);
+  --tp-white-smoke: #fafafa;
+
+  /* ── Navbar / top chrome ── */
+  --tp-nav:          #161e28;
+  --tp-nav-text:     #f5f5f5;
+  --tp-nav-text-dim: #9aa3b8;
+}
+
+/* ── Dark theme — MAI restrained dark (§31) ── */
+[data-theme="dark"] {
+  --tp-page:         #111111;
+  --tp-surface-1:    #181818;
+  --tp-surface-2:    #1f1f1f;
+  --tp-surface-3:    #222222;
+  --tp-hover:        #222222;
+  --tp-active:       #2a2a2a;
+
+  --tp-gray-50:  #111111;
+  --tp-gray-200: #222222;
+  --tp-gray-300: #2a2a2a;
+  --tp-gray-500: #737373;
+  --tp-gray-700: #404040;
+
+  --tp-black:  #f5f5f5;
+  --tp-text:   #f5f5f5;
+  --tp-text-sub:#b3b3b3;
+  --tp-text-muted:#999999;
+
+  --tp-border:     #2a2a2a;
+  --tp-border-md:  #3a3a3a;
+  --tp-border-lg:  #4a4a4a;
+
+  --tp-green:      #48b98b;
+  --tp-green-soft: #1b3a30;
+  --tp-red:        #f06a6a;
+  --tp-red-soft:   #3a1d1d;
+  --tp-blue:       #1769aa;
+  --tp-blue-soft:  rgba(23,105,170,.20);
+
+  --tp-orange:     #fb921f;
+  --tp-orange-dim: rgba(183,121,31,.22);
+
+  /* Status tints & neutral (dark) */
+  --tp-amber:       #fb921f;
+  --tp-amber-soft:  #4a2b0e;
+  --tp-amber-dim:   rgba(183,121,31,.18);
+  --tp-green-dim:   rgba(72,185,139,.18);
+  --tp-red-dim:     rgba(240,106,106,.18);
+  --tp-muted:       #999999;
+  --tp-muted-bg:    #1f1f1f;
+  --tp-muted-dim:   rgba(153,153,153,.12);
+}
+
+/* ── Page shell ── */
+.tp-page {
+  background: var(--tp-page);
+  color: var(--tp-text);
+  min-height: 100vh;
+  border-radius: 0;
+}
+
+/* ── Cards — borders, no shadows, ≤8px radius ── */
+.tp-card      { background: var(--tp-surface-1); border: 1px solid var(--tp-border); border-radius: 0; box-shadow: none; }
+.tp-card-alt  { background: var(--tp-surface-2); border: 1px solid var(--tp-border); border-radius: 0; box-shadow: none; }
+.tp-surface   { background: var(--tp-surface-2); }
+
+/* ── Card hover system (§13) ── */
+.tp-card:hover {
+  background: var(--tp-hover);
+  border-color: var(--tp-border-md);
+  transform: translateY(-3px);
+  transition: background-color 280ms ease, border-color 280ms ease, transform 350ms cubic-bezier(.16,1,.3,1);
+}
+.tp-card-arrow { transition: transform 350ms cubic-bezier(.16,1,.3,1); }
+.tp-card:hover .tp-card-arrow { transform: translateX(6px); }
+
+/* ── Inputs ── */
+.tp-input {
+  background: var(--tp-surface-1);
+  border: 1px solid var(--tp-border);
+  border-radius: 4px;
+  color: var(--tp-text);
+  padding: 9px 14px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.tp-input:focus {
+  border-color: var(--tp-blue);
+  box-shadow: 0 0 0 3px var(--tp-blue-soft);
+}
+
+/* ── Labels ── */
+.tp-label { font-size: 11px; font-weight: 700; color: var(--tp-text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.tp-section { padding: 24px; }
+
+/* ── Buttons (restrained) ── */
+.tp-btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 20px; border-radius: 4px;
+  background: var(--tp-black); color: var(--tp-white);
+  font-size: 13px; font-weight: 600; border: none; cursor: pointer;
+  transition: background-color 200ms ease, transform 350ms cubic-bezier(.16,1,.3,1);
+}
+.tp-btn-primary:hover { background: #2b2b2b; transform: translateY(-1px); }
+.tp-btn-primary:active { transform: translateY(0); }
+.tp-btn-primary[data-theme="dark"] { background: var(--tp-white); color: var(--tp-black); }
+.tp-btn-primary[data-theme="dark"]:hover { background: #e6e6e6; }
+
+.tp-btn-outline {
+  padding: 10px 20px; border-radius: 4px;
+  background: transparent; color: var(--tp-text);
+  font-size: 13px; font-weight: 600;
+  border: 1px solid var(--tp-border); cursor: pointer;
+  transition: background-color 200ms ease, border-color 200ms ease;
+}
+.tp-btn-outline:hover { background: var(--tp-hover); border-color: var(--tp-border-md); }
+
+.tp-btn-buy  { background: var(--tp-green);  color: var(--tp-white); }
+.tp-btn-sell { background: var(--tp-red);    color: var(--tp-white); }
+.tp-btn-buy:hover  { background: #065e40; }
+.tp-btn-sell:hover { background: #8a2424; }
+
+/* ── Status badges (restrained color only when meaningful) ── */
+.tp-status-positive { color: var(--tp-green); background: var(--tp-green-soft); }
+.tp-status-negative { color: var(--tp-red);   background: var(--tp-red-soft); }
+.tp-status-neutral  { color: var(--tp-text-muted); background: var(--tp-surface-2); }
+
+/* ── Scrollbar ── */
+.tp-page ::-webkit-scrollbar       { width: 5px; height: 5px; }
+.tp-page ::-webkit-scrollbar-track { background: transparent; }
+.tp-page ::-webkit-scrollbar-thumb { background: var(--tp-gray-300); border-radius: 999px; opacity: .5; }
+.tp-page ::-webkit-scrollbar-thumb:hover { background: var(--tp-gray-200); opacity: .8; }
+
+/* ── Selection ── */
+.tp-page ::selection { background: rgba(23,105,170,.20); color: var(--tp-text); }
+
+/* ── Reduced motion (§38) ── */
+@media (prefers-reduced-motion: reduce) {
+  .tp-page *, .tp-page *::before, .tp-page *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Keyframes ── */
+@keyframes tpFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes tpPulse  { 0%,100%{opacity:1} 50%{opacity:0.5} }
+@keyframes tpSpin   { to { transform: rotate(360deg); } }
+@keyframes tpMarquee { 0%{transform:translateX(0)} 100%{transform:translateX(-33.333%)} }
+@keyframes tpFadeUp  { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }

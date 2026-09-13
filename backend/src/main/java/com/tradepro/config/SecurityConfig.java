@@ -2,6 +2,8 @@ package com.tradepro.config;
 
 import com.tradepro.security.JwtAuthenticationFilter;
 import com.tradepro.security.RateLimitFilter;
+import com.tradepro.security.RefreshTokenFilter;
+import com.tradepro.security.RequestIdFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,17 +34,26 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final RequestIdFilter requestIdFilter;
     private final RateLimitFilter rateLimitFilter;
+    private final RefreshTokenFilter refreshTokenFilter;
+    private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
+    private final PasswordEncoder passwordEncoder;
 
     // Constructor injection — fixes field injection warnings
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
+    public SecurityConfig(RequestIdFilter requestIdFilter,
                           RateLimitFilter rateLimitFilter,
-                          UserDetailsService userDetailsService) {
-        this.jwtAuthFilter    = jwtAuthFilter;
-        this.rateLimitFilter  = rateLimitFilter;
+                          RefreshTokenFilter refreshTokenFilter,
+                          JwtAuthenticationFilter jwtAuthFilter,
+                          UserDetailsService userDetailsService,
+                          PasswordEncoder passwordEncoder) {
+        this.requestIdFilter   = requestIdFilter;
+        this.rateLimitFilter   = rateLimitFilter;
+        this.refreshTokenFilter = refreshTokenFilter;
+        this.jwtAuthFilter     = jwtAuthFilter;
         this.userDetailsService = userDetailsService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Value("${cors.allowed-origins:http://localhost:3000,https://trade-pro-t7l6.vercel.app}")
@@ -52,8 +63,8 @@ public class SecurityConfig {
     private static final String[] PUBLIC_URLS = {
         "/api/auth/**",
         "/auth/**",
-        "/api/health",
-        "/health",
+        "/api/health/**",
+        "/health/**",
         "/api/market/**",
         "/market/**",
         "/actuator/health",
@@ -76,7 +87,9 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
+            .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(refreshTokenFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             // ── Security Headers ──────────────────────────────────────────
             .headers(headers -> headers
@@ -136,7 +149,7 @@ public class SecurityConfig {
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
+        provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
 
@@ -145,9 +158,4 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        // BCrypt with strength 12 — slower brute-force
-        return new BCryptPasswordEncoder(12);
-    }
 }

@@ -1,0 +1,17 @@
+.grid   { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
+.card   { padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius-xl, 12px); background: var(--surface-1); }
+.kicker { width: 40%; height: .8rem; margin-bottom: .6rem; }
+.big    { width: 70%; height: 1.6rem; }
+.line2  { width: 55%; height: .8rem; margin-top: .5rem; }
+.chart  { width: 100%; height: 260px; }
+.list   { display: flex; flex-direction: column; gap: .6rem; }
+.listRow{ display: flex; align-items: center; gap: .7rem; }
+.avatar { width: 34px; height: 34px; border-radius: 6px; flex-shrink: 0; }
+.line1  { flex: .55; height: .9rem; }
+.line2  { flex: .25; height: .9rem; }
+.table  { display: flex; flex-direction: column; gap: .5rem; }
+.thRow  { display: flex; gap: .75rem; margin-bottom: .6rem; }
+.th     { flex: 1; height: .8rem; }
+.tr     { display: flex; align-items: center; gap: .75rem; }
+.tdAvatar { width: 32px; height: 32px; border-radius: 6px; flex-shrink: 0; }
+.td     { flex: 1; height: .9rem; }

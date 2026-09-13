@@ -1,22 +1,17 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback, useRef, useEffect, memo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import {
   TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight,
-  RefreshCw, Search, CheckCircle2, Clock, BarChart2,
+  RefreshCw, Search, CheckCircle2, Clock, BarChart2, Star,
+  Settings, Maximize2, Camera,
 } from 'lucide-react'
 import { useTrades, useMarketData } from '../hooks'
 import { SYMBOL_LABELS } from '../services/marketData'
-
-const T = {
-  bg: '#f8f9fa', white: '#fff',
-  border: '#e0e0e0', border2: '#f0f0f0',
-  text: '#1a1a1a', textSub: '#5f6368', textMute: '#9aa0a6',
-  green: '#0f9d58', greenBg: '#e8f5e9', greenDark: '#0a8043',
-  red: '#ea4335', redBg: '#fce8e6',
-  blue: '#1a73e8', blueBg: '#e8f0fe',
-  amber: '#d97706', amberBg: '#fef3c7',
-}
+import PaymentModal from '../components/PaymentModal'
+import TradingViewChart from '../components/TradingViewChart'
+import CompanyLogo from '../components/CompanyLogo'
+import styles from './TradePage.module.css'
 
 const fmt = n => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
@@ -24,28 +19,157 @@ const SEGMENTS   = ['EQUITY','FUTURES','OPTIONS','CURRENCY','COMMODITY']
 const ORDER_TYPES = ['MARKET','LIMIT','STOP_LOSS','STOP_LOSS_MARKET']
 const EXCHANGES  = ['NSE','BSE','MCX']
 
-/* ── Popular watchlist symbols ── */
-const WATCH_SYMS = [
-  'NIFTY 50','NIFTY BANK','RELIANCE','TCS','HDFCBANK',
-  'INFY','ICICIBANK','SBIN','BAJFINANCE','WIPRO',
-  'MARUTI','TATAMOTORS','NTPC','HCLTECH','SUNPHARMA',
+/* ── ALL Symbols by Segment ── */
+const ALL_IN_STOCKS = [
+  // NIFTY 50 constituents
+  'RELIANCE','TCS','HDFCBANK','INFY','ICICIBANK','SBIN','BAJFINANCE',
+  'BHARTIARTL','KOTAKBANK','WIPRO','HCLTECH','AXISBANK','LT','ITC',
+  'MARUTI','TITAN','TATAMOTORS','TATASTEEL','ONGC','NTPC','SUNPHARMA',
+  'ULTRACEMCO','NESTLEIND','ASIANPAINT','POWERGRID','COALINDIA',
+  'ADANIENT','ADANIPORTS','BAJAJ-AUTO','HEROMOTOCO','TATACONSUM',
+  'INDIGO','DRREDDY','CIPLA','APOLLOHOSP','EICHERMOT',
+  'GRASIM','DIVISLAB','TECHM','INDUSINDBK','POLYCAB',
+  // NIFTY Next 50
+  'DMART','SIEMENS','ABB','HAVELLS','GODREJCP','PIDILITIND','BERGEPAINT',
+  'MUTHOOTFIN','CHOLAFIN','BAJAJFINSV','SRF','AMBUJACEM','ACC','GLENMARK',
+  'LUPIN','BIOCON','AUROPHARMA','TORNTPHARM','ALKEM','IPCALAB',
+  'BOSCHLTD','MOTHERSON','EXIDEIND','CUMMINSIND','THERMAX',
+  'VOLTAS','BLUEDART','PERSISTENT','COFORGE','LTIM','MPHASIS',
+  'OFSS','KPITTECH','ZOMATO','PAYTM','NYKAA','POLICYBAZAAR',
+  // NIFTY Midcap 150
+  'BANKBARODA','PNB','CANBK','UNIONBANK','IDFCFIRSTB','FEDERALBNK',
+  'KARURVYSYA','DCBBANK','RBLBANK','YESBANK','BANDHANBNK',
+  'MFSL','SBILIFE','HDFCLIFE','ICICIGI','ICICIPRULI','STARHEALTH',
+  'GICRE','NIACL','ORIENTINS',
+  'RECLTD','PFC','IRFC','HUDCO','NHPC','SJVN','NLCINDIA','THANGAMAYL',
+  'TATAPOWER','ADANIGREEN','ADANITRANS','TORNTPOWER','CESC','JSW ENERGY',
+  'SAIL','HINDALCO','NATIONALUM','VEDL','HINDZINC','NMDC','MOIL',
+  'UPL','PIIND','RALLIS','ASTERDM','LALPATHLAB','METROPOLIS','VIJAYABANK',
+  'JSWSTEEL','JINDALSTEL','RATNAMANI','WELSPUNIND','APL APOLLO',
+  'PAGEIND','TRENT','MANYAVAR','SHOPERSTOP','VMART','ZYDUSLIFE',
+  // NIFTY Smallcap picks
+  'BSOFT','ZENSAR','NIITTECH','INFOEDGE','JUSTDIAL','AFFLE','NAZARA',
+  'DELTACORP','GMRINFRA','IRBINFRA','ASHOKA','HGINFRA','KNR',
+  'RITES','RVNL','IRCON','RAILTEL','TITAGARH',
+  'BPCL','IOC','HPCL','MRPL','CPCL',
+  'GAIL','IGL','MGL','ATGL','GSPL',
+  'CONCOR','ALLCARGO','GATI','MAHLOG','BLUEDART',
+  'TANLA','ROUTE','STLTECH','TATACOMM','VODAIDEA',
 ]
+
+const ALL_US_STOCKS = [
+  'AAPL','MSFT','NVDA','GOOGL','AMZN','TSLA','META','JPM',
+  'V','WMT','UNH','JNJ','XOM','PG','BRKB','MA','HD','BAC',
+  'CRM','NFLX','AMD','INTC','PYPL','DIS','NKE','COST',
+]
+
+const ALL_CRYPTO = [
+  'BTC','ETH','SOL','XRP','BNB','ADA','DOGE','DOT',
+  'AVAX','LINK','MATIC','UNI','ATOM','FIL','LTC',
+  'XLM','TRX','NEAR','APT','ARB','OP','INJ','SUI',
+]
+
+const ALL_ETFS = [
+  'NIFTYBEES','BANKBEES','JUNIORBEES','GOLDBEES','SILVERBEES',
+  'MIDCAPBEES','PSUBANKBEES','ITBEES','PHARMABEES','NIFTYBEES',
+]
+
+const PAIR_TABS = ['★ Favorites','IN Stocks','US Stocks','Crypto','ETFs']
+
+function getTabSymbols(tab, stockMap) {
+  switch (tab) {
+    case 'IN Stocks': return ALL_IN_STOCKS
+    case 'US Stocks': return ALL_US_STOCKS
+    case 'Crypto': return ALL_CRYPTO
+    case 'ETFs': return ALL_ETFS
+    default: // Favorites — top stocks from live data
+      return [
+        'RELIANCE','TCS','HDFCBANK','INFY','ICICIBANK','SBIN',
+        'BAJFINANCE','WIPRO','NTPC','HCLTECH','TATAMOTORS','SUNPHARMA',
+      ]
+  }
+}
 
 /* ── Recent order badge ── */
 function StatusBadge({ status }) {
   const map = {
-    COMPLETE:  { bg: T.greenBg,  color: T.greenDark },
-    PENDING:   { bg: T.amberBg,  color: T.amber },
-    CANCELLED: { bg: '#f3f4f6',  color: T.textMute },
-    REJECTED:  { bg: T.redBg,    color: T.red },
+    COMPLETE:  { bg: 'var(--tp-green-dim, rgba(34,197,94,0.12))',  color: 'var(--tp-green, #22c55e)' },
+    PENDING:   { bg: 'var(--tp-amber-dim, rgba(245,158,11,0.12))', color: 'var(--tp-amber, #f59e0b)' },
+    CANCELLED: { bg: 'var(--tp-muted-dim, rgba(139,148,158,0.12))', color: 'var(--tp-muted, #8b949e)' },
+    REJECTED:  { bg: 'var(--tp-red-dim, rgba(239,68,68,0.12))',   color: 'var(--tp-red, #ef4444)' },
   }
   const s = map[status] || map.PENDING
   return (
-    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: s.bg, color: s.color }}>
+    <span className={styles.statusBadge} style={{ background: s.bg, color: s.color }}>
       {status}
     </span>
   )
 }
+
+/* ── Order Type Tabs ── */
+const ORDER_TABS = ['Limit','Market','Stop Limit','Stop Market']
+
+/* ── Memoized pair row — prevents re-render of 100+ rows on every keystroke ── */
+const PairRow = memo(function PairRow({ sym, isSel, onSelect, quote, label }) {
+  const up = (quote?.changePct ?? 0) >= 0
+  return (
+    <div
+      className={`${styles.pairRow} ${isSel ? styles.pairRowSel : ''}`}
+      onClick={() => onSelect(sym)}
+    >
+      <div className={styles.pairLeft}>
+        <CompanyLogo symbol={sym} name={label || sym} size={28} borderRadius={6} />
+        <div>
+          <div className={styles.pairName}>{sym}</div>
+          <div className={styles.pairEx}>{label || sym}</div>
+        </div>
+      </div>
+      <div className={styles.pairPrice}>
+        {quote ? `₹${fmt(quote.price)}` : '—'}
+      </div>
+      <div className={up ? styles.pairChgUp : styles.pairChgDn}>
+        {up ? '+' : ''}{fmt(quote?.changePct ?? 0)}%
+      </div>
+    </div>
+  )
+}, (prev, next) =>
+  prev.sym === next.sym &&
+  prev.isSel === next.isSel &&
+  prev.label === next.label &&
+  prev.quote?.price === next.quote?.price &&
+  prev.quote?.changePct === next.quote?.changePct
+)
+
+/* ── Memoized order-book rows ── */
+const AskRow = memo(function AskRow({ price, qty, total, pct }) {
+  return (
+    <div className={styles.obRow}>
+      <div className={styles.obBar} style={{ width: `${pct}%`, background: 'rgba(239,68,68,0.08)' }} />
+      <span className={styles.obAskPrice}>{fmt(price)}</span>
+      <span className={styles.obAmt}>{qty.toLocaleString()}</span>
+      <span className={styles.obTotal}>₹{(total / 1e6).toFixed(2)}M</span>
+    </div>
+  )
+})
+const BidRow = memo(function BidRow({ price, qty, total, pct }) {
+  return (
+    <div className={styles.obRow}>
+      <div className={styles.obBar} style={{ width: `${pct}%`, background: 'rgba(34,197,94,0.08)' }} />
+      <span className={styles.obBidPrice}>{fmt(price)}</span>
+      <span className={styles.obAmt}>{qty.toLocaleString()}</span>
+      <span className={styles.obTotal}>₹{(total / 1e6).toFixed(2)}M</span>
+    </div>
+  )
+})
+const TradeRow = memo(function TradeRow({ time, price, qty, isUp }) {
+  return (
+    <div className={styles.obRecentRow}>
+      <span className={styles.obRecentTime}>{time}</span>
+      <span className={isUp ? styles.obRecentPriceUp : styles.obRecentPriceDn}>{fmt(price)}</span>
+      <span className={styles.obRecentAmt}>{qty.toLocaleString()}</span>
+    </div>
+  )
+})
 
 export default function TradePage() {
   const navigate = useNavigate()
@@ -57,331 +181,600 @@ export default function TradePage() {
   const [selSym, setSelSym] = useState('NIFTY 50')
   const [symSearch, setSymSearch] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [paymentOrder, setPaymentOrder] = useState(null)
+  const [orderTab, setOrderTab] = useState('Limit')
+  const [bottomTab, setBottomTab] = useState('Open Orders')
+  const [pairTab, setPairTab] = useState('★ Favorites')
+
+  // Price / qty / amount state for buy & sell forms.
+  // `lastEdited` tracks which field the user typed in last, so the other
+  // two fields derive from it without fighting each other on every keystroke.
+  const [buyPrice, setBuyPrice] = useState('')
+  const [buyQty, setBuyQty] = useState('')
+  const [buyAmount, setBuyAmount] = useState('')
+  const [sellPrice, setSellPrice] = useState('')
+  const [sellQty, setSellQty] = useState('')
+  const [sellAmount, setSellAmount] = useState('')
+  const [buyEdited, setBuyEdited] = useState(null)  // 'price' | 'qty' | 'amount'
+  const [sellEdited, setSellEdited] = useState(null)
+  const buyQtyLock = useRef(false)
+  const buyAmtLock = useRef(false)
+  const sellQtyLock = useRef(false)
+  const sellAmtLock = useRef(false)
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm({
-    defaultValues: { symbol: 'RELIANCE', exchange: 'NSE', segment: 'EQUITY', orderType: 'MARKET', quantity: '', price: '', triggerPrice: '', gttExpiry: '' },
+    defaultValues: { symbol: 'RELIANCE', exchange: 'NSE', segment: 'EQUITY', orderType: 'MARKET', quantity: '1', price: '', triggerPrice: '', gttExpiry: '' },
   })
 
   const orderType = watch('orderType')
   const watchSym  = watch('symbol')
 
-  const onSubmit = async (data) => {
-    await place({
-      symbol: data.symbol.trim().toUpperCase(),
-      exchange: data.exchange, segment: data.segment, orderType: data.orderType,
-      side, quantity: parseInt(data.quantity, 10),
-      price: data.price ? parseFloat(data.price) : null,
-      triggerPrice: data.triggerPrice ? parseFloat(data.triggerPrice) : null,
-      isGTT, gttExpiry: data.gttExpiry || null,
-    })
-    setSubmitted(true)
-    setTimeout(() => { setSubmitted(false); reset({ symbol: '', exchange: 'NSE', segment: 'EQUITY', orderType: 'MARKET', quantity: '', price: '', triggerPrice: '', gttExpiry: '' }) }, 2000)
-  }
-
-  /* build merged quotes */
   const allQuotes = useMemo(() => ({ ...indices, ...stocks }), [indices, stocks])
-
-  /* watchlist filtered by search */
-  const filteredSyms = useMemo(() => {
-    const q = symSearch.toLowerCase()
-    return WATCH_SYMS.filter(s => s.toLowerCase().includes(q) || (SYMBOL_LABELS[s] || '').toLowerCase().includes(q))
-  }, [symSearch])
-
   const selQ = allQuotes[selSym]
   const selUp = (selQ?.changePct ?? 0) >= 0
-
-  /* live quote for symbol in form */
   const formQ = allQuotes[watchSym?.toUpperCase()] || null
 
+  // Stable handler for pair row clicks so memoized rows don't re-render unnecessarily
+  const handlePairSelect = useCallback((s) => {
+    setSelSym(s)
+    setValue('symbol', s)
+  }, [setValue])
+
+  // Auto-fill price from live quote when symbol changes
+  useEffect(() => {
+    const livePrice = allQuotes[selSym]?.price
+    if (livePrice && !buyPrice) {
+      setBuyPrice(String(livePrice.toFixed(2)))
+      // If user has already typed an amount, derive qty from the new price
+      const a = parseFloat(buyAmount)
+      if (!isNaN(a) && a > 0) {
+        setBuyQty(String(Math.floor(a / livePrice)))
+      }
+    }
+    if (livePrice && !sellPrice) {
+      setSellPrice(String(livePrice.toFixed(2)))
+      const a = parseFloat(sellAmount)
+      if (!isNaN(a) && a > 0) {
+        setSellQty(String(Math.floor(a / livePrice)))
+      }
+    }
+  }, [selSym, allQuotes])
+
+  // Helper: resolve the live price (entered > market quote > 0)
+  const resolveBuyPrice = () => parseFloat(buyPrice) || allQuotes[selSym]?.price || 0
+  const resolveSellPrice = () => parseFloat(sellPrice) || allQuotes[selSym]?.price || 0
+
+  // Amount ↔ Qty sync handlers for BUY form.
+  // Strategy: the field the user TYPES in is the source of truth.
+  // The other two fields are DERIVED from it, so they never overwrite what the user just typed.
+  const handleBuyAmountChange = (val) => {
+    setBuyAmount(val)
+    setBuyEdited('amount')
+    const p = resolveBuyPrice()
+    const a = parseFloat(val)
+    if (p > 0 && !isNaN(a) && a >= 0) {
+      buyQtyLock.current = true
+      setBuyQty(a > 0 ? String(Math.floor(a / p)) : '0')
+      setTimeout(() => { buyQtyLock.current = false }, 0)
+    }
+  }
+  const handleBuyQtyChange = (val) => {
+    setBuyQty(val)
+    setBuyEdited('qty')
+    const p = resolveBuyPrice()
+    const q = parseFloat(val)
+    if (p > 0 && !isNaN(q) && q >= 0) {
+      buyAmtLock.current = true
+      setBuyAmount(String((q * p).toFixed(2)))
+      setTimeout(() => { buyAmtLock.current = false }, 0)
+    }
+  }
+  const handleBuyPriceChange = (val) => {
+    setBuyPrice(val)
+    setBuyEdited('price')
+    const p = parseFloat(val)
+    if (p > 0) {
+      // Recompute whichever field the user wasn't editing last
+      if (buyEdited === 'qty') {
+        const q = parseFloat(buyQty) || 0
+        buyAmtLock.current = true
+        setBuyAmount(String((q * p).toFixed(2)))
+        setTimeout(() => { buyAmtLock.current = false }, 0)
+      } else if (buyEdited === 'amount') {
+        const a = parseFloat(buyAmount) || 0
+        buyQtyLock.current = true
+        setBuyQty(a > 0 ? String(Math.floor(a / p)) : '0')
+        setTimeout(() => { buyQtyLock.current = false }, 0)
+      }
+    }
+  }
+
+  // Amount ↔ Qty sync handlers for SELL form
+  const handleSellAmountChange = (val) => {
+    setSellAmount(val)
+    setSellEdited('amount')
+    const p = resolveSellPrice()
+    const a = parseFloat(val)
+    if (p > 0 && !isNaN(a) && a >= 0) {
+      sellQtyLock.current = true
+      setSellQty(a > 0 ? String(Math.floor(a / p)) : '0')
+      setTimeout(() => { sellQtyLock.current = false }, 0)
+    }
+  }
+  const handleSellQtyChange = (val) => {
+    setSellQty(val)
+    setSellEdited('qty')
+    const p = resolveSellPrice()
+    const q = parseFloat(val)
+    if (p > 0 && !isNaN(q) && q >= 0) {
+      sellAmtLock.current = true
+      setSellAmount(String((q * p).toFixed(2)))
+      setTimeout(() => { sellAmtLock.current = false }, 0)
+    }
+  }
+  const handleSellPriceChange = (val) => {
+    setSellPrice(val)
+    setSellEdited('price')
+    const p = parseFloat(val)
+    if (p > 0) {
+      if (sellEdited === 'qty') {
+        const q = parseFloat(sellQty) || 0
+        sellAmtLock.current = true
+        setSellAmount(String((q * p).toFixed(2)))
+        setTimeout(() => { sellAmtLock.current = false }, 0)
+      } else if (sellEdited === 'amount') {
+        const a = parseFloat(sellAmount) || 0
+        sellQtyLock.current = true
+        setSellQty(a > 0 ? String(Math.floor(a / p)) : '0')
+        setTimeout(() => { sellQtyLock.current = false }, 0)
+      }
+    }
+  }
+
+  const handlePaymentSuccess = async (paymentResult) => {
+    try {
+      await place({
+        symbol: paymentOrder.symbol,
+        exchange: paymentOrder.exchange,
+        segment: paymentOrder.segment,
+        orderType: paymentOrder.type,
+        side: paymentOrder.side,
+        quantity: paymentOrder.qty,
+        price: paymentOrder.type !== 'MARKET' ? paymentOrder.ltp : null,
+      })
+      setSubmitted(true)
+      setPaymentOrder(null)
+      reset({ symbol: 'RELIANCE', exchange: 'NSE', segment: 'EQUITY', orderType: 'MARKET', quantity: '1', price: '', triggerPrice: '', gttExpiry: '' })
+      setTimeout(() => setSubmitted(false), 2000)
+    } catch (err) {
+      console.error('Failed to place trade after payment:', err)
+    }
+  }
+
+  // Memoize order book data — no Math.random() in render
+  const orderBookData = useMemo(() => {
+    const base = selQ?.price || 2500
+    const asks = Array.from({length: 8}, (_, i) => {
+      const price = base + (8 - i) * 2.5
+      const qty = 100 + ((i * 7 + 13) * 31 % 5000)
+      return { price, qty, total: price * qty, pct: (qty / 5000) * 100 }
+    })
+    const bids = Array.from({length: 8}, (_, i) => {
+      const price = base - (i + 1) * 2.5
+      const qty = 100 + ((i * 11 + 17) * 29 % 5000)
+      return { price, qty, total: price * qty, pct: (qty / 5000) * 100 }
+    })
+    const trades = Array.from({length: 6}, (_, i) => {
+      const price = base + (((i * 7 + 3) % 17) - 8) * 1.2
+      const qty = 100 + ((i * 13 + 5) * 19 % 1000)
+      return {
+        time: new Date(Date.now() - i * 3000).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+        price, qty, isUp: i % 2 === 0,
+      }
+    })
+    return { asks, bids, trades }
+  }, [selQ?.price])
+
+  const filteredSyms = useMemo(() => {
+    const q = symSearch.toLowerCase()
+    const syms = getTabSymbols(pairTab, stocks)
+    if (!q) return syms
+    return syms.filter(s => s.toLowerCase().includes(q) || (SYMBOL_LABELS[s] || '').toLowerCase().includes(q))  }, [symSearch, pairTab, stocks])
+
+
   return (
-    <div style={{ background: T.bg, minHeight: '100vh', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif' }}>
-      <div style={{ maxWidth: 1340, margin: '0 auto', padding: 24, display: 'grid', gridTemplateColumns: '320px 1fr 300px', gap: 16, alignItems: 'start' }}>
+    <div className={styles.page}>
+      {/* ═══ 3-Column Exchange Layout ═══ */}
+      <div className={styles.exchangeGrid}>
 
-        {/* ── Column 1: Order Form ── */}
-        <div>
-          {/* Selected symbol header */}
-          <div style={{ background: selUp ? T.greenBg : T.redBg, border: `1px solid ${selUp ? '#a8d5b5' : '#f5c6c2'}`, borderRadius: 12, padding: '14px 16px', marginBottom: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: T.text }}>{SYMBOL_LABELS[selSym] || selSym}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: selUp ? T.greenDark : T.red, fontWeight: 700 }}>
-                {selUp ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
-                {selUp ? '+' : ''}{fmt(selQ?.changePct ?? 0)}%
-              </div>
-            </div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: T.text, letterSpacing: '-0.5px' }}>
-              ₹{selQ ? fmt(selQ.price) : '—'}
-            </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 11, color: T.textSub }}>
-              <span>O: ₹{selQ?.open ? fmt(selQ.open) : '—'}</span>
-              <span style={{ color: T.greenDark }}>H: ₹{selQ?.high ? fmt(selQ.high) : '—'}</span>
-              <span style={{ color: T.red }}>L: ₹{selQ?.low ? fmt(selQ.low) : '—'}</span>
-            </div>
+        {/* ── Column 1: Pairs Sidebar ── */}
+        <div className={styles.pairsSidebar}>
+          <div className={styles.pairsSearch}>
+            <Search size={13} className={styles.pairsSearchIcon} />
+            <input
+              value={symSearch}
+              onChange={e => setSymSearch(e.target.value)}
+              placeholder="Search"
+              className={styles.pairsSearchInput}
+            />
           </div>
 
-          {/* Order form card */}
-          <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'hidden' }}>
-            {/* GTT toggle */}
-            <div style={{ display: 'flex', borderBottom: `1px solid ${T.border}`, padding: '10px 16px', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Place Order</span>
-              <div style={{ display: 'flex', gap: 4, background: T.bg, borderRadius: 6, padding: 3 }}>
-                {['Regular', 'GTT'].map(t => (
-                  <button key={t} onClick={() => setIsGTT(t === 'GTT')} style={{
-                    padding: '4px 12px', borderRadius: 4, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                    background: (isGTT ? t === 'GTT' : t === 'Regular') ? T.white : 'transparent',
-                    color: (isGTT ? t === 'GTT' : t === 'Regular') ? T.text : T.textMute,
-                    boxShadow: (isGTT ? t === 'GTT' : t === 'Regular') ? '0 1px 3px rgba(0,0,0,.08)' : 'none',
-                  }}>{t}</button>
-                ))}
-              </div>
-            </div>
-
-            {/* Buy/Sell */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: `1px solid ${T.border}` }}>
-              {['BUY', 'SELL'].map(s => (
-                <button key={s} onClick={() => setSide(s)} style={{
-                  padding: '11px 0', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 800,
-                  background: side === s ? (s === 'BUY' ? T.greenBg : T.redBg) : T.white,
-                  color: side === s ? (s === 'BUY' ? T.greenDark : T.red) : T.textMute,
-                  borderBottom: side === s ? `2.5px solid ${s === 'BUY' ? T.green : T.red}` : '2.5px solid transparent',
-                }}>↑ {s}</button>
-              ))}
-            </div>
-
-            {/* Success overlay */}
-            {submitted && (
-              <div style={{ padding: '24px 16px', textAlign: 'center', borderBottom: `1px solid ${T.border}` }}>
-                <CheckCircle2 size={36} color={T.green} />
-                <div style={{ fontSize: 14, fontWeight: 700, color: T.greenDark, marginTop: 8 }}>Order placed successfully!</div>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit(onSubmit)} style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {/* Symbol */}
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: T.textSub, display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.4 }}>Symbol</label>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input {...register('symbol', { required: 'Symbol required' })}
-                    style={{ flex: 1, padding: '8px 10px', border: `1px solid ${errors.symbol ? T.red : T.border}`, borderRadius: 6, fontSize: 13, fontWeight: 700, outline: 'none', textTransform: 'uppercase' }}
-                    placeholder="RELIANCE"
-                    onBlur={e => setSelSym(e.target.value.toUpperCase())}
-                  />
-                  <select {...register('exchange')} style={{ padding: '8px 6px', border: `1px solid ${T.border}`, borderRadius: 6, fontSize: 12, color: T.textSub, outline: 'none' }}>
-                    {EXCHANGES.map(e => <option key={e}>{e}</option>)}
-                  </select>
-                </div>
-                {errors.symbol && <span style={{ fontSize: 11, color: T.red }}>{errors.symbol.message}</span>}
-                {formQ && (
-                  <div style={{ marginTop: 4, fontSize: 11, color: (formQ.changePct ?? 0) >= 0 ? T.greenDark : T.red, fontWeight: 600 }}>
-                    LTP: ₹{fmt(formQ.price)} ({(formQ.changePct ?? 0) >= 0 ? '+' : ''}{fmt(formQ.changePct ?? 0)}%)
-                  </div>
-                )}
-              </div>
-
-              {/* Segment + Order Type */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSub, display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.4 }}>Segment</label>
-                  <select {...register('segment')} style={{ width: '100%', padding: '8px 6px', border: `1px solid ${T.border}`, borderRadius: 6, fontSize: 12, outline: 'none' }}>
-                    {SEGMENTS.map(s => <option key={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSub, display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.4 }}>Order Type</label>
-                  <select {...register('orderType')} style={{ width: '100%', padding: '8px 6px', border: `1px solid ${T.border}`, borderRadius: 6, fontSize: 12, outline: 'none' }}>
-                    {ORDER_TYPES.map(t => <option key={t}>{t}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              {/* Quantity */}
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: T.textSub, display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.4 }}>Quantity</label>
-                <input type="number" inputMode="numeric" {...register('quantity', { required: 'Required', min: { value: 1, message: 'Min 1' } })}
-                  style={{ width: '100%', padding: '8px 10px', border: `1px solid ${errors.quantity ? T.red : T.border}`, borderRadius: 6, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
-                  placeholder="1" />
-                {errors.quantity && <span style={{ fontSize: 11, color: T.red }}>{errors.quantity.message}</span>}
-              </div>
-
-              {/* Price (for non-market orders) */}
-              {orderType !== 'MARKET' && orderType !== 'STOP_LOSS_MARKET' && (
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSub, display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.4 }}>Price (₹)</label>
-                  <input type="number" step="0.05" {...register('price')}
-                    style={{ width: '100%', padding: '8px 10px', border: `1px solid ${T.border}`, borderRadius: 6, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
-                    placeholder="0.00" />
-                </div>
-              )}
-
-              {/* Trigger Price (for SL orders) */}
-              {(orderType === 'STOP_LOSS' || orderType === 'STOP_LOSS_MARKET') && (
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSub, display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.4 }}>Trigger Price (₹)</label>
-                  <input type="number" step="0.05" {...register('triggerPrice')}
-                    style={{ width: '100%', padding: '8px 10px', border: `1px solid ${T.border}`, borderRadius: 6, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
-                    placeholder="0.00" />
-                </div>
-              )}
-
-              {/* GTT Expiry */}
-              {isGTT && (
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSub, display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.4 }}>GTT Expiry</label>
-                  <input type="date" {...register('gttExpiry')}
-                    style={{ width: '100%', padding: '8px 10px', border: `1px solid ${T.border}`, borderRadius: 6, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
-                </div>
-              )}
-
-              {/* Submit */}
-              <button type="submit" disabled={placing || submitted} style={{
-                width: '100%', padding: '12px', borderRadius: 8, border: 'none', cursor: placing ? 'not-allowed' : 'pointer',
-                background: submitted ? T.greenBg : side === 'BUY' ? T.green : T.red,
-                color: submitted ? T.greenDark : '#fff',
-                fontSize: 14, fontWeight: 800, letterSpacing: 0.3,
-                transition: 'all .15s', opacity: placing ? 0.7 : 1,
-              }}>
-                {placing ? 'Placing…' : submitted ? '✓ Order Placed' : `${side} ${isGTT ? '(GTT)' : ''}`}
+          {/* Pair Tabs */}
+          <div className={styles.pairTabs}>
+            {PAIR_TABS.map(tab => (
+              <button
+                key={tab}
+                className={pairTab === tab ? styles.pairTabActive : styles.pairTab}
+                onClick={() => setPairTab(tab)}
+              >
+                {tab}
               </button>
-            </form>
-
-            {isGTT && (
-              <div style={{ margin: '0 16px 16px', padding: '10px 12px', background: T.blueBg, borderRadius: 8, fontSize: 11.5, color: T.blue }}>
-                GTT orders execute automatically when your preset price is triggered.
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Column 2: Market Watch + Recent Orders ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-          {/* Market Watch */}
-          <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'hidden' }}>
-            <div style={{ padding: '12px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <BarChart2 size={15} color={T.blue} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Market Watch</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: T.green, fontWeight: 700 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green, display: 'inline-block' }} />LIVE
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, padding: '5px 10px' }}>
-                  <Search size={12} color={T.textMute} />
-                  <input value={symSearch} onChange={e => setSymSearch(e.target.value)} placeholder="Search…"
-                    style={{ border: 'none', background: 'none', outline: 'none', fontSize: 12, color: T.text, width: 100 }} />
-                </div>
-                <button onClick={refresh} disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', border: `1px solid ${T.border}`, borderRadius: 6, background: T.white, cursor: 'pointer', fontSize: 12, color: T.textSub }}>
-                  <RefreshCw size={11} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
-                </button>
-              </div>
-            </div>
-
-            {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr', padding: '7px 16px', background: T.bg, borderBottom: `1px solid ${T.border}`, fontSize: 10, fontWeight: 700, color: T.textMute, textTransform: 'uppercase', letterSpacing: 0.4 }}>
-              <span>Symbol</span><span style={{ textAlign: 'right' }}>LTP</span><span style={{ textAlign: 'right' }}>Chg%</span>
-            </div>
-
-            {filteredSyms.map(sym => {
-              const q   = allQuotes[sym]
-              const up  = (q?.changePct ?? 0) >= 0
-              const isSel = selSym === sym
-              return (
-                <div key={sym} onClick={() => { setSelSym(sym); setValue('symbol', sym.includes(' ') ? sym : sym) }}
-                  style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr', padding: '9px 16px', borderBottom: `1px solid ${T.border2}`, cursor: 'pointer', background: isSel ? T.blueBg : T.white, transition: 'background .1s' }}
-                  onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = T.bg }}
-                  onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = T.white }}>
-                  <div>
-                    <div style={{ fontSize: 12.5, fontWeight: isSel ? 800 : 600, color: isSel ? T.blue : T.text }}>{SYMBOL_LABELS[sym] || sym}</div>
-                    <div style={{ fontSize: 10, color: T.textMute }}>NSE</div>
-                  </div>
-                  <div style={{ textAlign: 'right', fontSize: 13, fontWeight: 700, color: T.text, fontVariantNumeric: 'tabular-nums' }}>
-                    {q ? `₹${fmt(q.price)}` : '—'}
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: 11.5, fontWeight: 700, color: up ? T.greenDark : T.red, background: up ? T.greenBg : T.redBg, padding: '2px 7px', borderRadius: 5, fontVariantNumeric: 'tabular-nums' }}>
-                      {up ? '+' : ''}{fmt(q?.changePct ?? 0)}%
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Recent Orders */}
-          <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'hidden' }}>
-            <div style={{ padding: '12px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Today's Orders</span>
-              <button onClick={() => navigate('/dashboard/portfolio')} style={{ fontSize: 12, color: T.blue, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
-                View all →
-              </button>
-            </div>
-            {trades.length === 0 ? (
-              <div style={{ padding: '32px 16px', textAlign: 'center', color: T.textMute, fontSize: 13 }}>
-                No orders yet. Place your first order above.
-              </div>
-            ) : trades.slice(0, 8).map(t => (
-              <div key={t.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderBottom: `1px solid ${T.border2}` }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{t.symbol}</div>
-                  <div style={{ fontSize: 11, color: T.textMute }}>{t.orderType} · {t.exchange}</div>
-                </div>
-                <div style={{ textAlign: 'right', marginRight: 10 }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 700, color: t.side === 'BUY' ? T.blue : T.red, background: t.side === 'BUY' ? T.blueBg : T.redBg, padding: '2px 7px', borderRadius: 5 }}>
-                    {t.side} {t.quantity}
-                  </span>
-                  <div style={{ fontSize: 11, color: T.textMute, marginTop: 2 }}>₹{(t.executedPrice || t.price || 0).toLocaleString('en-IN')}</div>
-                </div>
-                <StatusBadge status={t.status} />
-              </div>
             ))}
           </div>
-        </div>
 
-        {/* ── Column 3: Index Board ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'hidden' }}>
-            <div style={{ padding: '12px 16px', borderBottom: `1px solid ${T.border}`, fontSize: 13, fontWeight: 700, color: T.text }}>
-              Indices
-            </div>
-            {['NIFTY 50','NIFTY BANK','INDIA VIX','NIFTY IT','NIFTY PHARMA','NIFTY AUTO'].map(key => {
-              const q = indices[key]
-              const up = (q?.changePct ?? 0) >= 0
+          {/* Pairs Header */}
+          <div className={styles.pairsHeader}>
+            <span className={styles.phPairs}>Pairs</span>
+            <span className={styles.phPrice}>Last Price</span>
+            <span className={styles.phChg}>Change</span>
+          </div>
+
+          {/* Pairs List */}
+          <div className={styles.pairsList}>
+            {filteredSyms.map(sym => {
+              const isSel = selSym === sym
               return (
-                <div key={key} style={{ padding: '12px 16px', borderBottom: `1px solid ${T.border2}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: 11.5, fontWeight: 700, color: T.textSub }}>{SYMBOL_LABELS[key] || key}</div>
-                    <div style={{ fontSize: 11.5, fontWeight: 700, color: up ? T.greenDark : T.red, display: 'flex', alignItems: 'center', gap: 2 }}>
-                      {up ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
-                      {up ? '+' : ''}{fmt(q?.changePct ?? 0)}%
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: T.text, marginTop: 3, fontVariantNumeric: 'tabular-nums' }}>
-                    {q ? fmt(q.price) : '—'}
-                  </div>
-                </div>
+                <PairRow
+                  key={sym}
+                  sym={sym}
+                  isSel={isSel}
+                  quote={allQuotes[sym]}
+                  label={SYMBOL_LABELS[sym] || sym}
+                  onSelect={handlePairSelect}
+                />
               )
             })}
           </div>
+        </div>
 
-          {/* Quick tips card */}
-          <div style={{ background: T.blueBg, border: `1px solid ${T.blue}30`, borderRadius: 12, padding: '16px' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.blue, marginBottom: 10 }}>Order Types Guide</div>
-            {[
-              ['MARKET', 'Execute immediately at best available price'],
-              ['LIMIT', 'Execute only at your specified price or better'],
-              ['STOP_LOSS', 'Trigger a limit order when price hits stop level'],
-              ['GTT', 'Order stays active until your condition is met'],
-            ].map(([type, desc]) => (
-              <div key={type} style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: T.blue }}>{type}</div>
-                <div style={{ fontSize: 11, color: T.textSub, lineHeight: 1.5 }}>{desc}</div>
+        {/* ── Column 2: Chart + Order Form ── */}
+        <div className={styles.centerColumn}>
+          {/* Chart Header */}
+          <div className={styles.chartHeader}>
+            <div className={styles.chartTitle}>
+              <CompanyLogo symbol={selSym} name={SYMBOL_LABELS[selSym] || selSym} size={36} borderRadius={8} style={{ marginRight: 10 }} />
+              <div>
+                <span className={styles.chartSym}>{SYMBOL_LABELS[selSym] || selSym}</span>
+                <span className={styles.chartExchange}>· NSE · 1D</span>
               </div>
+            </div>
+            <div className={styles.chartMeta}>
+              <span>O: ₹{selQ?.open ? fmt(selQ.open) : '—'}</span>
+              <span style={{color:'var(--tp-green,#22c55e)'}}>H: ₹{selQ?.high ? fmt(selQ.high) : '—'}</span>
+              <span style={{color:'var(--tp-red,#ef4444)'}}>L: ₹{selQ?.low ? fmt(selQ.low) : '—'}</span>
+              <span>C: ₹{selQ ? fmt(selQ.price) : '—'}</span>
+              <span className={selUp ? styles.chartChgUp : styles.chartChgDn}>
+                {selUp ? '+' : ''}{fmt(selQ?.changePct ?? 0)}%
+              </span>
+            </div>
+          </div>
+
+          {/* TradingView Chart */}
+          <div className={styles.chartArea}>
+            <TradingViewChart
+              height={350}
+              theme="light"
+              showVolume={true}
+              showSMA={true}
+              seed={selQ?.price || 2500}
+            />
+          </div>
+
+          {/* Order Type Tabs */}
+          <div className={styles.orderTypeTabs}>
+            {ORDER_TABS.map(tab => (
+              <button
+                key={tab}
+                className={orderTab === tab ? styles.orderTypeActive : styles.orderTypeTab}
+                onClick={() => setOrderTab(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {/* Buy/Sell Forms */}
+          <div className={styles.buySellGrid}>
+            {/* Buy Form */}
+            <div className={styles.orderFormCard}>
+              <div className={styles.osHeader}>
+                <span className={styles.osLabel}>Price</span>
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  className={styles.osInput}
+                  value={buyPrice}
+                  onChange={e => handleBuyPriceChange(e.target.value)}
+                  disabled={orderTab === 'Market'}
+                />
+                <span className={styles.osUnit}>INR</span>
+              </div>
+              <div className={styles.osHeader}>
+                <span className={styles.osLabel}>Qty</span>
+                <input type="number" placeholder="0" className={styles.osInput}
+                  value={buyQty}
+                  onChange={e => handleBuyQtyChange(e.target.value)}
+                />
+                <span className={styles.osUnit}>Qty</span>
+              </div>
+              <div className={styles.osHeader}>
+                <span className={styles.osLabel}>Amount</span>
+                <input type="number" placeholder="0" className={styles.osInput}
+                  value={buyAmount}
+                  onChange={e => handleBuyAmountChange(e.target.value)}
+                />
+                <span className={styles.osUnit}>INR</span>
+              </div>
+              <div className={styles.percentBtns}>
+                {['25%','50%','75%','100%'].map(p => {
+                  return (
+                    <button key={p} className={styles.percentBtn} onClick={() => {
+                      const pct = parseInt(p) / 100
+                      const price = parseFloat(buyPrice) || selQ?.price || 0
+                      const maxAmt = 100000 * pct // simulated balance
+                      const qty = price > 0 ? Math.floor(maxAmt / price) : 0
+                      if (qty <= 0) return
+                      const amt = qty * price
+                      // Set the source-of-truth as amount (it matches what the percent represents)
+                      setBuyAmount(String(amt.toFixed(2)))
+                      setBuyQty(String(qty))
+                      setBuyEdited('amount')
+                    }}>{p}</button>
+                  )
+                })}
+              </div>
+              <div className={styles.osMeta}>
+                <div className={styles.osMetaRow}><span>Total:</span><span>₹{buyAmount ? Number(buyAmount).toLocaleString('en-IN') : '0'}</span></div>
+                <div className={styles.osMetaRow}><span>Est. Fee:</span><span>₹{buyAmount ? (Number(buyAmount) * 0.0003).toFixed(2) : '0'}</span></div>
+              </div>
+              <button className={styles.buyBtn} type="button" onClick={() => {
+                const p = parseFloat(buyPrice) || selQ?.price || 0
+                const userQty = parseInt(buyQty)
+                const userAmt = parseFloat(buyAmount)
+                // Prefer the field the user actually typed in; fall back to the
+                // derived values so the payment page always shows real numbers.
+                const a = !isNaN(userAmt) && userAmt > 0
+                  ? userAmt
+                  : (!isNaN(userQty) && userQty > 0 && p > 0 ? userQty * p : (p > 0 ? p : 0))
+                const q = !isNaN(userQty) && userQty > 0
+                  ? userQty
+                  : (p > 0 && a > 0 ? Math.floor(a / p) : (p > 0 ? 1 : 0))
+                if (a <= 0 || p <= 0 || q <= 0) return // nothing to buy
+                navigate(`/dashboard/payment?name=${encodeURIComponent(SYMBOL_LABELS[selSym] || selSym)}&type=Stock&side=BUY&qty=${q}&price=${p}&amount=${a.toFixed(2)}&symbol=${selSym}&exchange=NSE`)
+              }}>BUY</button>
+            </div>
+
+            {/* Sell Form */}
+            <div className={styles.orderFormCard}>
+              <div className={styles.osHeader}>
+                <span className={styles.osLabel}>Price</span>
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  className={styles.osInput}
+                  value={sellPrice}
+                  onChange={e => handleSellPriceChange(e.target.value)}
+                  disabled={orderTab === 'Market'}
+                />
+                <span className={styles.osUnit}>INR</span>
+              </div>
+              <div className={styles.osHeader}>
+                <span className={styles.osLabel}>Qty</span>
+                <input type="number" placeholder="0" className={styles.osInput}
+                  value={sellQty}
+                  onChange={e => handleSellQtyChange(e.target.value)}
+                />
+                <span className={styles.osUnit}>Qty</span>
+              </div>
+              <div className={styles.osHeader}>
+                <span className={styles.osLabel}>Amount</span>
+                <input type="number" placeholder="0" className={styles.osInput}
+                  value={sellAmount}
+                  onChange={e => handleSellAmountChange(e.target.value)}
+                />
+                <span className={styles.osUnit}>INR</span>
+              </div>
+              <div className={styles.percentBtns}>
+                {['25%','50%','75%','100%'].map(p => {
+                  return (
+                    <button key={p} className={styles.percentBtn} onClick={() => {
+                      const pct = parseInt(p) / 100
+                      const price = parseFloat(sellPrice) || selQ?.price || 0
+                      const maxAmt = 50000 * pct // simulated holding
+                      const qty = price > 0 ? Math.floor(maxAmt / price) : 0
+                      if (qty <= 0) return
+                      const amt = qty * price
+                      setSellAmount(String(amt.toFixed(2)))
+                      setSellQty(String(qty))
+                      setSellEdited('amount')
+                    }}>{p}</button>
+                  )
+                })}
+              </div>
+              <div className={styles.osMeta}>
+                <div className={styles.osMetaRow}><span>Total:</span><span>₹{sellAmount ? Number(sellAmount).toLocaleString('en-IN') : '0'}</span></div>
+                <div className={styles.osMetaRow}><span>Est. Fee:</span><span>₹{sellAmount ? (Number(sellAmount) * 0.0003).toFixed(2) : '0'}</span></div>
+              </div>
+              <button className={styles.sellBtn} type="button" onClick={() => {
+                const p = parseFloat(sellPrice) || selQ?.price || 0
+                const userQty = parseInt(sellQty)
+                const userAmt = parseFloat(sellAmount)
+                const a = !isNaN(userAmt) && userAmt > 0
+                  ? userAmt
+                  : (!isNaN(userQty) && userQty > 0 && p > 0 ? userQty * p : (p > 0 ? p : 0))
+                const q = !isNaN(userQty) && userQty > 0
+                  ? userQty
+                  : (p > 0 && a > 0 ? Math.floor(a / p) : (p > 0 ? 1 : 0))
+                if (a <= 0 || p <= 0 || q <= 0) return
+                navigate(`/dashboard/payment?name=${encodeURIComponent(SYMBOL_LABELS[selSym] || selSym)}&type=Stock&side=SELL&qty=${q}&price=${p}&amount=${a.toFixed(2)}&symbol=${selSym}&exchange=NSE`)
+              }}>SELL</button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Column 3: Order Book ── */}
+        <div className={styles.orderBookCol}>
+          <div className={styles.obHeader}>
+            <span className={styles.obTitle}>Order Book</span>
+          </div>
+
+          {/* Order Book Header */}
+          <div className={styles.obHeadRow}>
+            <span className={styles.obPriceLabel}>Price(INR)</span>
+            <span className={styles.obAmtLabel}>Amount(QTY)</span>
+            <span className={styles.obTotalLabel}>Total</span>
+          </div>
+
+          {/* Asks (Sells) */}
+          <div className={styles.obAsks}>
+            {orderBookData.asks.map((a, i) => (
+              <AskRow key={`ask-${i}`} price={a.price} qty={a.qty} total={a.total} pct={a.pct} />
+            ))}
+          </div>
+
+          {/* Last Price */}
+          <div className={styles.obSpread}>
+            <div className={styles.obLastPrice}>
+              <span className={styles.obLastVal}>₹{selQ ? fmt(selQ.price) : '—'}</span>
+              <span className={selUp ? styles.obLastUp : styles.obLastDn}>
+                {selUp ? '▲' : '▼'} {Math.abs(selQ?.changePct ?? 0).toFixed(2)}%
+              </span>
+            </div>
+            <div className={styles.obSpreadRow}>
+              <span className={styles.obSpreadLabel}>USD</span>
+              <span className={styles.obSpreadVal}>{selQ ? `₹${fmt(selQ.price)}` : '—'}</span>
+            </div>
+          </div>
+
+          {/* Bids (Buys) */}
+          <div className={styles.obBids}>
+            {orderBookData.bids.map((b, i) => (
+              <BidRow key={`bid-${i}`} price={b.price} qty={b.qty} total={b.total} pct={b.pct} />
+            ))}
+          </div>
+
+          {/* Recent Trades */}
+          <div className={styles.obRecentHeader}>
+            <span className={styles.obRecentTab}>Recent Trades</span>
+            <span className={styles.obRecentTabInactive}>Market Depth</span>
+          </div>
+          <div className={styles.obRecentHead}>
+            <span>Time</span>
+            <span>Price(INR)</span>
+            <span>Amount(QTY)</span>
+          </div>
+          <div className={styles.obRecentList}>
+            {orderBookData.trades.map((t, i) => (
+              <TradeRow key={i} time={t.time} price={t.price} qty={t.qty} isUp={t.isUp} />
             ))}
           </div>
         </div>
       </div>
 
+      {/* ═══ Bottom Tab Bar ═══ */}
+      <div className={styles.bottomSection}>
+        <div className={styles.bottomTabs}>
+          {['Open Orders','Closed Orders','Order History','Balance'].map(tab => (
+            <button
+              key={tab}
+              className={bottomTab === tab ? styles.bottomTabActive : styles.bottomTab}
+              onClick={() => setBottomTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        <div className={styles.bottomContent}>
+          {bottomTab === 'Open Orders' ? (
+            trades.filter(t => t.status === 'PENDING').length === 0 ? (
+              <div className={styles.emptyState}>
+                <Clock size={48} style={{opacity:0.15}} />
+                <span>No open orders</span>
+              </div>
+            ) : (
+              <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                <thead><tr style={{color:'var(--tp-muted,#8b949e)',fontSize:11}}>
+                  <th style={{padding:'8px 12px',textAlign:'left'}}>Symbol</th>
+                  <th>Side</th><th>Type</th><th>Qty</th><th>Price</th><th>Status</th>
+                </tr></thead>
+                <tbody>
+                  {trades.filter(t => t.status === 'PENDING').map(t => (
+                    <tr key={t.id} style={{borderTop:'1px solid var(--tp-border, #e8eaed)'}}>
+                      <td style={{padding:'8px 12px',fontWeight:700}}>{t.symbol}</td>
+                      <td style={{textAlign:'center'}}><StatusBadge status={t.side} /></td>
+                      <td style={{textAlign:'center',color:'var(--tp-muted,#8b949e)'}}>{t.orderType}</td>
+                      <td style={{textAlign:'center'}}>{t.quantity}</td>
+                      <td style={{textAlign:'center'}}>₹{(t.price||0).toLocaleString('en-IN')}</td>
+                      <td style={{textAlign:'center'}}><StatusBadge status={t.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )
+          ) : bottomTab === 'Closed Orders' ? (
+            trades.filter(t => t.status === 'COMPLETE').length === 0 ? (
+              <div className={styles.emptyState}>
+                <CheckCircle2 size={48} style={{opacity:0.15}} />
+                <span>No completed orders</span>
+              </div>
+            ) : (
+              <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                <thead><tr style={{color:'var(--tp-muted,#8b949e)',fontSize:11}}>
+                  <th style={{padding:'8px 12px',textAlign:'left'}}>Symbol</th>
+                  <th>Side</th><th>Type</th><th>Qty</th><th>Price</th><th>P&L</th>
+                </tr></thead>
+                <tbody>
+                  {trades.filter(t => t.status === 'COMPLETE').map(t => (
+                    <tr key={t.id} style={{borderTop:'1px solid var(--tp-border, #e8eaed)'}}>
+                      <td style={{padding:'8px 12px',fontWeight:700}}>{t.symbol}</td>
+                      <td style={{textAlign:'center'}}><StatusBadge status={t.side} /></td>
+                      <td style={{textAlign:'center',color:'var(--tp-muted,#8b949e)'}}>{t.orderType}</td>
+                      <td style={{textAlign:'center'}}>{t.quantity}</td>
+                      <td style={{textAlign:'center'}}>₹{(t.executedPrice||t.price||0).toLocaleString('en-IN')}</td>
+                      <td style={{textAlign:'center',fontWeight:700,color:(t.pnl||0)>=0?'var(--tp-green,#22c55e)':'var(--tp-red,#ef4444)'}}>
+                        {(t.pnl||0)>=0?'+':''}₹{(t.pnl||0).toLocaleString('en-IN')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )
+          ) : (
+            <div className={styles.emptyState}>
+              <BarChart2 size={48} style={{opacity:0.15}} />
+              <span>{bottomTab === 'Balance' ? 'Connect broker to see balance' : 'No order history yet'}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Success Overlay */}
+      {submitted && (
+        <div className={styles.successOverlay}>
+          <CheckCircle2 size={36} color="var(--tp-green,#22c55e)" />
+          <div className={styles.successText}>Order placed successfully!</div>
+        </div>
+      )}
+
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+
+      {paymentOrder && (
+        <PaymentModal
+          order={paymentOrder}
+          onClose={() => setPaymentOrder(null)}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   )
 }

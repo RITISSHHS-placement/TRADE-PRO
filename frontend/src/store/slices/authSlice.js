@@ -8,7 +8,10 @@ const STORAGE_KEY_USER  = 'tp-user'
 
 function persist(token, user) {
   try {
+    // Use secure cookies for auth state whenever possible.
+    // Only persist a bearer token if the session is explicit and not cookie-based.
     if (token && token !== 'cookie') localStorage.setItem(STORAGE_KEY_TOKEN, token)
+    else localStorage.removeItem(STORAGE_KEY_TOKEN)
     if (user) localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user))
   } catch (_) {}
 }
@@ -55,9 +58,8 @@ export const loginUser = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       // data may be { email, password } (credential login)
-      // OR { token, user, refreshToken } (pre-verified OTP login — injected directly)
-      if (data?.token !== undefined || data?.user !== undefined) {
-        // Pre-built payload from OTP verification — return as-is
+      // OR { user } (pre-verified OTP login — injected directly)
+      if (data?.user !== undefined) {
         return data
       }
       const res = await authAPI.login(data)
@@ -118,7 +120,7 @@ const authSlice = createSlice({
       .addCase(registerUser.pending,   (s) => { s.loading = true;  s.error = null })
       .addCase(registerUser.fulfilled, (s, { payload }) => {
         s.loading = false
-        s.token   = payload?.token || 'cookie'
+        s.token   = 'cookie'
         s.user    = payload?.user || payload
         persist(s.token, s.user)
         toast.success('Account created! Welcome to TradePro.')
@@ -134,7 +136,7 @@ const authSlice = createSlice({
       .addCase(loginUser.pending,   (s) => { s.loading = true;  s.error = null })
       .addCase(loginUser.fulfilled, (s, { payload }) => {
         s.loading = false
-        s.token   = payload?.token || 'cookie'
+        s.token   = 'cookie'
         s.user    = payload?.user || payload
         persist(s.token, s.user)
         toast.success('Welcome back!')
@@ -156,7 +158,7 @@ const authSlice = createSlice({
     // ── Refresh ──
     builder
       .addCase(refreshToken.fulfilled, (s, { payload }) => {
-        s.token = payload?.token || s.token || 'cookie'
+        s.token = 'cookie'
         s.user  = payload?.user  || s.user
         persist(s.token, s.user)
       })

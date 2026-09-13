@@ -1,5 +1,5 @@
-/* MarketPage — MAI Design */
-.page { display:flex; flex-direction:column; gap:0; }
+/* MarketPage — Crypto Exchange Light Theme */
+.page { display:flex; flex-direction:column; gap:0; background: #f8f9fa; }
 .ticker { display:flex; overflow-x:auto; background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-md); height:40px; scrollbar-width:none; }
 .ticker::-webkit-scrollbar { display:none; }
 .chip { display:flex; align-items:center; gap:8px; padding:0 16px; border-right:1px solid var(--border); white-space:nowrap; flex-shrink:0; cursor:pointer; transition:background .1s; height:100%; }

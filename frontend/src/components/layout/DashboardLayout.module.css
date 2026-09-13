@@ -12,13 +12,43 @@
 /* ── Top Nav ── */
 .topNav {
   height: 56px;
-  background: var(--surface-1);
-  border-bottom: 1px solid var(--border);
+  background: var(--nav-bg);
+  border-bottom: 1px solid #2a3a4d;
   box-shadow: var(--shadow-xs);
   flex-shrink: 0;
   position: sticky;
   top: 0;
   z-index: 200;
+
+  /* Dark-nav chrome: light text + darker inset surfaces for contrast */
+  --text-primary:  var(--tp-nav-text);
+  --text-secondary: #b8c1d6;
+  --text-tertiary:  #a8b4d1;
+  --text-muted:     #8a94a6;
+  --border:         #2a3a4d;
+  --border-strong:  #3a4a5e;
+  --surface-1:      var(--nav-bg);
+  --surface-2:      #1e2937;
+  --surface-hover:  #243140;
+  /* brighter blues that read on the dark navy */
+  --blue:           #4c9aff;
+  --blue-hover:     #63b3ff;
+  --blue-dim:       rgba(23,105,170,.20);
+}
+
+/* White pop-up menus reset back to a light text scheme */
+.topNav .moreDropdown {
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  --text-primary:  #1a1a1e;
+  --text-secondary: #4b5563;
+  --text-tertiary:  #6b7280;
+  --text-muted:     #737373;
+  --border:         #e8e8e8;
+  --border-strong:  #d1d5db;
+  --surface-1:      #ffffff;
+  --surface-2:      #f5f5f5;
+  --surface-hover:  #f0f0f0;
 }
 .topNavInner {
   max-width: 1440px;
@@ -196,7 +226,7 @@
 .tickerWrap {
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
-  height: 38px; overflow: hidden; flex-shrink: 0;
+  height: 42px; overflow: hidden; flex-shrink: 0;
 }
 .tickerTrack {
   display: flex; align-items: center; height: 100%;
@@ -208,8 +238,8 @@
   100% { transform: translateX(-33.333%); }
 }
 .tickerItem {
-  display: inline-flex; align-items: center; gap: 9px;
-  padding: 0 22px; border-right: 1px solid var(--border);
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 0 18px; border-right: 1px solid var(--border);
   flex-shrink: 0; cursor: default;
 }
 .tickerSym {
@@ -232,11 +262,147 @@
 @media (max-width: 900px) {
   .navSearch { display: none; }
   .navLink { padding: 7px 9px; font-size: 12px; }
-  .userName, .killSwitchBtn span { display: none; }
+  .killSwitchLabel { display: none; }
+  .logoutLabel { display: none; }
   .content { padding: 14px; }
 }
 @media (max-width: 600px) {
   .navLinks { display: none; }
   .navRight { gap: 5px; }
   .navLogoText { display: none; }
+  .userName { display: none; }
+  .userChip { padding: 4px; border-radius: 50%; }
 }
+
+/* ── Hamburger button — hidden on desktop ── */
+.hamburger {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 8px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-tertiary); cursor: pointer;
+  flex-shrink: 0; transition: all .14s;
+}
+.hamburger:hover { background: var(--surface-hover); color: var(--text-primary); }
+
+@media (max-width: 768px) {
+  .hamburger { display: inline-flex; }
+}
+
+/* ── Mobile Drawer overlay ── */
+.drawerOverlay {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(4px);
+  z-index: 400;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+/* ── Mobile Drawer ── */
+.drawer {
+  position: fixed; top: 0; left: 0; bottom: 0;
+  width: 300px; max-width: 88vw;
+  background: var(--surface-1);
+  border-right: 1px solid var(--border);
+  z-index: 500;
+  display: flex; flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+  box-shadow: 4px 0 32px rgba(0,0,0,0.15);
+}
+.drawerOpen {
+  transform: translateX(0);
+}
+
+/* Drawer header */
+.drawerHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.drawerClose {
+  width: 32px; height: 32px; border-radius: 7px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-tertiary); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .14s;
+}
+.drawerClose:hover { background: var(--surface-hover); color: var(--text-primary); }
+
+/* Drawer user block */
+.drawerUser {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--surface-2);
+}
+.drawerUserAvatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--blue); color: #fff;
+  font-size: 16px; font-weight: 700;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.drawerUserName  { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.drawerUserEmail { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* Drawer nav */
+.drawerNav {
+  flex: 1; overflow-y: auto; padding: 8px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.drawerSection {
+  padding: 12px 18px 5px;
+  font-size: 10px; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .7px;
+}
+.drawerNavLink {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 11px 18px;
+  background: transparent; border: none;
+  color: var(--text-secondary); font-size: 13px; font-weight: 500;
+  cursor: pointer; text-align: left; font-family: var(--font);
+  transition: background .1s, color .1s;
+}
+.drawerNavLink:hover {
+  background: var(--surface-2); color: var(--text-primary);
+}
+.drawerNavIcon {
+  width: 26px; height: 26px; border-radius: 6px;
+  display: grid; place-items: center;
+  font-size: 13px; flex-shrink: 0;
+}
+
+/* Drawer footer */
+.drawerFooter {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex; gap: 8px;
+}
+.drawerKillSwitch {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 0; border-radius: 8px;
+  background: var(--red-dim); border: 1px solid rgba(220,38,38,.2);
+  color: var(--red); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: var(--font);
+  transition: all .14s;
+}
+.drawerKillSwitch:hover { background: rgba(220,38,38,.16); }
+.drawerLogout {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 0; border-radius: 8px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-secondary); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: var(--font);
+  transition: all .14s;
+}
+.drawerLogout:hover { background: var(--surface-hover); color: var(--text-primary); }
+
+/* Ticker logo size tweak */
+.tickerItem { gap: 6px; }
