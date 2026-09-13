@@ -16,52 +16,41 @@ import CommandPalette from '../primitive/CommandPalette'
 import { useAutoLogout } from '../../hooks'
 import styles from './DashboardLayout.module.css'
 
-/* ── Top nav items — all primary routes surfaced here ── */
+/* ── Top nav items — only 5 primary routes, rest live in More ── */
 const NAV_ITEMS = [
-  { to: '/dashboard',            label: 'Dashboard',  tip: 'Overview' },
-  { to: '/dashboard/trade',      label: 'Trade',      tip: 'US stocks & options' },
-  { to: '/dashboard/crypto',     label: 'Crypto',     tip: 'Crypto exchange' },
-  { to: '/dashboard/invest',     label: 'Invest',     tip: 'Mutual funds & more' },
-  { to: '/dashboard/portfolio',  label: 'Portfolio',  tip: 'Your holdings' },
-  { to: '/dashboard/us-stocks',  label: 'US Stocks',  tip: 'US equity markets' },
-  { to: '/dashboard/screener',   label: 'Screener',   tip: 'Stock screener' },
-  { to: '/dashboard/news',       label: 'News',       tip: 'Market news' },
-  { to: '/dashboard/ipo-watch',  label: 'IPO',        tip: 'IPO watchlist' },
-  { to: '/dashboard/revenue-recovery', label: 'Recover', tip: 'Revenue recovery' },
+  { to: '/dashboard',           label: 'Dashboard', tip: 'Overview' },
+  { to: '/dashboard/trade',     label: 'Trade',     tip: 'Place orders' },
+  { to: '/dashboard/portfolio', label: 'Portfolio', tip: 'Your holdings' },
+  { to: '/dashboard/invest',    label: 'Invest',    tip: 'Mutual funds & more' },
+  { to: '/dashboard/market',    label: 'Markets',   tip: 'Live market data' },
 ]
 
-/* ── More dropdown data with routes ── */
+/* ── Items that moved out of the top nav into More → Products ── */
 const MORE_PRODUCTS = [
-  { icon: '$',  bg: '#2563eb', label: 'US Equity',   badge: 'New', to: '/dashboard/us-stocks' },
-  { icon: '↑',  bg: '#ea580c', label: 'IN Stocks',                 to: '/dashboard/market' },
-  { icon: '₿',  bg: '#f7931a', label: 'Crypto',      badge: 'New', to: '/dashboard/crypto' },
-  { icon: '📊', bg: '#1a73e8', label: 'Crypto Portfolio', to: '/dashboard/crypto-portfolio' },
-  { icon: '📈', bg: '#0d9488', label: 'ETFs',                       to: '/dashboard/market' },
-  { icon: '⚖',  bg: '#0d9488', label: 'Indices',                    to: '/dashboard/market' },
-  { icon: '◎',  bg: '#7c3aed', label: 'MFs',                        to: '/dashboard/mf' },
-  { icon: '▣',  bg: '#2563eb', label: 'smallcases',                 to: '/dashboard/smallcases' },
-  { icon: '🪙', bg: '#d97706', label: 'Gold',                        to: '/dashboard/digital-gold' },
-  { icon: '₹',  bg: '#7c3aed', label: 'LAMF',                       to: '/dashboard/mf' },
-  { icon: '₹',  bg: '#16a34a', label: 'LAS',                        to: '/dashboard/pricing' },
+  { icon: '🔵', bg: '#2563eb', label: 'US Stocks',    badge: 'New', to: '/dashboard/us-stocks' },
+  { icon: '₿',  bg: '#f7931a', label: 'Crypto',       badge: 'New', to: '/dashboard/crypto' },
+  { icon: '🪙', bg: '#d97706', label: 'Digital Gold',              to: '/dashboard/digital-gold' },
+  { icon: '◎',  bg: '#7c3aed', label: 'Mutual Funds',              to: '/dashboard/mf' },
+  { icon: '📋', bg: '#0d9488', label: 'Smallcases',                to: '/dashboard/smallcases' },
+  { icon: '🚀', bg: '#ea580c', label: 'IPO Watch',                 to: '/dashboard/ipo-watch' },
+  { icon: '📊', bg: '#1a73e8', label: 'Crypto Portfolio',          to: '/dashboard/crypto-portfolio' },
+  { icon: '₹',  bg: '#16a34a', label: 'Fixed Deposits',            to: '/dashboard/invest' },
 ]
 const MORE_TOOLS = [
-  { icon: '✦',  bg: '#0f766e', label: 'AI Revenue Recovery',       badge: 'New',  to: '/dashboard/revenue-recovery' },
-  { icon: '◉',  bg: '#2563eb', label: 'Stock Screener',             to: '/dashboard/screener' },
-  { icon: '◉',  bg: '#7c3aed', label: 'MF Screener',               to: '/dashboard/mf-screener' },
-  { icon: '$',  bg: '#16a34a', label: 'US Screener', badge: 'New',  to: '/dashboard/us-stocks' },
-  { icon: '↑↓', bg: '#ea580c', label: 'Market Movers',              to: '/dashboard/market' },
-  { icon: '●',  bg: '#2563eb', label: 'Market Mood',                to: '/dashboard/market' },
-  { icon: '💼', bg: '#2563eb', label: 'Portfolio',                  to: '/dashboard/portfolio' },
-  { icon: '🔖', bg: '#7c3aed', label: 'Watchlist',                  to: '/dashboard/watchlist' },
-  { icon: '🔔', bg: '#16a34a', label: 'Crypto Alerts',              to: '/dashboard/price-alerts' },
-  { icon: '🌐', bg: '#06b6d4', label: 'News and Events',            to: '/dashboard/news' },
-  { icon: '🔢', bg: '#7c3aed', label: 'IPO Watch',                  to: '/dashboard/ipo-watch' },
+  { icon: '🔍', bg: '#2563eb', label: 'Stock Screener',   to: '/dashboard/screener' },
+  { icon: '⭐', bg: '#7c3aed', label: 'Watchlist',         to: '/dashboard/watchlist' },
+  { icon: '📰', bg: '#06b6d4', label: 'News & Events',     to: '/dashboard/news' },
+  { icon: '↑↓', bg: '#ea580c', label: 'Market Movers',     to: '/dashboard/market' },
+  { icon: '🔔', bg: '#16a34a', label: 'Price Alerts',      to: '/dashboard/price-alerts' },
+  { icon: '⚙️', bg: '#4b5563', label: 'Settings',          to: '/dashboard/settings' },
+  { icon: '🛡️', bg: '#0f766e', label: 'Security',          to: '/dashboard/security' },
+  { icon: '✦',  bg: '#0f766e', label: 'AI Recovery', badge: 'New', to: '/dashboard/revenue-recovery' },
 ]
 const MORE_LEARN = [
-  { icon: '📖', bg: '#2563eb', label: 'Learn',                      to: '/dashboard/market' },
-  { icon: '👥', bg: '#1e293b', label: 'Social',                     to: '/dashboard/market' },
-  { icon: '💬', bg: '#1e293b', label: 'Blog',                       to: '/dashboard/market' },
-  { icon: '🎓', bg: '#1e293b', label: "How To's",                   to: '/dashboard/market' },
+  { icon: '📖', bg: '#2563eb', label: 'Learn',     to: '/dashboard/market' },
+  { icon: '💬', bg: '#1e293b', label: 'Blog',      to: '/dashboard/market' },
+  { icon: '🎓', bg: '#1e293b', label: "How To's",  to: '/dashboard/market' },
+  { icon: '💲', bg: '#16a34a', label: 'Pricing',   to: '/dashboard/pricing' },
 ]
 
 /* ── More Dropdown Component ── */

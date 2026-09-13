@@ -1,14 +1,14 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # TradePro — Full Local Stack
-#   postgres  → PostgreSQL 16 database
-#   redis     → Redis 7 (rate-limiter / cache)
-#   backend   → Spring Boot 3 (port 8080)
-#   frontend  → React/Vite served by Nginx (port 3000)
+#   postgres  → PostgreSQL 16  host:7433  (unique — avoids all common conflicts)
+#   redis     → Redis 7        host:6399
+#   backend   → Spring Boot 3  host:8765
+#   frontend  → Nginx/React    host:4173  → http://localhost:4173
 #
 # Usage:
-#   cp .env.example .env          # fill in secrets
-#   docker compose up --build     # first run (builds images)
-#   docker compose up             # subsequent runs (cached images)
+#   cp .env.example .env          # fill in secrets (one-time)
+#   docker compose up --build     # first run  (builds images ~3 min)
+#   docker compose up             # subsequent runs (images cached, ~10 s)
 #   docker compose down -v        # stop and wipe volumes
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -24,7 +24,7 @@ services:
       POSTGRES_USER:     ${POSTGRES_USER:-tradepro}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tradepro_secret}
     ports:
-      - "5433:5432"   # host 5433 → container 5432 (avoids conflict with local postgres)
+      - "7433:5432"   # TradePro postgres — unique port, avoids all common conflicts
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -40,7 +40,7 @@ services:
     container_name: tradepro-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6399:6379"   # TradePro redis — unique port
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -56,7 +56,7 @@ services:
     container_name: tradepro-backend
     restart: unless-stopped
     ports:
-      - "8090:8080"   # host 8090 → container 8080 (avoids conflict with local Spring Boot)
+      - "8765:8080"   # TradePro backend — unique port
     environment:
       SPRING_PROFILES_ACTIVE: prod
       # Database — point to the postgres service by container name
@@ -71,7 +71,7 @@ services:
       # JWT — must be at least 256-bit (32 chars)
       JWT_SECRET:  ${JWT_SECRET:-change-me-in-dot-env-at-least-32-chars-long}
       # CORS — allow the frontend container and localhost dev
-      CORS_ALLOWED_ORIGINS: "http://localhost:3001,http://127.0.0.1:3001,http://localhost:3000,http://127.0.0.1:3000"
+      CORS_ALLOWED_ORIGINS: "http://localhost:4173,http://127.0.0.1:4173,http://localhost:3000,http://127.0.0.1:3000"
       # Cookies — false = SameSite=Lax (OK for http://localhost)
       APP_COOKIES_SECURE: "false"
       # Mail (OTP) — Gmail app password or leave blank to use console fallback
@@ -104,7 +104,7 @@ services:
     container_name: tradepro-frontend
     restart: unless-stopped
     ports:
-      - "3001:80"     # host 3001 → container 80 (avoids conflict with local Vite dev server)
+      - "4173:80"     # TradePro frontend — unique port (http://localhost:4173)
     depends_on:
       backend:
         condition: service_healthy

@@ -81,12 +81,12 @@
 
 /* Search */
 .navSearch {
-  flex: 1; max-width: 380px;
+  flex: 1; max-width: 240px;
   display: flex; align-items: center; gap: 8px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 0 12px; height: 36px;
+  padding: 0 12px; height: 34px;
   transition: border-color .15s, box-shadow .15s;
 }
 .navSearch:focus-within {
@@ -111,13 +111,14 @@
 
 /* Nav links */
 .navLinks {
-  display: flex; align-items: center; gap: 2px;
+  display: flex; align-items: center; gap: 1px;
   flex-shrink: 0;
+  overflow: hidden;
 }
 .navLink {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 7px 12px; border-radius: 6px;
-  font-size: 13px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 10px; border-radius: 6px;
+  font-size: 12.5px; font-weight: 500;
   color: var(--text-tertiary);
   text-decoration: none; background: transparent;
   border: none; cursor: pointer;
